@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<!-- saved from url=(0060)file:///C:/Studia/Elektroenergetyka/Nowy%20folder/index.html -->
+<html lang="pl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnergoSym — Symulator Energetyczny Zakładu Produkcyjnego</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./EnergoSym — Symulator Energetyczny Zakładu Produkcyjnego_files/css2" rel="stylesheet">
+<script src="./EnergoSym — Symulator Energetyczny Zakładu Produkcyjnego_files/chart.js.pobrane"></script>
+<style>
+/* ===== RESET & ROOT ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #0f1117;
+  --bg2:      #161820;
+  --bg3:      #1d1f2a;
+  --surface:  #232535;
+  --surface2: #2a2c3e;
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.14);
+  --text:     #eeecea;
+  --text2:    #9896a0;
+  --text3:    #5f5e68;
+  --blue:     #4d9de0;
+  --blue2:    #7ab8ec;
+  --blue-bg:  rgba(77,157,224,0.12);
+  --green:    #3ecf8e;
+  --green2:   #6ddba9;
+  --green-bg: rgba(62,207,142,0.10);
+  --amber:    #f4a535;
+  --amber2:   #f7c068;
+  --amber-bg: rgba(244,165,53,0.10);
+  --red:      #e05a5a;
+  --red2:     #eb8484;
+  --red-bg:   rgba(224,90,90,0.10);
+  --purple:   #9b87f5;
+  --purple-bg:rgba(155,135,245,0.10);
+  --radius:   6px;
+  --radius-lg:10px;
+  --font:     'IBM Plex Sans', sans-serif;
+  --mono:     'IBM Plex Mono', monospace;
+  --shadow:   0 4px 24px rgba(0,0,0,0.4);
+}
+html { font-size: 14px; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; overflow: hidden; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+/* ===== HEADER ===== */
+.header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-logo {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--green);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.header-logo span { color: var(--text3); }
+.header-sub { font-size: 12px; color: var(--text3); border-left: 1px solid var(--border2); padding-left: 1rem; margin-left: 0.5rem; }
+
+/* ===== LAYOUT ===== */
+.layout { display: flex; height: calc(100vh - 56px); }
+
+/* ===== SIDEBAR NAV ===== */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 1.25rem 0;
+  overflow-y: auto;
+}
+.nav-group { margin-bottom: 0.25rem; }
+.nav-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 0.5rem 1.25rem 0.25rem;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1.25rem;
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font);
+  transition: color 0.15s, background 0.15s;
+  border-left: 2px solid transparent;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--text); background: rgba(77,157,224,0.08); border-left-color: var(--blue); }
+.nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; }
+.nav-item.active .nav-icon { opacity: 1; }
+
+/* ===== MAIN CONTENT ===== */
+.main { flex: 1; overflow-y: auto; padding: 1.75rem 2rem; position: relative; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ===== PAGE HEADER ===== */
+.page-header { margin-bottom: 1.5rem; }
+.page-title { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.page-desc { font-size: 13px; color: var(--text2); }
+
+/* ===== CARDS & GRIDS ===== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+}
+.card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.card-title-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 1rem; }
+.grid3 { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-bottom: 1rem; }
+.grid4 { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
+@media(max-width:900px) { .grid2,.grid3,.grid4 { grid-template-columns: 1fr 1fr; } }
+@media(max-width:600px) { .grid2,.grid3,.grid4 { grid-template-columns: 1fr; } }
+
+/* ===== METRIC CARDS ===== */
+.mc {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.mc::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.mc.blue::before { background: var(--blue); }
+.mc.green::before { background: var(--green); }
+.mc.amber::before { background: var(--amber); }
+.mc.red::before { background: var(--red); }
+.mc.purple::before { background: var(--purple); }
+.mc-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.mc-value { font-size: 24px; font-weight: 600; font-family: var(--mono); color: var(--text); line-height: 1; }
+.mc-value.blue { color: var(--blue2); }
+.mc-value.green { color: var(--green2); }
+.mc-value.amber { color: var(--amber2); }
+.mc-value.red { color: var(--red2); }
+.mc-value.purple { color: var(--purple); }
+.mc-unit { font-size: 11px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+
+/* ===== FORM CONTROLS ===== */
+.form-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.8rem; }
+.form-label { font-size: 12px; color: var(--text2); min-width: 220px; flex-shrink: 0; }
+input[type=range] {
+  flex: 1; min-width: 0; accent-color: var(--blue); cursor: pointer; height: 4px;
+  -webkit-appearance: none; background: var(--surface2); border-radius: 2px;
+}
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--blue); cursor: pointer; }
+input[type=number], input[type=text] {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius);
+  color: var(--text); font-family: var(--mono); font-size: 13px; padding: 6px 10px;
+  width: 100%;
+}
+input[type=number]:focus, input[type=text]:focus { outline: none; border-color: var(--blue); }
+select {
+  width: 100%; padding: 7px 10px; font-size: 13px;
+  border: 1px solid var(--border2); border-radius: var(--radius);
+  background: var(--bg3); color: var(--text); font-family: var(--font); cursor: pointer;
+}
+select:focus { outline: none; border-color: var(--blue); }
+.val-display {
+  font-family: var(--mono); font-size: 12px; color: var(--amber2);
+  min-width: 80px; text-align: right; flex-shrink: 0;
+}
+
+/* ===== SECTION DIVIDER ===== */
+.sdiv { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+.stitle { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+
+/* ===== BADGE BUTTONS ===== */
+.btn-group { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+.btn {
+  padding: 5px 12px; font-size: 12px; border: 1px solid var(--border2);
+  border-radius: var(--radius); background: transparent; color: var(--text2);
+  cursor: pointer; font-family: var(--font); transition: all 0.15s;
+}
+.btn:hover { color: var(--text); border-color: var(--blue); }
+.btn.active { background: var(--blue-bg); color: var(--blue2); border-color: var(--blue); }
+.btn-primary {
+  padding: 8px 16px; font-size: 13px; font-weight: 500;
+  background: var(--blue); color: #fff; border: none; border-radius: var(--radius);
+  cursor: pointer; font-family: var(--font); transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.85; }
+
+/* ===== LEGEND ===== */
+.legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; font-size: 12px; color: var(--text2); }
+.legend span { display: flex; align-items: center; gap: 5px; }
+.ld { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* ===== CHART WRAPPERS ===== */
+.cw  { position: relative; width: 100%; height: 260px; }
+.cwm { position: relative; width: 100%; height: 300px; }
+.cwl { position: relative; width: 100%; height: 340px; }
+
+/* ===== INSIGHT BOXES ===== */
+.ins { border-radius: var(--radius); padding: 0.8rem 1rem; font-size: 12px; line-height: 1.6; margin-top: 0.85rem; border-left: 3px solid; }
+.ins.info  { background: var(--blue-bg);   color: var(--blue2);   border-left-color: var(--blue);  }
+.ins.good  { background: var(--green-bg);  color: var(--green2);  border-left-color: var(--green); }
+.ins.warn  { background: var(--amber-bg);  color: var(--amber2);  border-left-color: var(--amber); }
+
+/* ===== STATUS PILL ===== */
+.pill { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-family: var(--mono); }
+.pill.green { background: var(--green-bg); color: var(--green2); }
+.pill.amber { background: var(--amber-bg); color: var(--amber2); }
+.pill.red   { background: var(--red-bg);   color: var(--red2);   }
+.pill.blue  { background: var(--blue-bg);  color: var(--blue2);  }
+
+/* ===== FW STATUS BAR ===== */
+.fw-bar { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7rem 1rem; font-size: 12px; color: var(--text2); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+/* ===== TABLE ===== */
+.tbl-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead tr { background: var(--surface2); }
+th { padding: 9px 12px; text-align: left; font-weight: 600; color: var(--text2); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+.td-mono { font-family: var(--mono); }
+.td-green { color: var(--green2); font-family: var(--mono); font-weight: 500; }
+.td-amber { color: var(--amber2); font-family: var(--mono); }
+.td-red   { color: var(--red2);   font-family: var(--mono); }
+.td-best  { background: var(--green-bg) !important; }
+
+/* ===== INVESTMENT CALC ===== */
+.inv-unit { font-size: 12px; color: var(--text3); width: 40px; }
+
+/* ===== TABS (sub) ===== */
+.sub-tabs { display: flex; gap: 2px; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.sub-tab { padding: 7px 13px; font-size: 12px; cursor: pointer; border: none; background: none; color: var(--text2); border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: var(--font); transition: color 0.15s; }
+.sub-tab:hover { color: var(--text); }
+.sub-tab.active { color: var(--blue2); border-bottom-color: var(--blue); font-weight: 500; }
+.sub-section { display: none; }
+.sub-section.active { display: block; }
+
+/* ===== PRINT / PDF ===== */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .sidebar, .header { display: none !important; }
+  .layout { display: block !important; height: auto !important; overflow: visible !important; }
+  .main { padding: 0 !important; overflow: visible !important; height: auto !important; }
+  .page { display: none !important; }
+  #page-raport { display: block !important; }
+  body { background: white !important; color: #111 !important; font-size: 12px !important; }
+  .card { background: white !important; border: 1px solid #ccc !important; }
+  .mc { background: #f5f5f5 !important; }
+  .mc-value { color: #111 !important; }
+  .mc-label { color: #555 !important; }
+  .tbl-wrap { border: 1px solid #ccc !important; }
+  th { background: #eee !important; color: #333 !important; }
+  td { color: #222 !important; }
+  h3 { color: #111 !important; border-bottom-color: #ccc !important; }
+  .report-chart-wrap { page-break-inside: avoid; margin: 0.75rem 0; }
+  .report-chart-wrap canvas { display: block !important; max-width: 100% !important; }
+  .report-section { page-break-inside: avoid; margin-bottom: 1.5rem; }
+  .btn-primary, .btn { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">EnergoSym<span>.pl</span></div>
+  <div class="header-sub">Symulator energetyczny zakładu produkcyjnego — v3.1</div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:0.75rem">
+    <span id="hdr_pokrycie" class="pill amber">Pokrycie 27%</span>
+    <span id="hdr_koszt" style="font-family:var(--mono);font-size:12px;color:var(--text3)">Koszt sieci: 181&nbsp;689 PLN/dobę</span>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="nav-group">
+    <div class="nav-group-label">Konfiguracja</div>
+    <button class="nav-item active" onclick="showPage(&#39;cfg&#39;)">Parametry ogólne</button>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Zakład</div>
+    <button class="nav-item" onclick="showPage(&#39;zaklad&#39;)">Profil produkcyjny</button>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">OZE</div>
+    <button class="nav-item" onclick="showPage(&#39;pv&#39;)">Fotowoltaika (PV)</button>
+    <button class="nav-item" onclick="showPage(&#39;fw&#39;)">Elektrownia wiatrowa (FW)</button>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Magazyn</div>
+    <button class="nav-item" onclick="showPage(&#39;mee&#39;)">Magazyn energii (MEE)</button>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Analiza</div>
+    <button class="nav-item" onclick="showPage(&#39;bilans&#39;)">Bilans energetyczny</button>
+    <button class="nav-item" onclick="showPage(&#39;inwest&#39;)">Analiza inwestycji</button>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Dokumentacja</div>
+    <button class="nav-item" onclick="showPage(&#39;raport&#39;)">Raport sprawozdanie</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ===================== PAGE: KONFIGURACJA ===================== -->
+<div class="page active" id="page-cfg">
+  <div class="page-header">
+    <h1 class="page-title">Parametry ogólne</h1>
+    <p class="page-desc">Ustaw wszystkie parametry zakładu, instalacji OZE i MEE.</p>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot" style="background:var(--blue)"></span>Zakład produkcyjny</div>
+      <div class="form-row"><span class="form-label">Moc przyłączeniowa [MW]</span><input type="range" id="p_przyl" min="20" max="50" step="5" value="30" oninput="upd()"><span class="val-display" id="p_przyl_v">30 MW</span></div>
+      <div class="form-row"><span class="form-label">Zapotrzebowanie nocne 22–6 [%]</span><input type="range" id="p_noc" min="20" max="60" step="5" value="35" oninput="upd()"><span class="val-display" id="p_noc_v">35%</span></div>
+      <div class="form-row"><span class="form-label">Zapotrzebowanie dzienne 6–22 [%]</span><input type="range" id="p_dzien" min="60" max="95" step="5" value="85" oninput="upd()"><span class="val-display" id="p_dzien_v">85%</span></div>
+      <div class="form-row"><span class="form-label">Tryb pracy zakładu</span>
+        <select id="tryb" onchange="upd()">
+          <option value="3">3-zmianowy (równomierne 24h)</option>
+          <option value="2">2-zmianowy (aktywny 6–22)</option>
+          <option value="ramp">Nierównomierne (przerwy produkcyjne)</option>
+        </select>
+      </div>
+      <hr class="sdiv">
+      <div class="stitle">Ceny energii elektrycznej</div>
+      <div class="form-row"><span class="form-label">Cena szczytowa 6–21 [PLN/MWh]</span><input type="range" id="c_szczyt" min="100" max="1000" step="10" value="600" oninput="upd()"><span class="val-display" id="c_szczyt_v">600</span></div>
+      <div class="form-row"><span class="form-label">Cena nocna 21–6 [PLN/MWh]</span><input type="range" id="c_noc_pl" min="100" max="1000" step="10" value="250" oninput="upd()"><span class="val-display" id="c_noc_v">250</span></div>
+      <div class="form-row"><span class="form-label">Wzrost cen energii [%/rok]</span><input type="range" id="c_wzrost" min="0" max="15" step="0.5" value="4" oninput="upd()"><span class="val-display" id="c_wzrost_v">4%</span></div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title"><span class="card-title-dot" style="background:var(--amber)"></span>Fotowoltaika (PV)</div>
+        <div class="form-row"><span class="form-label">Moc zainstalowana PV [MW]</span><input type="range" id="pv_moc" min="2" max="35" step="1" value="30" oninput="upd()"><span class="val-display" id="pv_v">30 MW</span></div>
+        <div class="form-row"><span class="form-label">Sprawność falownika [%]</span><input type="range" id="pv_inv" min="92" max="99" step="0.5" value="97" oninput="upd()"><span class="val-display" id="pv_inv_v">97%</span></div>
+        <div class="form-row"><span class="form-label">Straty (zacienienie, okablowanie) [%]</span><input type="range" id="pv_loss" min="0" max="15" step="1" value="5" oninput="upd()"><span class="val-display" id="pv_loss_v">5%</span></div>
+        <div class="form-row"><span class="form-label">Sezon (nasłonecznienie)</span>
+          <select id="sezon" onchange="upd()">
+            <option value="lato">Lato — szczyt 65% mocy</option>
+            <option value="wiosna" selected="">Wiosna / Jesień — szczyt 40%</option>
+            <option value="zima">Zima — szczyt 20%</option>
+          </select>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title"><span class="card-title-dot" style="background:var(--green)"></span>Elektrownia wiatrowa (FW)</div>
+        <div class="form-row"><span class="form-label">Moc zainstalowana FW [MW]</span><input type="range" id="fw_moc" min="2" max="25" step="1" value="16" oninput="upd()"><span class="val-display" id="fw_v">16 MW</span></div>
+        <div class="form-row"><span class="form-label">Śr. prędkość wiatru [m/s]</span><input type="range" id="fw_wind" min="0" max="25" step="0.5" value="8" oninput="upd()"><span class="val-display" id="fw_wind_v">8 m/s</span></div>
+        <div class="form-row"><span class="form-label">Zmienność dobowa wiatru [%]</span><input type="range" id="fw_var" min="0" max="60" step="5" value="20" oninput="upd()"><span class="val-display" id="fw_var_v">20%</span></div>
+        <div id="fw_status_cfg" class="fw-bar">Słaby wiatr 8 m/s — sprawność 18%, śr. produkcja: 2.8 MW</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot" style="background:var(--purple)"></span>Magazyn energii (MEE)</div>
+        <div class="form-row"><span class="form-label">Pojemność MEE [MWh]</span><input type="range" id="mee_kwh" min="3" max="25" step="1" value="9" oninput="upd()"><span class="val-display" id="mee_kwh_v">9 MWh</span></div>
+        <div class="form-row"><span class="form-label">Moc MEE [MW]</span><input type="range" id="mee_mw" min="1" max="10" step="1" value="3" oninput="upd()"><span class="val-display" id="mee_mw_v">3 MW</span></div>
+        <div class="form-row"><span class="form-label">Sprawność round-trip MEE [%]</span><input type="range" id="mee_eff" min="80" max="98" step="1" value="92" oninput="upd()"><span class="val-display" id="mee_eff_v">92%</span></div>
+        <div class="form-row"><span class="form-label">Degradacja pojemności [%/rok]</span><input type="range" id="mee_deg" min="1" max="4" step="0.5" value="2" oninput="upd()"><span class="val-display" id="mee_deg_v">2%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stitle">Podsumowanie bieżącej konfiguracji</div>
+  <div class="grid4">
+    <div class="mc blue"><div class="mc-label">Zapotrzebowanie</div><div class="mc-value blue" id="cfg_zap">492</div><div class="mc-unit">MWh/dobę</div></div>
+    <div class="mc green"><div class="mc-label">Produkcja OZE</div><div class="mc-value green" id="cfg_oze">137</div><div class="mc-unit">MWh/dobę</div></div>
+    <div class="mc amber"><div class="mc-label">Pobór z sieci</div><div class="mc-value amber" id="cfg_siec">357</div><div class="mc-unit">MWh/dobę</div></div>
+    <div class="mc purple"><div class="mc-label">Autokonsumpcja</div><div class="mc-value purple" id="cfg_auto">100</div><div class="mc-unit">%</div></div>
+  </div>
+  <div class="grid3">
+    <div class="mc amber"><div class="mc-label">Koszt energii z sieci</div><div class="mc-value amber" id="cfg_koszt">181&nbsp;689</div><div class="mc-unit">PLN/dobę</div></div>
+    <div class="mc green"><div class="mc-label">Oszczędności vs. bez OZE</div><div class="mc-value green" id="cfg_oszcz">75&nbsp;186</div><div class="mc-unit">PLN/dobę</div></div>
+    <div class="mc blue"><div class="mc-label">Śr. prod. FW</div><div class="mc-value blue" id="cfg_fw_avg">2.8</div><div class="mc-unit">MW (chwilowo)</div></div>
+  </div>
+  <div id="ins_cfg" class="ins warn">Niskie pokrycie zapotrzebowania (27%) — zakład w pełni zależny od sieci energetycznej (wymaga zakupu 357 MWh dziennie). Oszczędności: 75&nbsp;186 PLN/dobę.</div>
+</div>
+
+<!-- ===================== PAGE: ZAKŁAD ===================== -->
+<div class="page" id="page-zaklad">
+  <div class="page-header">
+    <h1 class="page-title">Profil produkcyjny zakładu</h1>
+    <p class="page-desc">Dobowy i tygodniowy profil zapotrzebowania na energię elektryczną.</p>
+  </div>
+
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="showSub(&#39;zaklad&#39;,0)">Profil dobowy</button>
+    <button class="sub-tab" onclick="showSub(&#39;zaklad&#39;,1)">Profil tygodniowy</button>
+    <button class="sub-tab" onclick="showSub(&#39;zaklad&#39;,2)">Wskaźniki i statystyki</button>
+  </div>
+
+  <div class="sub-section active" id="zaklad_0">
+    <div class="btn-group">
+      <button class="btn active" id="b3" onclick="setTryb(&#39;3&#39;)">3-zmianowy</button>
+      <button class="btn" id="b2" onclick="setTryb(&#39;2&#39;)">2-zmianowy</button>
+      <button class="btn" id="br" onclick="setTryb(&#39;ramp&#39;)">Nierównomierne</button>
+    </div>
+    <div class="legend">
+      <span><span class="ld" style="background:var(--blue)"></span>Zapotrzebowanie [MW]</span>
+      <span><span class="ld" style="background:var(--red);opacity:0.6"></span>Limit przyłączeniowy</span>
+      <span><span class="ld" style="background:rgba(224,90,90,0.25)"></span>Strefa droga (6–21, taryfa szczytowa)</span>
+      <span><span class="ld" style="background:rgba(77,157,224,0.25)"></span>Strefa tania (21–6, taryfa nocna)</span>
+    </div>
+    <div class="card"><div class="cwl"><canvas id="c_zak_dobowy"></canvas></div></div>
+    <div class="grid4" style="margin-top:1rem">
+      <div class="mc blue"><div class="mc-label">Szczyt dobowy (MW czynne)</div><div class="mc-value blue" id="zak_peak">—</div><div class="mc-unit">MW</div></div>
+      <div class="mc purple"><div class="mc-label">Szczyt pozorny (tgφ=0,4)</div><div class="mc-value purple" id="zak_mva">—</div><div class="mc-unit">MVA</div></div>
+      <div class="mc red"><div class="mc-label">Moc bierna przy szczycie</div><div class="mc-value red" id="zak_mvar">—</div><div class="mc-unit">MVAr</div></div>
+      <div class="mc amber"><div class="mc-label">Energia dobowa</div><div class="mc-value amber" id="zak_energy">—</div><div class="mc-unit">MWh/dobę</div></div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:0.75rem 1rem;font-size:12px;color:var(--text2);margin-bottom:0.5rem">
+      <strong style="color:var(--text)">Uwaga o mocy biernej:</strong> Zakłady przemysłowe generują moc bierną indukcyjną. Standardowo w Polsce wymagane tgφ ≤ 0,4. Przy szczycie <span id="zak_min_inline">—</span> MW czynnych zapotrzebowanie na moc bierną wynosi <span id="zak_mvar_inline" style="color:var(--amber2)">—</span> MVAr, a moc pozorna <span id="zak_mva_inline" style="color:var(--purple)">—</span> MVA. Przekroczenie tgφ &gt; 0,4 skutkuje karami.
+    </div>
+    <div id="ins_zak1" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="zaklad_1">
+    <div class="legend">
+      <span><span class="ld" style="background:var(--blue)"></span>Dni robocze</span>
+      <span><span class="ld" style="background:var(--purple)"></span>Sobota (80% mocy)</span>
+      <span><span class="ld" style="background:var(--text3)"></span>Niedziela (30% mocy)</span>
+    </div>
+    <div class="card"><div class="cwl"><canvas id="c_zak_tygodniowy"></canvas></div></div>
+    <div class="grid4" style="margin-top:1rem">
+      <div class="mc blue"><div class="mc-label">Energia tygodniowa</div><div class="mc-value blue" id="zak_tyg_e">—</div><div class="mc-unit">MWh/tydzień</div></div>
+      <div class="mc"><div class="mc-label">Energia roczna (×52 tyg.)</div><div class="mc-value" id="zak_rok_e">—</div><div class="mc-unit">MWh/rok</div></div>
+      <div class="mc green"><div class="mc-label">Energia roczna realna</div><div class="mc-value green" id="zak_rok_e_real">—</div><div class="mc-unit">MWh/rok</div></div>
+      <div class="mc amber"><div class="mc-label">Koszt roczny (bez OZE)</div><div class="mc-value amber" id="zak_rok_koszt">—</div><div class="mc-unit">PLN/rok</div></div>
+    </div>
+    <div id="ins_zak2" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="zaklad_2">
+    <div class="stitle">Zestawienie wskaźników dobowych</div>
+    <div class="tbl-wrap" style="margin-bottom:1rem">
+      <table id="tbl_zaklad">
+        <thead><tr><th>Tryb pracy</th><th>Energia [MWh/dobę]</th><th>Szczyt [MW]</th><th>Min [MW]</th><th>Load factor [%]</th><th>Koszt bez OZE [PLN/dobę]</th></tr></thead>
+        <tbody id="tbl_zaklad_body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAGE: PV ===================== -->
+<div class="page" id="page-pv">
+  <div class="page-header">
+    <h1 class="page-title">Fotowoltaika (PV)</h1>
+  </div>
+
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="showSub(&#39;pv&#39;,0)">Profil dobowy</button>
+    <button class="sub-tab" onclick="showSub(&#39;pv&#39;,1)">Porównanie sezonów</button>
+    <button class="sub-tab" onclick="showSub(&#39;pv&#39;,2)">Produkcja miesięczna</button>
+  </div>
+
+  <div class="sub-section active" id="pv_0">
+    <div class="btn-group">
+      <button class="btn" id="psl" onclick="setPvSezon(&#39;lato&#39;)">Lato</button>
+      <button class="btn active" id="psw" onclick="setPvSezon(&#39;wiosna&#39;)">Wiosna/Jesień</button>
+      <button class="btn" id="psz" onclick="setPvSezon(&#39;zima&#39;)">Zima</button>
+    </div>
+    <div class="legend"><span><span class="ld" style="background:var(--amber)"></span>Produkcja PV brutto [MW]</span><span><span class="ld" style="background:var(--amber2);opacity:0.5"></span>Produkcja netto (po stratach)</span></div>
+    <div class="card"><div class="cwl"><canvas id="c_pv_dobowy"></canvas></div></div>
+    <div class="grid4" style="margin-top:1rem">
+      <div class="mc amber"><div class="mc-label">Szczyt PV</div><div class="mc-value amber" id="pv_peak">—</div><div class="mc-unit">MW</div></div>
+      <div class="mc"><div class="mc-label">Energia dobowa netto</div><div class="mc-value" id="pv_e_netto">—</div><div class="mc-unit">MWh/dobę</div></div>
+      <div class="mc green"><div class="mc-label">Straty łączne</div><div class="mc-value green" id="pv_straty">—</div><div class="mc-unit">%</div></div>
+      <div class="mc blue"><div class="mc-label">Godziny słoneczne</div><div class="mc-value blue" id="pv_hours">—</div><div class="mc-unit">h/dobę</div></div>
+    </div>
+    <div id="ins_pv1" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="pv_1">
+    <div class="legend">
+      <span><span class="ld" style="background:var(--amber)"></span>Lato</span>
+      <span><span class="ld" style="background:var(--green)"></span>Wiosna/Jesień</span>
+      <span><span class="ld" style="background:var(--blue)"></span>Zima</span>
+    </div>
+    <div class="card"><div class="cwl"><canvas id="c_pv_sezony"></canvas></div></div>
+    <div id="ins_pv2" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="pv_2">
+    <div class="legend"><span><span class="ld" style="background:var(--amber)"></span>Produkcja miesięczna PV [MWh]</span></div>
+    <div class="card"><div class="cwm"><canvas id="c_pv_miesiace"></canvas></div></div>
+    <div class="grid3" style="margin-top:1rem">
+      <div class="mc amber"><div class="mc-label">Produkcja roczna PV</div><div class="mc-value amber" id="pv_rok">—</div><div class="mc-unit">MWh/rok</div></div>
+      <div class="mc green"><div class="mc-label">Współczynnik CF (roczny)</div><div class="mc-value green" id="pv_cf">—</div><div class="mc-unit">%</div></div>
+      <div class="mc blue"><div class="mc-label">Wartość produkcji</div><div class="mc-value blue" id="pv_wartosc">—</div><div class="mc-unit">PLN/rok</div></div>
+    </div>
+    <div id="ins_pv3" class="ins info"></div>
+  </div>
+</div>
+
+<!-- ===================== PAGE: FW ===================== -->
+<div class="page" id="page-fw">
+  <div class="page-header">
+    <h1 class="page-title">Elektrownia wiatrowa (FW)</h1>
+  </div>
+
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="showSub(&#39;fw&#39;,0)">Profil dobowy</button>
+    <button class="sub-tab" onclick="showSub(&#39;fw&#39;,1)">Krzywa mocy turbiny</button>
+    <button class="sub-tab" onclick="showSub(&#39;fw&#39;,2)">Rozkład Weibulla</button>
+    <button class="sub-tab" onclick="showSub(&#39;fw&#39;,3)">Porównanie prędkości wiatru</button>
+  </div>
+
+  <div class="sub-section active" id="fw_0">
+    <div id="fw_status_bar" class="fw-bar">Słaby wiatr 8 m/s — sprawność 18%, śr. produkcja: 2.8 MW</div>
+    <div class="legend">
+      <span><span class="ld" style="background:var(--green)"></span>Produkcja FW [MW]</span>
+      <span><span class="ld" style="background:var(--green2);opacity:0.4"></span>Zakres zmienności</span>
+    </div>
+    <div class="card"><div class="cwl"><canvas id="c_fw_dobowy"></canvas></div></div>
+    <div class="grid4" style="margin-top:1rem">
+      <div class="mc green"><div class="mc-label">Śr. produkcja</div><div class="mc-value green" id="fw_avg">—</div><div class="mc-unit">MW</div></div>
+      <div class="mc"><div class="mc-label">Sprawność wiatrowa</div><div class="mc-value" id="fw_eff">—</div><div class="mc-unit">%</div></div>
+      <div class="mc amber"><div class="mc-label">Energia dobowa</div><div class="mc-value amber" id="fw_e_day">—</div><div class="mc-unit">MWh/dobę</div></div>
+      <div class="mc blue"><div class="mc-label">Energia roczna (est.)</div><div class="mc-value blue" id="fw_e_rok">—</div><div class="mc-unit">MWh/rok</div></div>
+    </div>
+    <div id="ins_fw1" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="fw_1">
+    <div class="legend"><span><span class="ld" style="background:var(--green)"></span>Moc [MW] vs prędkość wiatru [m/s]</span><span><span class="ld" style="background:var(--amber);opacity:0.5"></span>Zaznaczony punkt pracy</span></div>
+    <div class="card"><div class="cwl"><canvas id="c_fw_krzywa"></canvas></div></div>
+    <div id="ins_fw2" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="fw_2">
+    <div class="legend"><span><span class="ld" style="background:var(--blue)"></span>Rozkład Weibulla (prawdopodobieństwo) [%]</span><span><span class="ld" style="background:var(--green)"></span>Produkcja [MW] w danej prędkości</span></div>
+    <div class="card"><div class="cwl"><canvas id="c_fw_weibull"></canvas></div></div>
+    <div id="ins_fw3" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="fw_3">
+    <div class="legend">
+      <span><span class="ld" style="background:var(--red2)"></span>4 m/s</span>
+      <span><span class="ld" style="background:var(--amber)"></span>6 m/s</span>
+      <span><span class="ld" style="background:var(--green)"></span>8 m/s</span>
+      <span><span class="ld" style="background:var(--blue)"></span>10 m/s</span>
+      <span><span class="ld" style="background:var(--purple)"></span>12+ m/s</span>
+    </div>
+    <div class="card"><div class="cwl"><canvas id="c_fw_porownanie"></canvas></div></div>
+    <div id="ins_fw4" class="ins info"></div>
+  </div>
+</div>
+
+<!-- ===================== PAGE: MEE ===================== -->
+<div class="page" id="page-mee">
+  <div class="page-header">
+    <h1 class="page-title">Magazyn energii elektrycznej (MEE)</h1>
+  </div>
+
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="showSub(&#39;mee&#39;,0)">Praca dobowa MEE</button>
+    <button class="sub-tab" onclick="showSub(&#39;mee&#39;,1)">Z MEE vs bez MEE</button>
+    <button class="sub-tab" onclick="showSub(&#39;mee&#39;,2)">Degradacja w czasie</button>
+  </div>
+
+  <div class="sub-section active" id="mee_0">
+    <div class="legend">
+      <span><span class="ld" style="background:var(--purple)"></span>Stan naładowania SOC [MWh]</span>
+      <span><span class="ld" style="background:var(--green)"></span>Moc MEE [MW] (+ładowanie / –rozładowanie)</span>
+      <span><span class="ld" style="background:var(--red2)"></span>Taryfa [PLN/MWh ÷ 10]</span>
+    </div>
+    <div class="card"><div class="cwl"><canvas id="c_mee_dobowy"></canvas></div></div>
+    <div class="grid4" style="margin-top:1rem">
+      <div class="mc purple"><div class="mc-label">Energia rozładowana</div><div class="mc-value purple" id="mee_e_dis">—</div><div class="mc-unit">MWh/dobę</div></div>
+      <div class="mc green"><div class="mc-label">Oszczędności arbitraż</div><div class="mc-value green" id="mee_sav_day">—</div><div class="mc-unit">PLN/dobę</div></div>
+      <div class="mc amber"><div class="mc-label">Oszczędności rocznie</div><div class="mc-value amber" id="mee_sav_rok">—</div><div class="mc-unit">PLN/rok</div></div>
+      <div class="mc blue"><div class="mc-label">Cykle ładowania/dobę</div><div class="mc-value blue" id="mee_cycles">—</div><div class="mc-unit">cykli</div></div>
+    </div>
+    <div id="ins_mee1" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="mee_1">
+    <div class="legend">
+      <span><span class="ld" style="background:var(--blue)"></span>Pobór z sieci — BEZ MEE [MW]</span>
+      <span><span class="ld" style="background:var(--green)"></span>Pobór z sieci — Z MEE [MW]</span>
+    </div>
+    <div class="card"><div class="cwl"><canvas id="c_mee_porownanie"></canvas></div></div>
+    <div class="grid3" style="margin-top:1rem">
+      <div class="mc blue"><div class="mc-label">Koszt sieci BEZ MEE</div><div class="mc-value blue" id="mee_koszt_bez">—</div><div class="mc-unit">PLN/dobę</div></div>
+      <div class="mc green"><div class="mc-label">Koszt sieci Z MEE</div><div class="mc-value green" id="mee_koszt_z">—</div><div class="mc-unit">PLN/dobę</div></div>
+      <div class="mc amber"><div class="mc-label">Redukcja szczytu</div><div class="mc-value amber" id="mee_peak_red">—</div><div class="mc-unit">MW (–%)</div></div>
+    </div>
+    <div id="ins_mee2" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="mee_2">
+    <div class="legend">
+      <span><span class="ld" style="background:var(--purple)"></span>Pojemność nominalna [MWh]</span>
+      <span><span class="ld" style="background:var(--red2)"></span>Pojemność po degradacji [MWh]</span>
+    </div>
+    <div class="card"><div class="cwm"><canvas id="c_mee_degradacja"></canvas></div></div>
+    <div class="grid3" style="margin-top:1rem">
+      <div class="mc"><div class="mc-label">Pojemność po 10 latach</div><div class="mc-value" id="mee_deg10">—</div><div class="mc-unit">MWh</div></div>
+      <div class="mc red"><div class="mc-label">Pojemność po 20 latach</div><div class="mc-value red" id="mee_deg20">—</div><div class="mc-unit">MWh</div></div>
+      <div class="mc amber"><div class="mc-label">Rok wymiany (poniżej 70%)</div><div class="mc-value amber" id="mee_wymiana">—</div><div class="mc-unit">rok ekspl.</div></div>
+    </div>
+    <div id="ins_mee3" class="ins info"></div>
+  </div>
+</div>
+
+<!-- ===================== PAGE: BILANS ===================== -->
+<div class="page" id="page-bilans">
+  <div class="page-header">
+    <h1 class="page-title">Bilans energetyczny</h1>
+  </div>
+
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="showSub(&#39;bilans&#39;,0)">Bilans dobowy</button>
+    <button class="sub-tab" onclick="showSub(&#39;bilans&#39;,1)">Bilans tygodniowy</button>
+    <button class="sub-tab" onclick="showSub(&#39;bilans&#39;,2)">Zestawienie liczbowe</button>
+  </div>
+
+  <div class="sub-section active" id="bilans_0">
+    <div class="legend">
+      <span><span class="ld" style="background:var(--blue)"></span>Zapotrzebowanie</span>
+      <span><span class="ld" style="background:var(--purple)"></span>OZE łącznie</span>
+      <span><span class="ld" style="background:var(--red)"></span>Pobór z sieci</span>
+      <span><span class="ld" style="background:var(--green)"></span>Nadwyżka OZE</span>
+    </div>
+    <div class="card"><div class="cwl"><canvas id="c_bil_dobowy"></canvas></div></div>
+    <div class="grid4" style="margin-top:1rem">
+      <div class="mc red"><div class="mc-label">Maks. pobór z sieci</div><div class="mc-value red" id="bil_max_siec">—</div><div class="mc-unit">MW (szczyt)</div></div>
+      <div class="mc green"><div class="mc-label">Energia z MEE</div><div class="mc-value green" id="bil_mee_e">—</div><div class="mc-unit">MWh/dobę</div></div>
+      <div class="mc amber"><div class="mc-label">Nadwyżka OZE</div><div class="mc-value amber" id="bil_nadwyzka">—</div><div class="mc-unit">MWh/dobę</div></div>
+      <div class="mc blue"><div class="mc-label">Pokrycie OZE+MEE</div><div class="mc-value blue" id="bil_pokrycie">—</div><div class="mc-unit">%</div></div>
+    </div>
+    <div id="ins_bil1" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="bilans_1">
+    <div class="legend">
+      <span><span class="ld" style="background:var(--blue)"></span>Zapotrzebowanie</span>
+      <span><span class="ld" style="background:var(--green)"></span>Produkcja OZE</span>
+      <span><span class="ld" style="background:var(--red)"></span>Pobór z sieci</span>
+    </div>
+    <div class="card"><div class="cwl"><canvas id="c_bil_tygodniowy"></canvas></div></div>
+    <div class="grid3" style="margin-top:1rem">
+      <div class="mc blue"><div class="mc-label">Energia z sieci tyg.</div><div class="mc-value blue" id="bil_tyg_siec">—</div><div class="mc-unit">MWh/tydzień</div></div>
+      <div class="mc amber"><div class="mc-label">Koszt sieci tyg.</div><div class="mc-value amber" id="bil_tyg_koszt">—</div><div class="mc-unit">PLN/tydzień</div></div>
+      <div class="mc green"><div class="mc-label">Oszczędności tyg.</div><div class="mc-value green" id="bil_tyg_oszcz">—</div><div class="mc-unit">PLN/tydzień</div></div>
+    </div>
+    <div id="ins_bil2" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="bilans_2">
+    <div class="stitle">Bilans energetyczny godzinowy (24h)</div>
+    <div class="tbl-wrap" style="margin-bottom:1rem">
+      <table>
+        <thead><tr><th>Godz.</th><th>Zapotrzebowanie [MW]</th><th>PV [MW]</th><th>FW [MW]</th><th>MEE [MW]</th><th>Z sieci [MW]</th><th>Nadwyżka [MW]</th><th>Koszt [PLN]</th></tr></thead>
+        <tbody id="tbl_bilans_body"></tbody>
+      </table>
+    </div>
+    <div id="ins_bil3" class="ins info"></div>
+  </div>
+</div>
+
+<!-- ===================== PAGE: INWESTYCJE ===================== -->
+<div class="page" id="page-inwest">
+  <div class="page-header">
+    <h1 class="page-title">Analiza inwestycji</h1>
+  </div>
+
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="showSub(&#39;inwest&#39;,0)">Kalkulator inwestycji</button>
+    <button class="sub-tab" onclick="showSub(&#39;inwest&#39;,1)">Porównanie 3 wariantów</button>
+    <button class="sub-tab" onclick="showSub(&#39;inwest&#39;,2)">Przepływy gotówkowe</button>
+    <button class="sub-tab" onclick="showSub(&#39;inwest&#39;,3)">Tabela szczegółowa</button>
+  </div>
+
+  <div class="sub-section active" id="inwest_0">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot" style="background:var(--amber)"></span>Parametry inwestycji</div>
+        <div class="stitle" style="font-size:12px">Rozbudowa PV</div>
+        <div class="form-row"><span class="form-label">Dodatkowa moc PV [MW]</span><input type="number" id="inv_pv_mw" min="0" max="50" step="1" value="5" oninput="calcInv()" style="width:100px"><span class="inv-unit">MW</span></div>
+        <div class="form-row"><span class="form-label">Opcja gruntu PV</span>
+          <select id="inv_pv_grunt" onchange="calcInv()">
+            <option value="zakup">Zakup (57 000 PLN/ha)</option>
+            <option value="dzierzawa">Dzierżawa (2 000 PLN/ha/rok)</option>
+            <option value="wlasny">Własny grunt (0 PLN)</option>
+          </select>
+        </div>
+        <div class="stitle" style="font-size:12px;margin-top:0.5rem">Rozbudowa FW</div>
+        <div class="form-row"><span class="form-label">Dodatkowa moc FW [MW]</span><input type="number" id="inv_fw_mw" min="0" max="30" step="1" value="0" oninput="calcInv()" style="width:100px"><span class="inv-unit">MW</span></div>
+        <div class="stitle" style="font-size:12px;margin-top:0.5rem">Rozbudowa MEE</div>
+        <div class="form-row"><span class="form-label">Dodatkowa pojemność [MWh]</span><input type="number" id="inv_mee_kwh" min="0" max="50" step="1" value="0" oninput="calcInv()" style="width:100px"><span class="inv-unit">MWh</span></div>
+        <div class="form-row"><span class="form-label">Dodatkowa moc MEE [MW]</span><input type="number" id="inv_mee_mw" min="0" max="15" step="1" value="0" oninput="calcInv()" style="width:100px"><span class="inv-unit">MW</span></div>
+        <hr class="sdiv">
+        <div class="stitle" style="font-size:12px">Parametry finansowe</div>
+        <div class="form-row"><span class="form-label">Stopa dyskontowa [%]</span><input type="number" id="inv_discount" min="1" max="15" step="0.5" value="6" oninput="calcInv()" style="width:100px"><span class="inv-unit">%</span></div>
+        <div class="form-row"><span class="form-label">Horyzont analizy [lat]</span><input type="number" id="inv_horizon" min="5" max="30" step="1" value="20" oninput="calcInv()" style="width:100px"><span class="inv-unit">lat</span></div>
+        <div class="form-row"><span class="form-label">Dofinansowanie / dotacja [%]</span><input type="number" id="inv_dotacja" min="0" max="60" step="5" value="0" oninput="calcInv()" style="width:100px"><span class="inv-unit">%</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot" style="background:var(--green)"></span>Wyniki kalkulacji</div>
+        <div class="stitle" style="font-size:12px">Nakłady inwestycyjne (CAPEX)</div>
+        <div class="tbl-wrap" style="margin-bottom:1rem">
+          <table id="tbl_capex">
+            <thead><tr><th>Pozycja</th><th>Kwota [tys. PLN]</th></tr></thead>
+            <tbody id="tbl_capex_body"><tr><td>Instalacja PV</td><td class="td-mono">17&nbsp;500</td></tr><tr><td>Grunt pod PV (zakup) </td><td class="td-mono">371</td></tr><tr><td style="font-weight:600">CAPEX brutto</td><td class="td-mono td-green">17&nbsp;871</td></tr><tr class="td-best"><td style="font-weight:600">CAPEX netto (po dotacji)</td><td class="td-mono td-green">17&nbsp;871</td></tr></tbody>
+          </table>
+        </div>
+        <div class="stitle" style="font-size:12px">Wskaźniki opłacalności</div>
+        <div class="grid2" style="margin-bottom:0">
+          <div class="mc green"><div class="mc-label">CAPEX łączny</div><div class="mc-value green" id="inv_capex_total">17&nbsp;871</div><div class="mc-unit">tys. PLN</div></div>
+          <div class="mc amber"><div class="mc-label">Oszczędności roczne</div><div class="mc-value amber" id="inv_sav_rok">2&nbsp;753&nbsp;049</div><div class="mc-unit">PLN/rok</div></div>
+          <div class="mc blue"><div class="mc-label">SPBT (prosty zwrot)</div><div class="mc-value blue" id="inv_spbt">6.5</div><div class="mc-unit">lat</div></div>
+          <div class="mc purple"><div class="mc-label">NPV</div><div class="mc-value purple" id="inv_npv">27&nbsp;482</div><div class="mc-unit">tys. PLN</div></div>
+          <div class="mc green"><div class="mc-label">IRR</div><div class="mc-value green" id="inv_irr">18.9</div><div class="mc-unit">%</div></div>
+          <div class="mc"><div class="mc-label">Oszczędność CAPEX (dotacja)</div><div class="mc-value" id="inv_dotacja_v">0</div><div class="mc-unit">tys. PLN</div></div>
+        </div>
+        <div id="ins_inv0" class="ins good">Inwestycja OPŁACALNA: NPV = 27&nbsp;482 tys. PLN &gt; 0. IRR = 18.9% &gt; stopa dyskontowa 6%. Zwrot w 6.5 lat.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-section" id="inwest_1">
+    <div class="grid3" style="margin-bottom:1rem">
+      <div class="mc amber"><div class="mc-label">+25% PV — oszczędność</div><div class="mc-value amber" id="cmp_pv_sav">—</div><div class="mc-unit">PLN/dobę</div></div>
+      <div class="mc green"><div class="mc-label">+25% FW — oszczędność</div><div class="mc-value green" id="cmp_fw_sav">—</div><div class="mc-unit">PLN/dobę</div></div>
+      <div class="mc purple"><div class="mc-label">+50% MEE — oszczędność</div><div class="mc-value purple" id="cmp_mee_sav">—</div><div class="mc-unit">PLN/dobę</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="ld" style="background:var(--text3)"></span>Obecna</span>
+      <span><span class="ld" style="background:var(--amber)"></span>+25% PV</span>
+      <span><span class="ld" style="background:var(--green)"></span>+25% FW</span>
+      <span><span class="ld" style="background:var(--purple)"></span>+50% MEE</span>
+    </div>
+    <div class="card"><div class="cw"><canvas id="c_cmp_koszt"></canvas></div></div>
+    <div id="ins_cmp1" class="ins good"></div>
+    <hr class="sdiv">
+    <div class="legend">
+      <span><span class="ld" style="background:var(--blue)"></span>CAPEX [tys. PLN]</span>
+      <span><span class="ld" style="background:var(--amber)"></span>Czas zwrotu [lata]</span>
+    </div>
+    <div class="card"><div class="cw"><canvas id="c_cmp_roi"></canvas></div></div>
+    <div id="ins_cmp2" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="inwest_2">
+    <div class="legend">
+      <span><span class="ld" style="background:var(--green)"></span>Skumulowane przepływy [tys. PLN]</span>
+      <span><span class="ld" style="background:var(--blue);opacity:0.4"></span>Próg rentowności</span>
+    </div>
+    <div class="card"><div class="cwl"><canvas id="c_cashflow"></canvas></div></div>
+    <div id="ins_cf" class="ins info"></div>
+  </div>
+
+  <div class="sub-section" id="inwest_3">
+    <div class="stitle">Szczegółowe przepływy roczne</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Rok</th><th>Cena energii [PLN/MWh]</th><th>Oszczędność roczna [PLN]</th><th>Przepływ [PLN]</th><th>Skumulowany [PLN]</th><th>Status</th></tr></thead>
+        <tbody id="tbl_cashflow_body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAGE: RAPORT ===================== -->
+<div class="page" id="page-raport">
+  <div class="page-header">
+    <h1 class="page-title">Raport — Sprawozdanie</h1>
+    <p class="page-desc">Zbiorcze zestawienie wyników do sprawozdania.</p>
+  </div>
+  <div style="margin-bottom:1.25rem;display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn-primary" onclick="window.print()">Drukuj / Zapisz PDF</button>
+    <button class="btn" onclick="copyReport()">Kopiuj tekst raportu</button>
+  </div>
+
+  <div class="card" id="report-content">
+    <div class="report-section">
+      <h3>1. Parametry analizowanego układu</h3>
+      <div id="rep_params"><div class="tbl-wrap"><table><tbody><tr><td style="width:55%;color:var(--text2)">Moc przyłączeniowa</td><td class="td-mono">30 MW</td></tr><tr><td style="width:55%;color:var(--text2)">Tryb pracy</td><td class="td-mono">3-zmianowy</td></tr><tr><td style="width:55%;color:var(--text2)">Zapotrzebowanie nocne (22–6)</td><td class="td-mono">35%</td></tr><tr><td style="width:55%;color:var(--text2)">Zapotrzebowanie dzienne (6–22)</td><td class="td-mono">85%</td></tr><tr><td style="width:55%;color:var(--text2)">Moc PV</td><td class="td-mono">30 MW</td></tr><tr><td style="width:55%;color:var(--text2)">Sprawność falownika PV</td><td class="td-mono">97%</td></tr><tr><td style="width:55%;color:var(--text2)">Straty PV</td><td class="td-mono">5%</td></tr><tr><td style="width:55%;color:var(--text2)">Moc FW</td><td class="td-mono">16 MW</td></tr><tr><td style="width:55%;color:var(--text2)">Prędkość wiatru śr.</td><td class="td-mono">8 m/s</td></tr><tr><td style="width:55%;color:var(--text2)">Zmienność FW</td><td class="td-mono">20%</td></tr><tr><td style="width:55%;color:var(--text2)">MEE pojemność</td><td class="td-mono">9 MWh</td></tr><tr><td style="width:55%;color:var(--text2)">MEE moc</td><td class="td-mono">3 MW</td></tr><tr><td style="width:55%;color:var(--text2)">Sprawność MEE</td><td class="td-mono">92%</td></tr><tr><td style="width:55%;color:var(--text2)">Sezon</td><td class="td-mono">Wiosna/Jesień</td></tr><tr><td style="width:55%;color:var(--text2)">Cena szczytowa</td><td class="td-mono">600 PLN/MWh</td></tr><tr><td style="width:55%;color:var(--text2)">Cena nocna</td><td class="td-mono">250 PLN/MWh</td></tr></tbody></table></div></div>
+    </div>
+    <div class="report-section">
+      <h3>2. Profil zapotrzebowania zakładu</h3>
+      <div id="rep_zaklad"><div class="tbl-wrap"><table><tbody><tr><td style="width:55%;color:var(--text2)">Zapotrzebowanie dobowe</td><td class="td-mono">492 MWh/dobę</td></tr><tr><td style="width:55%;color:var(--text2)">Szczyt (MW czynne)</td><td class="td-mono">25.5 MW</td></tr><tr><td style="width:55%;color:var(--text2)">Szczyt pozorny (tgφ=0,4)</td><td class="td-mono">27.5 MVA</td></tr><tr><td style="width:55%;color:var(--text2)">Moc bierna przy szczycie</td><td class="td-mono">10.2 MVAr</td></tr><tr><td style="width:55%;color:var(--text2)">Load factor</td><td class="td-mono">68%</td></tr><tr><td style="width:55%;color:var(--text2)">Energia roczna realna</td><td class="td-mono">152&nbsp;766 MWh/rok (250 dn.rob.+52 sob.+63 nd)</td></tr></tbody></table></div></div>
+      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c1" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
+    </div>
+    <div class="report-section">
+      <h3>3. Produkcja OZE</h3>
+      <div id="rep_oze"><div class="tbl-wrap"><table><tbody><tr><td style="width:55%;color:var(--text2)">Produkcja PV dobowa</td><td class="td-mono">75.4 MWh/dobę</td></tr><tr><td style="width:55%;color:var(--text2)">Produkcja FW dobowa</td><td class="td-mono">61.6 MWh/dobę</td></tr><tr><td style="width:55%;color:var(--text2)">Sprawność FW</td><td class="td-mono">18%</td></tr><tr><td style="width:55%;color:var(--text2)">OZE łącznie</td><td class="td-mono">137 MWh/dobę</td></tr><tr><td style="width:55%;color:var(--text2)">Produkcja OZE rocznie (est.)</td><td class="td-mono">50&nbsp;025 MWh/rok</td></tr></tbody></table></div></div>
+      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c2" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
+    </div>
+    <div class="report-section">
+      <h3>4. Magazyn energii (MEE)</h3>
+      <div id="rep_mee"><div class="tbl-wrap"><table><tbody><tr><td style="width:55%;color:var(--text2)">Energia z MEE dobowo</td><td class="td-mono">1.9 MWh/dobę</td></tr><tr><td style="width:55%;color:var(--text2)">Oszczędności arbitrażu (cena szcz.–nocna)</td><td class="td-mono">575 PLN/dobę</td></tr><tr><td style="width:55%;color:var(--text2)">Rok degradacji do 70% pojemności</td><td class="td-mono">18. rok eksploatacji</td></tr></tbody></table></div></div>
+      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c3" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
+    </div>
+    <div class="report-section">
+      <h3>5. Bilans energetyczny</h3>
+      <div id="rep_bilans"><div class="tbl-wrap"><table><tbody><tr><td style="width:55%;color:var(--text2)">Pobór z sieci</td><td class="td-mono">357 MWh/dobę</td></tr><tr><td style="width:55%;color:var(--text2)">Nadwyżka OZE</td><td class="td-mono">0 MWh/dobę</td></tr><tr><td style="width:55%;color:var(--text2)">Pokrycie zapotrzebowania OZE+MEE</td><td class="td-mono">27%</td></tr><tr><td style="width:55%;color:var(--text2)">Koszt energii z sieci</td><td class="td-mono">181&nbsp;689 PLN/dobę</td></tr><tr><td style="width:55%;color:var(--text2)">Oszczędności vs. brak OZE</td><td class="td-mono">75&nbsp;186 PLN/dobę</td></tr><tr><td style="width:55%;color:var(--text2)">Oszczędności rocznie</td><td class="td-mono">27&nbsp;442&nbsp;872 PLN/rok</td></tr></tbody></table></div></div>
+      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c4" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
+    </div>
+    <div class="report-section">
+      <h3>6. Analiza ekonomiczna inwestycji</h3>
+      <div id="rep_inwest"><div class="tbl-wrap"><table><tbody><tr><td style="width:55%;color:var(--text2)">Koszt bez OZE (roczny est.)</td><td class="td-mono">93&nbsp;759&nbsp;375 PLN/rok</td></tr><tr><td style="width:55%;color:var(--text2)">Koszt z OZE+MEE (roczny est.)</td><td class="td-mono">66&nbsp;316&nbsp;503 PLN/rok</td></tr><tr><td style="width:55%;color:var(--text2)">Oszczędności roczne</td><td class="td-mono">27&nbsp;442&nbsp;872 PLN/rok</td></tr><tr><td style="width:55%;color:var(--text2)">Wzrost cen energii</td><td class="td-mono">4%/rok</td></tr></tbody></table></div></div>
+    </div>
+    <div class="report-section">
+      <h3>7. Założenia metodologiczne</h3>
+      <div id="rep_metoda" style="font-size:12px;color:var(--text2);line-height:1.8">
+    <b>Modele obliczeniowe:</b><br>
+    • PV: kształt krzywej dobowej oparty na typowym nasłonecznieniu w Polsce. Szczyty: lato 65%, wiosna/jesień 40%, zima 20%. Uwzględniono sprawność falownika i straty.<br>
+    • FW: krzywa mocy potęgowa (v−3)^2.2/11^2.2 dla zakresu 3–14 m/s, moc nominalna 14–24,9 m/s, cut-out ≥25 m/s → P=0. Zmienność dobowa = suma trzech sinusoid.<br>
+    • Rozkład Weibulla: k=2,0, λ=v_śr×1,128.<br>
+    • MEE: round-trip efficiency, ładowanie z nadwyżki OZE i taniej taryfy nocnej; przy ładowaniu z sieci pobór sieci rośnie (zachowanie energii). Degradacja liniowa %/rok.<br>
+    • Moc bierna: tgφ=0,4 (standard PL dla zakładów przemysłowych). S=P/cosφ, Q=P·tgφ.<br>
+    • Roczny czas: 250 dni roboczych (100%) + 52 soboty (80%) + 63 dni wolne (30%) = 365 dni.<br>
+    • CAPEX PV: 3 500 PLN/kW + grunt 1,3 ha/MW × 57 000 PLN/ha lub 2 000 PLN/ha/rok dzierżawa. FW: 5 000 PLN/kW. MEE: 900 PLN/kWh + 200 PLN/kW.<br>
+    • Wyniki mają charakter szacunkowy — tylko do analiz koncepcyjnych.<br>
+    Wersja: 3.1 | Data: 03.05.2026
+  </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- end .layout -->
+
+<script>
+// ============================================================
+// GLOBALS & STATE
+// ============================================================
+const charts = {};
+let lastSim = null;
+
+const g  = id => document.getElementById(id);
+const iv = id => parseFloat(g(id).value);
+const fmt  = n => Math.round(n).toLocaleString('pl-PL');
+const fmtD = (n,d) => n.toFixed(d);
+const fmtK = n => (n/1000).toFixed(1);
+
+// Chart defaults
+Chart.defaults.color = '#9896a0';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+Chart.defaults.font.size = 11;
+
+// ============================================================
+// PHYSICS / SIMULATION MODELS
+// ============================================================
+function windEfficiency(ws) {
+  if (ws < 3) return 0;
+  if (ws >= 25) return 0;   // cut-out
+  if (ws < 14) return Math.pow((ws - 3) / 11, 2.2);  
+  return 1.0;               
+}
+
+function pvProfile(sezon, maxMW, invEff, lossEff) {
+  const f = { lato:0.65, wiosna:0.40, zima:0.20 }[sezon];
+  const shape = [0,0,0,0,0,0,0.04,0.14,0.34,0.55,0.75,0.90,0.95,0.90,0.80,0.65,0.45,0.24,0.09,0.02,0,0,0,0];
+  const totalEff = (invEff/100) * (1 - lossEff/100);
+  return shape.map(v => parseFloat((v * f * maxMW).toFixed(3)));
+}
+
+function pvProfileNetto(sezon, maxMW, invEff, lossEff) {
+  const brutto = pvProfile(sezon, maxMW, 100, 0);
+  const eff = (invEff/100) * (1 - lossEff/100);
+  return brutto.map(v => parseFloat((v * eff).toFixed(3)));
+}
+
+function fwProfile(maxMW, windSpeed, variability) {
+  const baseEff = windEfficiency(windSpeed);
+  if (baseEff === 0) return Array(24).fill(0);
+  const vFrac = variability / 100;
+  const hourly = [0.82,0.78,0.74,0.70,0.72,0.76,0.80,0.88,0.95,1.0,1.03,1.05,1.02,0.98,0.94,0.90,0.93,0.97,1.02,1.05,1.01,0.96,0.90,0.85];
+  return hourly.map((hv, i) => {
+    const noise1 = Math.sin(i * 1.7 + 0.8) * 0.45;
+    const noise2 = Math.sin(i * 3.1 + 2.3) * 0.30;
+    const noise3 = Math.sin(i * 5.3 + 1.1) * 0.20;
+    const totalNoise = (noise1 + noise2 + noise3) * vFrac;
+    const eff = Math.max(0, Math.min(1, baseEff * hv + totalNoise * baseEff));
+    return parseFloat((eff * maxMW).toFixed(3));
+  });
+}
+
+function demandProfile(tryb, pp, pn, pd, dayScale=1.0) {
+  return Array.from({length:24}, (_, h) => {
+    let pct;
+    if (tryb==='3') { pct = (h>=22||h<6) ? pn/100 : pd/100; }
+    else if (tryb==='2') { pct = (h<6||h>=22) ? 0.10 : pd/100; }
+    else {
+      if (h<6||h>=22) pct = pn/100*0.7;
+      else if (h<8) pct = 0.40;
+      else if (h<12) pct = pd/100;
+      else if (h<13) pct = 0.50;
+      else if (h<17) pct = pd/100*1.05;
+      else if (h<19) pct = 0.70;
+      else pct = pd/100*0.8;
+    }
+    return parseFloat((Math.min(pct,1)*pp*dayScale).toFixed(3));
+  });
+}
+
+function simulate(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, sezon, tryb, pp, pn, pd, invEff, lossEff, dayScale=1.0) {
+  const pv  = pvProfileNetto(sezon, pvMW, invEff, lossEff);
+  const fw  = fwProfile(fwMW, fwW, fwV);
+  const dem = demandProfile(tryb, pp, pn, pd, dayScale);
+  let soc = meeMWh * 0.3;
+  const rtEff = meeEff / 100;
+  const socArr=[], gridArr=[], surplusArr=[], meePow=[];
+
+  for (let h = 0; h < 24; h++) {
+    const oze = pv[h] + fw[h];
+    let gap = dem[h] - oze;  
+    let mee = 0;
+
+    if (gap < 0) {
+      const surplusOze = -gap;
+      const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
+      soc = Math.min(meeMWh, soc + ch * rtEff);
+      mee = ch;
+      gap += ch;  
+    } else if (gap > 0) {
+      const dis = Math.min(gap, meeMW, soc);
+      soc = Math.max(0, soc - dis);
+      mee = -dis;
+      gap -= dis * rtEff;  
+    }
+
+    const isCheapHour = (h < 6 || h >= 21);
+    if (isCheapHour && soc < meeMWh * 0.95 && gap >= 0 && meeMWh > 0) {
+      const maxCharge = Math.min(meeMW, meeMWh - soc);
+      const gridCharge = Math.min(maxCharge, meeMW * 0.7); 
+      if (gridCharge > 0.01) {
+        soc = Math.min(meeMWh, soc + gridCharge * rtEff);
+        mee = gridCharge;  
+        gap += gridCharge;  
+      }
+    }
+
+    const gridPobor = Math.max(0, gap);
+    const surplus   = Math.max(0, -gap);
+
+    gridArr.push(parseFloat(gridPobor.toFixed(3)));
+    surplusArr.push(parseFloat(surplus.toFixed(3)));
+    socArr.push(parseFloat(soc.toFixed(3)));
+    meePow.push(parseFloat(mee.toFixed(3)));
+  }
+  const oze = pv.map((v,i) => parseFloat((v + fw[i]).toFixed(3)));
+  return { pv, fw, dem, oze, socArr, gridArr, surplusArr, meePow };
+}
+
+function calcCost(arr, cS, cN) {
+  return arr.reduce((a,v,h) => a + v * ((h>=6&&h<21) ? cS : cN), 0);
+}
+
+// ============================================================
+// CHART FACTORY
+// ============================================================
+function mkChart(id, type, data, opts={}) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  const hiddenParents = [];
+  let node = el.parentElement;
+  while (node && node !== document.body) {
+    const style = window.getComputedStyle(node);
+    if (style.display === 'none') {
+      node.style.display = 'block';
+      node.style.visibility = 'hidden';
+      hiddenParents.push(node);
+    }
+    node = node.parentElement;
+  }
+  charts[id] = new Chart(el.getContext('2d'), {
+    type, data,
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, ...opts }
+  });
+  hiddenParents.forEach(n => {
+    n.style.display = '';
+    n.style.visibility = '';
+  });
+  return charts[id];
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  g('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes("'"+name+"'")) n.classList.add('active');
+  });
+  setTimeout(() => {
+    Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} });
+    upd();
+    setTimeout(() => {
+      Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} });
+      upd();
+    }, 150);
+  }, 20);
+}
+
+function showSub(page, idx) {
+  const subs = document.querySelectorAll('#page-'+page+' .sub-section');
+  const tabs = document.querySelectorAll('#page-'+page+' .sub-tab');
+  subs.forEach((s,i) => s.classList.toggle('active', i===idx));
+  tabs.forEach((t,i) => t.classList.toggle('active', i===idx));
+  setTimeout(() => {
+    Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} });
+    upd();
+    setTimeout(() => {
+      Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} });
+      upd();
+    }, 150);
+  }, 20);
+}
+
+// ============================================================
+// HELPERS FOR QUICK BTN GROUPS
+// ============================================================
+function setTryb(t) {
+  g('tryb').value = t;
+  ['b3','b2','br'].forEach(id => g(id)?.classList.remove('active'));
+  const m = {'3':'b3','2':'b2','ramp':'br'}; g(m[t])?.classList.add('active');
+  upd();
+}
+function setPvSezon(s) {
+  g('sezon').value = s;
+  ['psl','psw','psz'].forEach(id => g(id)?.classList.remove('active'));
+  const m = {lato:'psl',wiosna:'psw',zima:'psz'}; g(m[s])?.classList.add('active');
+  upd();
+}
+
+// ============================================================
+// MAIN UPDATE FUNCTION
+// ============================================================
+function upd() {
+  const pp   = iv('p_przyl'), pn = iv('p_noc'), pd = iv('p_dzien');
+  const pvM  = iv('pv_moc'),  invEff = iv('pv_inv'), lossEff = iv('pv_loss');
+  const fwM  = iv('fw_moc'),  fwW = iv('fw_wind'), fwV = iv('fw_var');
+  const meeK = iv('mee_kwh'), meeP = iv('mee_mw'), meeEff = iv('mee_eff'), meeDeg = iv('mee_deg');
+  const sezon = g('sezon').value, tryb = g('tryb').value;
+  const cS = iv('c_szczyt'), cN = iv('c_noc_pl'), cWzrost = iv('c_wzrost');
+
+  // Update display values
+  const vals = {
+    p_przyl_v:`${pp} MW`, p_noc_v:`${pn}%`, p_dzien_v:`${pd}%`,
+    pv_v:`${pvM} MW`, pv_inv_v:`${invEff}%`, pv_loss_v:`${lossEff}%`,
+    fw_v:`${fwM} MW`, fw_wind_v:`${fwW} m/s`, fw_var_v:`${fwV}%`,
+    mee_kwh_v:`${meeK} MWh`, mee_mw_v:`${meeP} MW`, mee_eff_v:`${meeEff}%`, mee_deg_v:`${meeDeg}%`,
+    c_szczyt_v:`${cS}`, c_noc_v:`${cN}`, c_wzrost_v:`${cWzrost}%`
+  };
+  Object.entries(vals).forEach(([k,v]) => { if(g(k)) g(k).textContent = v; });
+
+  // Sync btn groups
+  const trybMap={'3':'b3','2':'b2','ramp':'br'};
+  ['b3','b2','br'].forEach(id => g(id)?.classList.remove('active'));
+  g(trybMap[tryb])?.classList.add('active');
+  const sznMap={lato:'psl',wiosna:'psw',zima:'psz'};
+  ['psl','psw','psz'].forEach(id => g(id)?.classList.remove('active'));
+  g(sznMap[sezon])?.classList.add('active');
+
+  // Run simulation
+  const S = simulate(pvM, fwM, fwW, fwV, meeK, meeP, meeEff, sezon, tryb, pp, pn, pd, invEff, lossEff);
+  lastSim = { S, pp, pn, pd, pvM, fwM, fwW, fwV, meeK, meeP, meeEff, meeDeg, sezon, tryb, cS, cN, cWzrost, invEff, lossEff };
+
+  const hrs = Array.from({length:24}, (_,i)=>`${i}:00`);
+  const totalDem  = S.dem.reduce((a,b)=>a+b,0);
+  const totalOze  = S.oze.reduce((a,b)=>a+b,0);
+  const totalGrid = S.gridArr.reduce((a,b)=>a+b,0);
+  const totalSurp = S.surplusArr.reduce((a,b)=>a+b,0);
+  const meeE      = S.meePow.filter(v=>v<0).reduce((a,b)=>a+Math.abs(b),0);
+  const autocons  = totalOze > 0 ? Math.min(100, Math.round((1-totalSurp/totalOze)*100)) : 0;
+  
+  // POPRAWKA AUTARKII
+  let pokrycie = 0;
+  if(totalDem > 0) {
+      pokrycie = Math.min(100, Math.round(((totalDem - totalGrid) / totalDem) * 100));
+  }
+  
+  const costGrid  = calcCost(S.gridArr, cS, cN);
+  const costNoOze = calcCost(S.dem, cS, cN);
+  const savings   = Math.max(0, costNoOze - costGrid);
+  const meeSav    = Math.max(0, Math.round(meeE * (cS-cN) * 0.85));
+  const eff       = windEfficiency(fwW);
+  const avgFW     = parseFloat((eff*fwM).toFixed(1));
+
+  // Header pills
+  const pillEl = g('hdr_pokrycie');
+  if(pillEl){
+      pillEl.textContent = `Pokrycie ${pokrycie}%`;
+      pillEl.className = pokrycie > 60 ? 'pill green' : pokrycie > 35 ? 'pill blue' : 'pill amber';
+  }
+  if(g('hdr_koszt')) g('hdr_koszt').textContent = `Koszt sieci: ${fmt(costGrid)} PLN/dobę`;
+
+  // FW status
+  const fwStatusText = fwW >= 25
+    ? `⚠️ WYŁĄCZENIE BURZOWE (cut-out) przy ${fwW} m/s — turbiny zatrzymane dla bezpieczeństwa! Produkcja = 0 MW.`
+    : eff===0
+    ? 'Turbiny zatrzymane — prędkość wiatru poniżej progu startowego (<3 m/s)'
+    : eff<0.3 ? `Słaby wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${avgFW} MW`
+    : eff<0.7 ? `Umiarkowany wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${avgFW} MW`
+    : `Dobry wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${avgFW} MW (moc nominalna od 14 m/s)`;
+  ['fw_status_cfg','fw_status_bar'].forEach(id => { if(g(id)) g(id).textContent = fwStatusText; });
+
+  // ---- PAGE: KONFIGURACJA ----
+  if (g('cfg_zap')) {
+    g('cfg_zap').textContent = Math.round(totalDem);
+    g('cfg_oze').textContent = Math.round(totalOze);
+    g('cfg_siec').textContent = Math.round(totalGrid);
+    g('cfg_auto').textContent = autocons;
+    g('cfg_koszt').textContent = fmt(costGrid);
+    g('cfg_oszcz').textContent = fmt(savings);
+    g('cfg_fw_avg').textContent = avgFW;
+    const ins = g('ins_cfg');
+    const fwCutout = fwW >= 25;
+    const fwWarning = fwCutout ? ' ⚠️ UWAGA: Prędkość wiatru ≥25 m/s — turbiny wyłączone (cut-out burzowy)!' : '';
+    
+    // POPRAWIONY KOMUNIKAT BAZUJĄCY NA POKRYCIU A NIE AUTOKONSUMPCJI
+    if (pokrycie > 60) { ins.className='ins good'; ins.textContent=`Doskonałe pokrycie zapotrzebowania (${pokrycie}%) — zakład w dużym stopniu niezależny od sieci. Oszczędności: ${fmt(savings)} PLN/dobę = ${fmt(savings*365)} PLN/rok.${fwWarning}`; }
+    else if (pokrycie > 30) { ins.className='ins info'; ins.textContent=`Umiarkowane pokrycie zapotrzebowania (${pokrycie}%). Zakład częściowo zależny od sieci. Oszczędności: ${fmt(savings)} PLN/dobę. Rozważ rozbudowę OZE.${fwWarning}`; }
+    else { ins.className='ins warn'; ins.textContent=`Niskie pokrycie zapotrzebowania (${pokrycie}%) — zakład w pełni zależny od sieci energetycznej (wymaga zakupu ${Math.round(totalGrid)} MWh dziennie). Oszczędności: ${fmt(savings)} PLN/dobę.${fwWarning}`; }
+  }
+
+  // ---- PAGE: ZAKŁAD ----
+  if (g('c_zak_dobowy') && isVisible('zaklad_0')) {
+    const tariffBg = Array.from({length:24}, (_,h) => (h>=6&&h<21) ? cS/10 : cN/10);
+    mkChart('c_zak_dobowy','bar',{labels:hrs,datasets:[
+      {label:'Taryfa÷10 [PLN/MWh]',data:tariffBg,backgroundColor:Array.from({length:24},(_,h)=>(h>=6&&h<21)?'rgba(224,90,90,0.10)':'rgba(77,157,224,0.08)'),borderRadius:0,order:3,yAxisID:'y'},
+      {label:'Zapotrzebowanie [MW]',data:S.dem,backgroundColor:'rgba(77,157,224,0.75)',borderRadius:2,order:1,yAxisID:'y'},
+      {label:'Limit przyłączeniowy',data:Array(24).fill(pp),type:'line',borderColor:'rgba(224,90,90,0.6)',borderDash:[6,3],borderWidth:1.5,pointRadius:0,fill:false,order:2,yAxisID:'y'}
+    ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW (taryfa ÷10)'}}},plugins:{legend:{display:true,labels:{color:'#9896a0',font:{size:11}}}}});
+    const peak=Math.max(...S.dem), peakH=S.dem.indexOf(peak);
+    const tgPhi = 0.4;
+    const peakMVA = parseFloat((peak / Math.sqrt(1/(1+tgPhi*tgPhi))).toFixed(1));
+    g('zak_peak').textContent=fmtD(peak,1); g('zak_min').textContent=fmtD(Math.min(...S.dem),1); g('zak_energy').textContent=Math.round(totalDem);
+    if(g('zak_mva'))  g('zak_mva').textContent = peakMVA;
+    if(g('zak_mvar')) g('zak_mvar').textContent = fmtD(peak*tgPhi,1);
+    if(g('zak_min_inline'))  g('zak_min_inline').textContent  = fmtD(peak,1);
+    if(g('zak_mvar_inline')) g('zak_mvar_inline').textContent = fmtD(peak*tgPhi,1);
+    if(g('zak_mva_inline'))  g('zak_mva_inline').textContent  = peakMVA;
+    g('ins_zak1').textContent=`Szczyt: ${fmtD(peak,1)} MW (${peakMVA} MVA z tgφ=0,4) o godz. ${peakH}:00. Load factor: ${Math.round(totalDem/(pp*24)*100)}%. Energia dobowa: ${Math.round(totalDem)} MWh. Obszar czerwony = taryfa szczytowa (6-21), niebieski = tania noc.`;
+  }
+  if (g('c_zak_tygodniowy') && isVisible('zaklad_1')) {
+    const days=['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
+    const scales=[1,1,1,1,1,0.8,0.3];
+    const dayEnergies=scales.map(s=>demandProfile(tryb,pp,pn,pd,s).reduce((a,b)=>a+b,0));
+    mkChart('c_zak_tygodniowy','bar',{labels:days,datasets:[
+      {label:'Energia dzienna',data:dayEnergies,backgroundColor:['rgba(77,157,224,0.7)','rgba(77,157,224,0.7)','rgba(77,157,224,0.7)','rgba(77,157,224,0.7)','rgba(77,157,224,0.7)','rgba(155,135,245,0.7)','rgba(100,100,100,0.5)'],borderRadius:4}
+    ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MWh/dobę'}}}});
+    const tygE=dayEnergies.reduce((a,b)=>a+b,0);
+    const rokE=tygE*52;
+    const eDzien=totalDem, eSob=totalDem*0.8, eNd=totalDem*0.3;
+    const rokE_real=Math.round(eDzien*250 + eSob*52 + eNd*63);
+    const rokKoszt=calcCost(S.gridArr,cS,cN)*365*0.85; 
+    const lf=Math.round(totalDem/(pp*24)*100);
+    g('zak_tyg_e').textContent=Math.round(tygE);
+    g('zak_rok_e').textContent=fmt(Math.round(rokE));
+    if(g('zak_rok_e_real')) g('zak_rok_e_real').textContent=fmt(rokE_real);
+    g('zak_rok_koszt').textContent=fmt(Math.round(rokKoszt));
+    g('ins_zak2').textContent=`Energia tygodniowa: ${Math.round(tygE)} MWh. Roczna (×52): ${fmt(Math.round(rokE))} MWh. Roczna realna (250 dn.rob. + 52 sob. + 63 nd): ${fmt(rokE_real)} MWh. Load factor: ${lf}%.`;
+  }
+  if (g('tbl_zaklad_body') && isVisible('zaklad_2')) {
+    const modes=[{id:'3',name:'3-zmianowy'},{id:'2',name:'2-zmianowy'},{id:'ramp',name:'Nierównomierne'}];
+    g('tbl_zaklad_body').innerHTML=modes.map(m=>{
+      const dem2=demandProfile(m.id,pp,pn,pd);
+      const e=dem2.reduce((a,b)=>a+b,0), pk=Math.max(...dem2), mn=Math.min(...dem2);
+      const lf2=Math.round(e/(pp*24)*100), kost=calcCost(dem2,cS,cN);
+      return `<tr><td>${m.name}</td><td class="td-mono">${Math.round(e)}</td><td class="td-mono">${fmtD(pk,1)}</td><td class="td-mono">${fmtD(mn,1)}</td><td class="td-mono">${lf2}%</td><td class="td-amber">${fmt(Math.round(kost))}</td></tr>`;
+    }).join('');
+  }
+
+  // ---- PAGE: PV ----
+  if (g('c_pv_dobowy') && isVisible('pv_0')) {
+    const pvBrutto=pvProfile(sezon,pvM,100,0);
+    const pvNetto=pvProfileNetto(sezon,pvM,invEff,lossEff);
+    mkChart('c_pv_dobowy','line',{labels:hrs,datasets:[
+      {label:'PV brutto',data:pvBrutto,borderColor:'rgba(244,165,53,0.5)',backgroundColor:'rgba(244,165,53,0.06)',fill:true,tension:0.4,pointRadius:0,borderWidth:1.5,borderDash:[4,2]},
+      {label:'PV netto',data:pvNetto,borderColor:getComputedStyle(document.documentElement).getPropertyValue('--amber').trim()||'#f4a535',backgroundColor:'rgba(244,165,53,0.15)',fill:true,tension:0.4,pointRadius:0,borderWidth:2}
+    ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
+    const pk=Math.max(...pvNetto), hSol=pvNetto.filter(v=>v>0.01).length;
+    const eNetto=pvNetto.reduce((a,b)=>a+b,0), eBrutto=pvBrutto.reduce((a,b)=>a+b,0);
+    const stratTotal=eBrutto>0?Math.round((1-eNetto/eBrutto)*100):0;
+    g('pv_peak').textContent=fmtD(pk,2); g('pv_e_netto').textContent=fmtD(eNetto,1);
+    g('pv_straty').textContent=stratTotal; g('pv_hours').textContent=hSol;
+    g('ins_pv1').textContent=`Moc szczytowa: ${fmtD(pk,2)} MW. Energia netto: ${fmtD(eNetto,1)} MWh/dobę. Straty łączne (falownik+zacienienie): ${stratTotal}%. Godziny słoneczne: ${hSol}h.`;
+  }
+  if (g('c_pv_sezony') && isVisible('pv_1')) {
+    const colors=['#f4a535','#3ecf8e','#4d9de0'];
+    const sezons=['lato','wiosna','zima'];
+    mkChart('c_pv_sezony','line',{labels:hrs,datasets:sezons.map((s,i)=>({
+      label:s,data:pvProfileNetto(s,pvM,invEff,lossEff),borderColor:colors[i],backgroundColor:colors[i]+'18',fill:true,tension:0.4,pointRadius:0,borderWidth:2
+    }))},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:{legend:{display:true,labels:{color:'#9896a0',font:{size:11}}}}});
+    const eL=pvProfileNetto('lato',pvM,invEff,lossEff).reduce((a,b)=>a+b,0);
+    const eW=pvProfileNetto('wiosna',pvM,invEff,lossEff).reduce((a,b)=>a+b,0);
+    const eZ=pvProfileNetto('zima',pvM,invEff,lossEff).reduce((a,b)=>a+b,0);
+    g('ins_pv2').textContent=`Lato: ${fmtD(eL,1)} MWh/dobę | Wiosna/Jesień: ${fmtD(eW,1)} MWh/dobę | Zima: ${fmtD(eZ,1)} MWh/dobę. Różnica lato/zima: ${fmtD(eL/Math.max(eZ,0.1),1)}x.`;
+  }
+  if (g('c_pv_miesiace') && isVisible('pv_2')) {
+    const months=['Sty','Lut','Mar','Kwi','Maj','Cze','Lip','Sie','Wrz','Paź','Lis','Gru'];
+    const monthFactors=[0.20,0.25,0.38,0.42,0.55,0.65,0.65,0.60,0.45,0.32,0.22,0.18];
+    const daysInMonth=[31,28,31,30,31,30,31,31,30,31,30,31];
+    const monthE=monthFactors.map((f,i)=>{
+      const shape=[0,0,0,0,0,0,0.04,0.14,0.34,0.55,0.75,0.90,0.95,0.90,0.80,0.65,0.45,0.24,0.09,0.02,0,0,0,0];
+      const totalEff=(invEff/100)*(1-lossEff/100);
+      return shape.reduce((a,v)=>a+v*f*pvM*totalEff,0)*daysInMonth[i];
+    });
+    const rokPV=monthE.reduce((a,b)=>a+b,0);
+    const cfPV=Math.round(rokPV/(pvM*8760)*100);
+    mkChart('c_pv_miesiace','bar',{labels:months,datasets:[
+      {label:'Energia PV',data:monthE.map(v=>Math.round(v)),backgroundColor:monthFactors.map(f=>`rgba(244,165,53,${0.3+f*0.7})`),borderRadius:4}
+    ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MWh/miesiąc'}}}});
+    g('pv_rok').textContent=fmt(Math.round(rokPV)); g('pv_cf').textContent=cfPV;
+    g('pv_wartosc').textContent=fmt(Math.round(rokPV*cS*0.8));
+    g('ins_pv3').textContent=`Roczna produkcja PV: ${fmt(Math.round(rokPV))} MWh. Współczynnik CF: ${cfPV}% (typowo 10-15% dla PV w Polsce). Szacunkowa wartość produkcji: ${fmt(Math.round(rokPV*cS*0.8))} PLN/rok.`;
+  }
+
+  // ---- PAGE: FW ----
+  if (g('c_fw_dobowy') && isVisible('fw_0')) {
+    const fwHigh=fwProfile(fwM,fwW,fwV*1.5);
+    const fwLow=fwProfile(fwM,fwW,0);
+    const fwMid=S.fw;
+    mkChart('c_fw_dobowy','line',{labels:hrs,datasets:[
+      {label:'Max (bez zmienności)',data:fwHigh,borderColor:'rgba(62,207,142,0.3)',fill:false,tension:0.4,pointRadius:0,borderWidth:1,borderDash:[2,3]},
+      {label:'FW (śr.)',data:fwMid,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.12)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},
+      {label:'Min',data:fwLow,borderColor:'rgba(62,207,142,0.3)',fill:false,tension:0.4,pointRadius:0,borderWidth:1,borderDash:[2,3]}
+    ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
+    const fwDay=fwMid.reduce((a,b)=>a+b,0);
+    g('fw_avg').textContent=avgFW; g('fw_eff').textContent=Math.round(eff*100);
+    g('fw_e_day').textContent=fmtD(fwDay,1); g('fw_e_rok').textContent=fmt(Math.round(fwDay*365));
+    g('ins_fw1').textContent=`Prędkość wiatru: ${fwW} m/s → sprawność ${Math.round(eff*100)}%, śr. ${avgFW} MW. Energia: ${fmtD(fwDay,1)} MWh/dobę = ${fmt(Math.round(fwDay*365))} MWh/rok. Zmienność ${fwV}% powoduje odchylenia ±${fmtD(fwDay*fwV/200,1)} MWh/h.`;
+  }
+  if (g('c_fw_krzywa') && isVisible('fw_1')) {
+    const wsArr=Array.from({length:52},(_,i)=>parseFloat((i*0.5).toFixed(1)));
+    const powArr=wsArr.map(ws=>windEfficiency(ws)*fwM);
+    mkChart('c_fw_krzywa','line',{labels:wsArr,datasets:[
+      {label:'Krzywa mocy [MW]',data:powArr,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.10)',fill:true,tension:0.4,pointRadius:0,borderWidth:2},
+      {label:'Punkt pracy',data:wsArr.map(ws=>Math.abs(ws-fwW)<0.3?windEfficiency(ws)*fwM:null),pointRadius:6,pointBackgroundColor:fwW>=25?'#e05a5a':'#f4a535',type:'scatter',showLine:false}
+    ]},{scales:{x:{title:{display:true,text:'Prędkość wiatru [m/s]'},ticks:{callback:(v,i)=>wsArr[i]%2===0?wsArr[i]:''}},y:{beginAtZero:true,title:{display:true,text:'Moc [MW]'},max:fwM*1.05}}});
+    const cutMsg = fwW>=25 ? `⚠️ Punkt pracy ${fwW} m/s = CUT-OUT! Turbiny wyłączone.` : `Bieżący punkt pracy: ${fwW} m/s → ${fmtD(eff*fwM,1)} MW (${Math.round(eff*100)}% mocy nom.)`;
+    g('ins_fw2').textContent=`Prędkość cut-in (startowa): 3 m/s. Moc nominalna: od 14 m/s. Cut-out (wyłączenie burzowe): 25 m/s → produkcja = 0. ${cutMsg}`;
+  }
+  if (g('c_fw_weibull') && isVisible('fw_2')) {
+    const k=2.0, lambda=fwW*1.128;
+    const wsW=Array.from({length:25},(_,i)=>i+1);
+    function weibullPDF(v){return (k/lambda)*Math.pow(v/lambda,k-1)*Math.exp(-Math.pow(v/lambda,k));}
+    const prob=wsW.map(v=>parseFloat((weibullPDF(v)*100).toFixed(2)));
+    const pow=wsW.map(v=>parseFloat((windEfficiency(v)*fwM).toFixed(2)));
+    mkChart('c_fw_weibull','bar',{labels:wsW,datasets:[
+      {label:'Prawdopodobieństwo Weibulla [%]',data:prob,backgroundColor:'rgba(77,157,224,0.6)',borderRadius:2,yAxisID:'y'},
+      {label:'Produkcja FW [MW]',data:pow,type:'line',borderColor:'#3ecf8e',pointRadius:0,borderWidth:2,tension:0.4,yAxisID:'y2'}
+    ]},{scales:{y:{position:'left',title:{display:true,text:'Prawdopodobieństwo [%]'},beginAtZero:true},y2:{position:'right',title:{display:true,text:'Moc FW [MW]'},grid:{drawOnChartArea:false},beginAtZero:true}},plugins:{legend:{display:true,labels:{color:'#9896a0'}}}});
+    const modeWs=wsW[prob.indexOf(Math.max(...prob))];
+    g('ins_fw3').textContent=`Rozkład Weibulla (k=${k}, λ=${fmtD(lambda,1)} m/s). Najczęstsza prędkość wiatru: ~${modeWs} m/s. Przy śr. ${fwW} m/s turbiny są zatrzymane przez ok. ${Math.round(prob[0]*2)}% czasu.`;
+  }
+  if (g('c_fw_porownanie') && isVisible('fw_3')) {
+    const wsLevels=[4,6,8,10,12];
+    const colors=['#e05a5a','#f4a535','#3ecf8e','#4d9de0','#9b87f5'];
+    mkChart('c_fw_porownanie','line',{labels:hrs,datasets:wsLevels.map((ws,i)=>({
+      label:`${ws} m/s`,data:fwProfile(fwM,ws,fwV),borderColor:colors[i],pointRadius:0,borderWidth:2,tension:0.3,fill:false
+    }))},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:{legend:{display:true,labels:{color:'#9896a0'}}}});
+    const energies=wsLevels.map(ws=>fmtD(fwProfile(fwM,ws,fwV).reduce((a,b)=>a+b,0),1));
+    g('ins_fw4').textContent=`Energia dobowa FW: ${wsLevels.map((ws,i)=>`${ws} m/s → ${energies[i]} MWh`).join(' | ')}.`;
+  }
+
+  // ---- PAGE: MEE ----
+  if (g('c_mee_dobowy') && isVisible('mee_0')) {
+    const tariff=Array.from({length:24},(_,h)=>(h>=6&&h<21)?cS:cN);
+    mkChart('c_mee_dobowy','line',{labels:hrs,datasets:[
+      {label:'SOC [MWh]',data:S.socArr,borderColor:'#9b87f5',backgroundColor:'rgba(155,135,245,0.12)',fill:true,tension:0.4,pointRadius:0,borderWidth:2,yAxisID:'y'},
+      {label:'Moc MEE [MW]',data:S.meePow,borderColor:'#3ecf8e',pointRadius:0,borderWidth:1.5,tension:0.3,borderDash:[3,2],yAxisID:'y'},
+      {label:'Taryfa÷10',data:tariff.map(v=>v/10),borderColor:'#e05a5a',pointRadius:0,borderWidth:1,tension:0,borderDash:[6,3],yAxisID:'y'}
+    ]},{scales:{y:{position:'left',title:{display:true,text:'MWh / MW'},beginAtZero:true}}});
+    const cycles=S.meePow.filter(v=>v>0.1).length>0?1:0;
+    g('mee_e_dis').textContent=fmtD(meeE,1); g('mee_sav_day').textContent=fmt(meeSav);
+    g('mee_sav_rok').textContent=fmt(meeSav*365); g('mee_cycles').textContent=cycles||'<1';
+    g('ins_mee1').textContent=`MEE ładuje przy nadwyżce OZE lub nocnym tanim prądzie (${cN} PLN/MWh) i rozładowuje w szczycie (${cS} PLN/MWh). Oszczędności arbitrażu: ${fmt(meeSav)} PLN/dobę = ${fmt(meeSav*365)} PLN/rok.`;
+  }
+  if (g('c_mee_porownanie') && isVisible('mee_1')) {
+    const S_bez=simulate(pvM,fwM,fwW,fwV,0,0,meeEff,sezon,tryb,pp,pn,pd,invEff,lossEff);
+    mkChart('c_mee_porownanie','line',{labels:hrs,datasets:[
+      {label:'BEZ MEE',data:S_bez.gridArr,borderColor:'#4d9de0',pointRadius:0,borderWidth:2,tension:0.3,fill:false},
+      {label:'Z MEE',data:S.gridArr,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.08)',fill:true,pointRadius:0,borderWidth:2,tension:0.3}
+    ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:{legend:{display:true,labels:{color:'#9896a0'}}}});
+    const c_bez=calcCost(S_bez.gridArr,cS,cN), c_z=calcCost(S.gridArr,cS,cN);
+    const pkBez=Math.max(...S_bez.gridArr), pkZ=Math.max(...S.gridArr);
+    const pkRed=Math.round((pkBez-pkZ)/pkBez*100);
+    g('mee_koszt_bez').textContent=fmt(Math.round(c_bez)); g('mee_koszt_z').textContent=fmt(Math.round(c_z));
+    g('mee_peak_red').textContent=`${fmtD(pkBez-pkZ,1)} (${pkRed||0}%)`;
+    g('ins_mee2').textContent=`MEE redukuje szczyt poboru z sieci o ${fmtD(pkBez-pkZ,1)} MW (${pkRed||0}%). Dzienny koszt sieci spada z ${fmt(Math.round(c_bez))} do ${fmt(Math.round(c_z))} PLN.`;
+  }
+  if (g('c_mee_degradacja') && isVisible('mee_2')) {
+    const years=Array.from({length:21},(_,i)=>i);
+    const capNom=years.map(()=>meeK);
+    const capReal=years.map(y=>meeK*Math.pow(1-meeDeg/100,y));
+    mkChart('c_mee_degradacja','line',{labels:years.map(y=>`Rok ${y}`),datasets:[
+      {label:'Nominalna',data:capNom,borderColor:'rgba(155,135,245,0.3)',borderDash:[4,3],pointRadius:0,borderWidth:1.5,fill:false},
+      {label:'Po degradacji',data:capReal,borderColor:'#e05a5a',backgroundColor:'rgba(224,90,90,0.10)',fill:true,tension:0.3,pointRadius:0,borderWidth:2}
+    ]},{scales:{y:{beginAtZero:false,title:{display:true,text:'MWh'}}},plugins:{legend:{display:true,labels:{color:'#9896a0'}}}});
+    const cap10=fmtD(meeK*Math.pow(1-meeDeg/100,10),1);
+    const cap20=fmtD(meeK*Math.pow(1-meeDeg/100,20),1);
+    const yr70=Math.ceil(Math.log(0.7)/Math.log(1-meeDeg/100));
+    g('mee_deg10').textContent=cap10; g('mee_deg20').textContent=cap20; g('mee_wymiana').textContent=yr70;
+    g('ins_mee3').textContent=`Przy degradacji ${meeDeg}%/rok — po 10 latach: ${cap10} MWh (${Math.round(cap10/meeK*100)}% nominalnej). Zalecana wymiana (poniżej 70%): rok ${yr70} eksploatacji.`;
+  }
+
+  // ---- PAGE: BILANS ----
+  if (g('c_bil_dobowy') && isVisible('bilans_0')) {
+    mkChart('c_bil_dobowy','line',{labels:hrs,datasets:[
+      {label:'Zapotrzebowanie',data:S.dem,borderColor:'#4d9de0',pointRadius:0,borderWidth:2,tension:0.3},
+      {label:'OZE łącznie',data:S.oze,borderColor:'#9b87f5',pointRadius:0,borderWidth:2,tension:0.3,borderDash:[4,2]},
+      {label:'Z sieci',data:S.gridArr,borderColor:'#e05a5a',backgroundColor:'rgba(224,90,90,0.08)',fill:true,pointRadius:0,borderWidth:2,tension:0.3},
+      {label:'Nadwyżka',data:S.surplusArr,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.10)',fill:true,pointRadius:0,borderWidth:2,tension:0.3}
+    ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:{legend:{display:true,labels:{color:'#9896a0',font:{size:11}}}}});
+    g('bil_max_siec').textContent=fmtD(Math.max(...S.gridArr),1);
+    g('bil_mee_e').textContent=fmtD(meeE,1);
+    g('bil_nadwyzka').textContent=Math.round(totalSurp);
+    g('bil_pokrycie').textContent=pokrycie;
+    g('ins_bil1').textContent=`Pobór z sieci: ${Math.round(totalGrid)} MWh/dobę. MEE: ${fmtD(meeE,1)} MWh. Nadwyżka OZE: ${Math.round(totalSurp)} MWh. Pokrycie OZE+MEE: ${pokrycie}%.`;
+  }
+  if (g('c_bil_tygodniowy') && isVisible('bilans_1')) {
+    const days=['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
+    const scales=[1,1,1,1,1,0.8,0.3];
+    const tygDem=scales.map(s=>demandProfile(tryb,pp,pn,pd,s).reduce((a,b)=>a+b,0));
+    const tygOze=scales.map(s=>{
+      const Sd=simulate(pvM,fwM,fwW,fwV,meeK,meeP,meeEff,sezon,tryb,pp,pn,pd,invEff,lossEff,s);
+      return Sd.oze.reduce((a,b)=>a+b,0);
+    });
+    const tygGrid=scales.map(s=>{
+      const Sd=simulate(pvM,fwM,fwW,fwV,meeK,meeP,meeEff,sezon,tryb,pp,pn,pd,invEff,lossEff,s);
+      return Sd.gridArr.reduce((a,b)=>a+b,0);
+    });
+    mkChart('c_bil_tygodniowy','bar',{labels:days,datasets:[
+      {label:'Zapotrzebowanie',data:tygDem,backgroundColor:'rgba(77,157,224,0.5)',borderRadius:2},
+      {label:'OZE łącznie',data:tygOze,backgroundColor:'rgba(155,135,245,0.5)',borderRadius:2},
+      {label:'Z sieci',data:tygGrid,backgroundColor:'rgba(224,90,90,0.5)',borderRadius:2}
+    ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MWh/dobę'}}},plugins:{legend:{display:true,labels:{color:'#9896a0'}}}});
+    const siecTyg=tygGrid.reduce((a,b)=>a+b,0);
+    const kosztTyg=siecTyg*(cS*0.75+cN*0.25);
+    const oszczTyg=Math.max(0,(tygDem.reduce((a,b)=>a+b,0)-siecTyg)*(cS*0.75+cN*0.25));
+    g('bil_tyg_siec').textContent=Math.round(siecTyg); g('bil_tyg_koszt').textContent=fmt(Math.round(kosztTyg)); g('bil_tyg_oszcz').textContent=fmt(Math.round(oszczTyg));
+    g('ins_bil2').textContent=`Tygodniowy pobór z sieci: ${Math.round(siecTyg)} MWh. Koszt: ${fmt(Math.round(kosztTyg))} PLN. Oszczędności OZE: ${fmt(Math.round(oszczTyg))} PLN/tydzień.`;
+  }
+  if (g('tbl_bilans_body') && isVisible('bilans_2')) {
+    g('tbl_bilans_body').innerHTML=Array.from({length:24},(_,h)=>{
+      const gridColor=S.gridArr[h]>pp*0.8?'td-red':S.gridArr[h]>0?'td-amber':'';
+      const kost=Math.round(S.gridArr[h]*((h>=6&&h<21)?cS:cN));
+      return `<tr><td class="td-mono">${h}:00</td><td class="td-mono">${fmtD(S.dem[h],2)}</td><td class="td-mono">${fmtD(S.pv[h],2)}</td><td class="td-mono">${fmtD(S.fw[h],2)}</td><td class="td-mono">${fmtD(S.meePow[h],2)}</td><td class="td-mono ${gridColor}">${fmtD(S.gridArr[h],2)}</td><td class="td-green">${fmtD(S.surplusArr[h],2)}</td><td class="td-amber">${fmt(kost)}</td></tr>`;
+    }).join('');
+    g('ins_bil3').textContent=`Suma dzienna: zapotrzebowanie ${fmtD(totalDem,1)} MWh | OZE ${fmtD(totalOze,1)} MWh | z sieci ${fmtD(totalGrid,1)} MWh | nadwyżka ${fmtD(totalSurp,1)} MWh.`;
+  }
+
+  // ---- PAGE: INWESTYCJE ----
+  if (g('c_cmp_koszt') && isVisible('inwest_1')) {
+    const S1=simulate(pvM*1.25,fwM,fwW,fwV,meeK,meeP,meeEff,sezon,tryb,pp,pn,pd,invEff,lossEff);
+    const S2=simulate(pvM,fwM*1.25,fwW,fwV,meeK,meeP,meeEff,sezon,tryb,pp,pn,pd,invEff,lossEff);
+    const S3=simulate(pvM,fwM,fwW,fwV,meeK*1.5,Math.min(meeP*1.3,12),meeEff,sezon,tryb,pp,pn,pd,invEff,lossEff);
+    const c0=Math.round(costGrid),c1=Math.round(calcCost(S1.gridArr,cS,cN)),c2=Math.round(calcCost(S2.gridArr,cS,cN)),c3=Math.round(calcCost(S3.gridArr,cS,cN));
+    const sav1=Math.max(0,c0-c1),sav2=Math.max(0,c0-c2),sav3=Math.max(0,c0-c3);
+    g('cmp_pv_sav').textContent=fmt(sav1); g('cmp_fw_sav').textContent=fmt(sav2); g('cmp_mee_sav').textContent=fmt(sav3);
+    mkChart('c_cmp_koszt','bar',{labels:['Obecna','+25% PV','+25% FW','+50% MEE'],datasets:[{label:'Koszt sieci PLN/dobę',data:[c0,c1,c2,c3],backgroundColor:['rgba(136,135,128,0.6)','rgba(244,165,53,0.7)','rgba(62,207,142,0.7)','rgba(155,135,245,0.7)'],borderRadius:4}]},{scales:{y:{beginAtZero:false,title:{display:true,text:'PLN/dobę'},ticks:{callback:v=>fmt(v)}}}});
+    const savs=[sav1,sav2,sav3],bst=savs.indexOf(Math.max(...savs)),bnames=['+25% PV','+25% FW','+50% MEE'];
+    const ins=g('ins_cmp1'); ins.className=savs[bst]>0?'ins good':'ins warn';
+    ins.textContent=savs[bst]>0?`Najlepsza inwestycja: ${bnames[bst]} — oszczędności ${fmt(savs[bst])} PLN/dobę = ${fmt(savs[bst]*365)} PLN/rok.`:'Obecna konfiguracja jest już dobrze zoptymalizowana — oszczędności z rozbudowy są minimalne.';
+    const cPV=Math.round(pvM*0.25*3500),cFW=Math.round(fwM*0.25*5000),cMEE=Math.round(meeK*0.5*900);
+    const rPV=sav1>0?+(cPV/(sav1*0.365)).toFixed(1):99,rFW=sav2>0?+(cFW/(sav2*0.365)).toFixed(1):99,rMEE=sav3>0?+(cMEE/(sav3*0.365)).toFixed(1):99;
+    mkChart('c_cmp_roi','bar',{labels:['+25% PV','+25% FW','+50% MEE'],datasets:[
+      {label:'CAPEX [tys. PLN]',data:[cPV,cFW,cMEE],backgroundColor:'rgba(77,157,224,0.6)',borderRadius:4,yAxisID:'y'},
+      {label:'Zwrot [lata]',data:[rPV,rFW,rMEE],backgroundColor:'rgba(244,165,53,0.6)',borderRadius:4,yAxisID:'y2'}
+    ]},{scales:{y:{position:'left',title:{display:true,text:'CAPEX [tys. PLN]'},beginAtZero:true},y2:{position:'right',title:{display:true,text:'Zwrot [lata]'},grid:{drawOnChartArea:false},beginAtZero:true}},plugins:{legend:{display:true,labels:{color:'#9896a0'}}}});
+    const rMin=Math.min(rPV,rFW,rMEE),rName=['+25% PV','+25% FW','+50% MEE'][[rPV,rFW,rMEE].indexOf(rMin)];
+    g('ins_cmp2').textContent=`Najszybszy zwrot: ${rName} — ${rMin} lat. CAPEX: PV ${fmt(cPV)} | FW ${fmt(cFW)} | MEE ${fmt(cMEE)} tys. PLN.`;
+  }
+
+  calcInv();
+  buildReport();
+}
+
+// ============================================================
+// INVESTMENT CALCULATOR
+// ============================================================
+function calcInv() {
+  if (!lastSim) return;
+  const { S, pp, pn, pd, pvM, fwM, fwW, fwV, meeK, meeP, meeEff, sezon, tryb, cS, cN, cWzrost, invEff, lossEff } = lastSim;
+  const addPV  = parseFloat(g('inv_pv_mw')?.value||0)||0;
+  const addFW  = parseFloat(g('inv_fw_mw')?.value||0)||0;
+  const addMEE = parseFloat(g('inv_mee_kwh')?.value||0)||0;
+  const addMEEP= parseFloat(g('inv_mee_mw')?.value||0)||0;
+  const discount= parseFloat(g('inv_discount')?.value||6)||6;
+  const horizon = parseInt(g('inv_horizon')?.value||20)||20;
+  const dotacja = parseFloat(g('inv_dotacja')?.value||0)||0;
+  const gruntOpt= g('inv_pv_grunt')?.value||'zakup';
+
+  // CAPEX
+  const capexPVInstall = addPV * 3500;
+  const capexPVGrunt   = gruntOpt==='zakup' ? addPV*1.3*57 : 0;  // 57 tys/ha
+  const capexPVTotal   = capexPVInstall + capexPVGrunt;
+  const opexPVGrunt    = gruntOpt==='dzierzawa' ? addPV*1.3*2 : 0; // 2 tys/ha/rok
+  const capexFW        = addFW * 5000;
+  const capexMEE       = addMEE * 900 + addMEEP * 200;
+  const capexTotal     = capexPVTotal + capexFW + capexMEE;
+  const capexNet       = capexTotal * (1 - dotacja/100);
+  const dotacjaKwota   = capexTotal * dotacja/100;
+
+  // Current cost
+  const costGrid = calcCost(S.gridArr, cS, cN);
+  // New simulation with added capacity
+  const S2 = simulate(pvM+addPV, fwM+addFW, fwW, fwV, meeK+addMEE, meeP+addMEEP, meeEff, sezon, tryb, pp, pn, pd, invEff, lossEff);
+  const costGrid2 = calcCost(S2.gridArr, cS, cN);
+  const savDay = Math.max(0, costGrid - costGrid2);
+  const savRok = Math.round(savDay * 365);
+
+  // SPBT
+  const spbt = savRok > 0 ? +(capexNet*1000 / savRok).toFixed(1) : 99;
+
+  // NPV & IRR
+  let npv = -capexNet*1000;
+  let cfArr = [-capexNet*1000];
+  for (let y = 1; y <= horizon; y++) {
+    const price_factor = Math.pow(1 + cWzrost/100, y);
+    const cf = savRok * price_factor - opexPVGrunt*1000;
+    npv += cf / Math.pow(1 + discount/100, y);
+    cfArr.push((cfArr[cfArr.length-1] || 0) + cf);
+  }
+
+  // IRR (simple bisection)
+  let irrVal = 0;
+  if (savRok > 0 && capexNet > 0) {
+    let lo = 0, hi = 200;
+    for (let iter = 0; iter < 50; iter++) {
+      const mid = (lo+hi)/2;
+      let v = -capexNet*1000;
+      for (let y=1; y<=horizon; y++) v += savRok*Math.pow(1+cWzrost/100,y)/Math.pow(1+mid/100,y);
+      if (v > 0) lo = mid; else hi = mid;
+    }
+    irrVal = (lo+hi)/2;
+  }
+
+  // Update CAPEX table
+  if (g('tbl_capex_body')) {
+    const rows = [
+      ['Instalacja PV', capexPVInstall],
+      ['Grunt pod PV ('+(gruntOpt==='zakup'?'zakup':'dzierżawa wymagana z góry w analizie')+') ', capexPVGrunt],
+      ['Elektrownia wiatrowa FW', capexFW],
+      ['Magazyn energii MEE', capexMEE],
+      ['CAPEX brutto', capexTotal, true],
+      ['Dofinansowanie/dotacja', -dotacjaKwota],
+      ['CAPEX netto (po dotacji)', capexNet, true, true]
+    ].filter(r => r[1] !== 0 || r[2]);
+    g('tbl_capex_body').innerHTML = rows.map(([lbl,val,bold,highlight]) =>
+      `<tr${highlight?' class="td-best"':''}><td${bold?' style="font-weight:600"':''}>${lbl}</td><td class="td-mono${bold?' td-green':''}">${fmt(Math.round(val))}</td></tr>`
+    ).join('');
+  }
+
+  if (g('inv_capex_total')) g('inv_capex_total').textContent = fmt(Math.round(capexNet));
+  if (g('inv_sav_rok'))     g('inv_sav_rok').textContent = fmt(savRok);
+  if (g('inv_spbt'))        g('inv_spbt').textContent = spbt < 99 ? fmtD(spbt,1) : '∞';
+  if (g('inv_npv'))         g('inv_npv').textContent = fmt(Math.round(npv/1000));
+  if (g('inv_irr'))         g('inv_irr').textContent = irrVal > 0 ? fmtD(irrVal,1) : '—';
+  if (g('inv_dotacja_v'))   g('inv_dotacja_v').textContent = fmt(Math.round(dotacjaKwota));
+
+  const ins = g('ins_inv0');
+  if (ins) {
+    if (capexTotal === 0) { ins.className='ins info'; ins.textContent='Ustaw wartości rozbudowy PV, FW lub MEE aby zobaczyć analizę.'; }
+    else if (npv > 0) { ins.className='ins good'; ins.textContent=`Inwestycja OPŁACALNA: NPV = ${fmt(Math.round(npv/1000))} tys. PLN > 0. IRR = ${fmtD(irrVal,1)}% > stopa dyskontowa ${discount}%. Zwrot w ${fmtD(spbt,1)} lat.`; }
+    else { ins.className='ins warn'; ins.textContent=`Inwestycja o granicznych parametrach: NPV = ${fmt(Math.round(npv/1000))} tys. PLN. Rozważ dotację lub tańszy scenariusz.`; }
+  }
+
+  // Cashflow chart
+  if (g('c_cashflow') && isVisible('inwest_2')) {
+    const years2 = Array.from({length:horizon+1},(_,i)=>i===0?'Rok 0':`Rok ${i}`);
+    const cumCF = [-capexNet];
+    for (let y=1; y<=horizon; y++) {
+      const price_factor = Math.pow(1+cWzrost/100,y);
+      const cf = savRok*price_factor/1000 - opexPVGrunt;
+      cumCF.push(+(cumCF[cumCF.length-1]+cf).toFixed(1));
+    }
+    mkChart('c_cashflow','line',{labels:years2,datasets:[
+      {label:'Skumulowane przepływy',data:cumCF,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.08)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:cumCF.map(v=>v>=0?'#3ecf8e':'#e05a5a'),borderWidth:2},
+      {label:'Próg rentowności',data:Array(horizon+1).fill(0),borderColor:'rgba(77,157,224,0.3)',borderDash:[6,3],borderWidth:1,pointRadius:0,fill:false}
+    ]},{scales:{y:{title:{display:true,text:'tys. PLN'}}}});
+    if (g('ins_cf')) g('ins_cf').textContent=`Skumulowane przepływy po ${horizon} latach: ${fmt(Math.round(cumCF[horizon]))} tys. PLN. NPV (zdyskontowane): ${fmt(Math.round(npv/1000))} tys. PLN.`;
+  }
+
+  // Cashflow table
+  if (g('tbl_cashflow_body') && isVisible('inwest_3')) {
+    let cum = -capexNet*1000;
+    g('tbl_cashflow_body').innerHTML = Array.from({length:horizon+1}, (_,y) => {
+      const pf = Math.pow(1+cWzrost/100,y);
+      const cf = y===0 ? -capexNet*1000 : savRok*pf - opexPVGrunt*1000;
+      if (y>0) cum += cf;
+      const status = cum >= 0 ? '<span class="pill green">✓ Zwrot</span>' : '<span class="pill red">Inwestycja</span>';
+      const cena = Math.round(cS*pf);
+      return `<tr><td class="td-mono">${y}</td><td class="td-mono">${cena}</td><td class="td-mono">${y===0?'—':fmt(Math.round(savRok*pf))}</td><td class="td-mono ${cf<0?'td-red':'td-green'}">${fmt(Math.round(cf))}</td><td class="td-mono ${cum<0?'td-amber':'td-green'}">${fmt(Math.round(cum))}</td><td>${status}</td></tr>`;
+    }).join('');
+  }
+}
+
+// ============================================================
+// REPORT BUILDER
+// ============================================================
+function buildReport() {
+  if (!lastSim) return;
+  if (!g('rep_params')) return;
+  const { S, pp, pn, pd, pvM, fwM, fwW, fwV, meeK, meeP, meeEff, meeDeg, sezon, tryb, cS, cN, cWzrost, invEff, lossEff } = lastSim;
+  const totalDem  = S.dem.reduce((a,b)=>a+b,0);
+  const totalOze  = S.oze.reduce((a,b)=>a+b,0);
+  const totalGrid = S.gridArr.reduce((a,b)=>a+b,0);
+  const totalSurp = S.surplusArr.reduce((a,b)=>a+b,0);
+  const meeE      = S.meePow.filter(v=>v<0).reduce((a,b)=>a+Math.abs(b),0);
+  let pokrycie = 0;
+  if(totalDem > 0) pokrycie = Math.min(100,Math.round(((totalDem-totalGrid)/totalDem)*100));
+  
+  const costGrid  = calcCost(S.gridArr,cS,cN);
+  const costNoOze = calcCost(S.dem,cS,cN);
+  const savings   = Math.max(0,costNoOze-costGrid);
+  const eff       = windEfficiency(fwW);
+  const trybNames = {'3':'3-zmianowy','2':'2-zmianowy','ramp':'Nierównomierne'};
+  const sezonNames = {lato:'Lato',wiosna:'Wiosna/Jesień',zima:'Zima'};
+  const tbl = (rows) => `<div class="tbl-wrap"><table><tbody>${rows.map(([l,v])=>`<tr><td style="width:55%;color:var(--text2)">${l}</td><td class="td-mono">${v}</td></tr>`).join('')}</tbody></table></div>`;
+
+  g('rep_params').innerHTML = tbl([
+    ['Moc przyłączeniowa',''+pp+' MW'],['Tryb pracy',trybNames[tryb]],
+    ['Zapotrzebowanie nocne (22–6)',''+pn+'%'],['Zapotrzebowanie dzienne (6–22)',''+pd+'%'],
+    ['Moc PV',''+pvM+' MW'],['Sprawność falownika PV',''+invEff+'%'],['Straty PV',''+lossEff+'%'],
+    ['Moc FW',''+fwM+' MW'],['Prędkość wiatru śr.',''+fwW+' m/s'],['Zmienność FW',''+fwV+'%'],
+    ['MEE pojemność',''+meeK+' MWh'],['MEE moc',''+meeP+' MW'],['Sprawność MEE',''+meeEff+'%'],
+    ['Sezon',sezonNames[sezon]],['Cena szczytowa',''+cS+' PLN/MWh'],['Cena nocna',''+cN+' PLN/MWh']
+  ]);
+  const tgPhi=0.4, peakMW=Math.max(...S.dem);
+  const rokE_real=Math.round(totalDem*250 + totalDem*0.8*52 + totalDem*0.3*63);
+  const hrs=Array.from({length:24},(_,i)=>`${i}:00`);
+  g('rep_zaklad').innerHTML = tbl([
+    ['Zapotrzebowanie dobowe',''+Math.round(totalDem)+' MWh/dobę'],
+    ['Szczyt (MW czynne)',''+fmtD(peakMW,1)+' MW'],
+    ['Szczyt pozorny (tgφ=0,4)',''+fmtD(peakMW*Math.sqrt(1+tgPhi*tgPhi),1)+' MVA'],
+    ['Moc bierna przy szczycie',''+fmtD(peakMW*tgPhi,1)+' MVAr'],
+    ['Load factor',''+Math.round(totalDem/(pp*24)*100)+'%'],
+    ['Energia roczna realna',''+fmt(rokE_real)+' MWh/rok (250 dn.rob.+52 sob.+63 nd)']
+  ]);
+  const pvDay=S.pv.reduce((a,b)=>a+b,0), fwDay=S.fw.reduce((a,b)=>a+b,0);
+  g('rep_oze').innerHTML = tbl([
+    ['Produkcja PV dobowa',''+fmtD(pvDay,1)+' MWh/dobę'],
+    ['Produkcja FW dobowa',''+fmtD(fwDay,1)+' MWh/dobę'],
+    ['Sprawność FW',''+Math.round(eff*100)+'%'+(fwW>=25?' ⚠️ CUT-OUT (≥25 m/s)!':'')],
+    ['OZE łącznie',''+Math.round(totalOze)+' MWh/dobę'],
+    ['Produkcja OZE rocznie (est.)',''+fmt(Math.round(totalOze*365))+' MWh/rok']
+  ]);
+  g('rep_mee').innerHTML = tbl([
+    ['Energia z MEE dobowo',''+fmtD(meeE,1)+' MWh/dobę'],
+    ['Oszczędności arbitrażu (cena szcz.–nocna)',''+fmt(Math.round(meeE*(cS-cN)*0.85))+' PLN/dobę'],
+    ['Rok degradacji do 70% pojemności',''+Math.ceil(Math.log(0.7)/Math.log(1-meeDeg/100))+'. rok eksploatacji']
+  ]);
+  g('rep_bilans').innerHTML = tbl([
+    ['Pobór z sieci',''+Math.round(totalGrid)+' MWh/dobę'],
+    ['Nadwyżka OZE',''+Math.round(totalSurp)+' MWh/dobę'],
+    ['Pokrycie zapotrzebowania OZE+MEE',''+pokrycie+'%'],
+    ['Koszt energii z sieci',''+fmt(Math.round(costGrid))+' PLN/dobę'],
+    ['Oszczędności vs. brak OZE',''+fmt(Math.round(savings))+' PLN/dobę'],
+    ['Oszczędności rocznie',''+fmt(Math.round(savings*365))+' PLN/rok']
+  ]);
+  g('rep_inwest').innerHTML = tbl([
+    ['Koszt bez OZE (roczny est.)',''+fmt(Math.round(costNoOze*365))+' PLN/rok'],
+    ['Koszt z OZE+MEE (roczny est.)',''+fmt(Math.round(costGrid*365))+' PLN/rok'],
+    ['Oszczędności roczne',''+fmt(Math.round(savings*365))+' PLN/rok'],
+    ['Wzrost cen energii',''+cWzrost+'%/rok']
+  ]);
+  g('rep_metoda').innerHTML = `
+    <b>Modele obliczeniowe:</b><br>
+    • PV: kształt krzywej dobowej oparty na typowym nasłonecznieniu w Polsce. Szczyty: lato 65%, wiosna/jesień 40%, zima 20%. Uwzględniono sprawność falownika i straty.<br>
+    • FW: krzywa mocy potęgowa (v−3)^2.2/11^2.2 dla zakresu 3–14 m/s, moc nominalna 14–24,9 m/s, cut-out ≥25 m/s → P=0. Zmienność dobowa = suma trzech sinusoid.<br>
+    • Rozkład Weibulla: k=2,0, λ=v_śr×1,128.<br>
+    • MEE: round-trip efficiency, ładowanie z nadwyżki OZE i taniej taryfy nocnej; przy ładowaniu z sieci pobór sieci rośnie (zachowanie energii). Degradacja liniowa %/rok.<br>
+    • Moc bierna: tgφ=0,4 (standard PL dla zakładów przemysłowych). S=P/cosφ, Q=P·tgφ.<br>
+    • Roczny czas: 250 dni roboczych (100%) + 52 soboty (80%) + 63 dni wolne (30%) = 365 dni.<br>
+    • CAPEX PV: 3 500 PLN/kW + grunt 1,3 ha/MW × 57 000 PLN/ha lub 2 000 PLN/ha/rok dzierżawa. FW: 5 000 PLN/kW. MEE: 900 PLN/kWh + 200 PLN/kW.<br>
+    • Wyniki mają charakter szacunkowy — tylko do analiz koncepcyjnych.<br>
+    Wersja: 3.1 | Data: 03.05.2026
+  `;
+
+  // Wykresy w raporcie (widoczne w PDF)
+  const rOpts={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:true,labels:{color:'#555',font:{size:10},boxWidth:10}}}};
+  const mkR=(id,type,data,extra={})=>{if(charts[id])charts[id].destroy();charts[id]=new Chart(g(id).getContext('2d'),{type,data,options:{...rOpts,...extra}});};
+  if(g('rpt_c1')) mkR('rpt_c1','bar',{labels:hrs,datasets:[{label:'Zapotrzebowanie [MW]',data:S.dem,backgroundColor:'rgba(77,157,224,0.7)',borderRadius:2},{label:'Limit',data:Array(24).fill(pp),type:'line',borderColor:'rgba(224,90,90,0.6)',borderDash:[5,3],borderWidth:1.5,pointRadius:0,fill:false}]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
+  if(g('rpt_c2')) mkR('rpt_c2','line',{labels:hrs,datasets:[{label:'PV [MW]',data:S.pv,borderColor:'#f4a535',backgroundColor:'rgba(244,165,53,0.12)',fill:true,tension:0.4,pointRadius:0,borderWidth:2},{label:'FW [MW]',data:S.fw,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.10)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},{label:'OZE łącznie',data:S.oze,borderColor:'#9b87f5',pointRadius:0,borderWidth:1.5,borderDash:[4,2],fill:false,tension:0.4}]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
+  if(g('rpt_c3')){const tariff=Array.from({length:24},(_,h)=>(h>=6&&h<21)?cS:cN);mkR('rpt_c3','line',{labels:hrs,datasets:[{label:'SOC MEE [MWh]',data:S.socArr,borderColor:'#9b87f5',backgroundColor:'rgba(155,135,245,0.12)',fill:true,tension:0.4,pointRadius:0,borderWidth:2,yAxisID:'y'},{label:'Moc MEE [MW]',data:S.meePow,borderColor:'#3ecf8e',pointRadius:0,borderWidth:1.5,tension:0.3,borderDash:[3,2],yAxisID:'y'},{label:'Taryfa÷10',data:tariff.map(v=>v/10),borderColor:'#e05a5a',pointRadius:0,borderWidth:1,tension:0,borderDash:[6,3],yAxisID:'y'}]},{scales:{y:{position:'left',beginAtZero:true,title:{display:true,text:'MWh/MW'}}}});}
+  if(g('rpt_c4')) mkR('rpt_c4','line',{labels:hrs,datasets:[{label:'Zapotrzebowanie',data:S.dem,borderColor:'#4d9de0',pointRadius:0,borderWidth:2,tension:0.3},{label:'OZE łącznie',data:S.oze,borderColor:'#9b87f5',pointRadius:0,borderWidth:1.5,borderDash:[4,2],tension:0.3},{label:'Z sieci',data:S.gridArr,borderColor:'#e05a5a',backgroundColor:'rgba(224,90,90,0.08)',fill:true,pointRadius:0,borderWidth:2,tension:0.3},{label:'Nadwyżka',data:S.surplusArr,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.10)',fill:true,pointRadius:0,borderWidth:2,tension:0.3}]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
+}
+
+function copyReport() {
+  const el = g('report-content');
+  navigator.clipboard?.writeText(el.innerText || el.textContent);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function isVisible(id) {
+  const el = g(id);
+  if (!el) return false;
+  if (!el.classList.contains('active')) return false;
+  const parentPage = el.closest('.page');
+  if (parentPage && !parentPage.classList.contains('active')) return false;
+  return true;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => setTimeout(upd, 300));
+</script>
+
+</body></html>
