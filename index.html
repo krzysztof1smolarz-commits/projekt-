@@ -341,9 +341,9 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   <div class="grid2">
     <div class="card">
       <div class="card-title"><span class="card-title-dot" style="background:var(--blue)"></span>Zakład produkcyjny</div>
-      <div class="form-row"><span class="form-label">Moc przyłączeniowa [MW]</span><input type="range" id="p_przyl" min="20" max="50" step="5" value="30" oninput="upd()"><span class="val-display" id="p_przyl_v">30 MW</span></div>
-      <div class="form-row"><span class="form-label">Zapotrzebowanie nocne 22–6 [%]</span><input type="range" id="p_noc" min="20" max="60" step="5" value="35" oninput="upd()"><span class="val-display" id="p_noc_v">35%</span></div>
-      <div class="form-row"><span class="form-label">Zapotrzebowanie dzienne 6–22 [%]</span><input type="range" id="p_dzien" min="60" max="95" step="5" value="85" oninput="upd()"><span class="val-display" id="p_dzien_v">85%</span></div>
+      <div class="form-row"><span class="form-label">Moc przyłączeniowa [MW]</span><input type="range" id="p_przyl" min="2" max="100" step="5" value="30" oninput="upd()"><span class="val-display" id="p_przyl_v">30 MW</span></div>
+      <div class="form-row"><span class="form-label">Zapotrzebowanie nocne 22–6 [%]</span><input type="range" id="p_noc" min="5" max="90" step="5" value="35" oninput="upd()"><span class="val-display" id="p_noc_v">35%</span></div>
+      <div class="form-row"><span class="form-label">Zapotrzebowanie dzienne 6–22 [%]</span><input type="range" id="p_dzien" min="50" max="95" step="5" value="85" oninput="upd()"><span class="val-display" id="p_dzien_v">85%</span></div>
       <div class="form-row"><span class="form-label">Tryb pracy zakładu</span>
         <select id="tryb" onchange="upd()">
           <option value="3">3-zmianowy (równomierne 24h)</option>
@@ -360,7 +360,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--amber)"></span>Fotowoltaika (PV)</div>
-        <div class="form-row"><span class="form-label">Moc zainstalowana PV [MW]</span><input type="range" id="pv_moc" min="2" max="35" step="1" value="30" oninput="upd()"><span class="val-display" id="pv_v">30 MW</span></div>
+        <div class="form-row"><span class="form-label">Moc zainstalowana PV [MW]</span><input type="range" id="pv_moc" min="2" max="100" step="1" value="30" oninput="upd()"><span class="val-display" id="pv_v">30 MW</span></div>
         <div class="form-row"><span class="form-label">Sprawność falownika [%]</span><input type="range" id="pv_inv" min="92" max="99" step="0.5" value="97" oninput="upd()"><span class="val-display" id="pv_inv_v">97%</span></div>
         <div class="form-row"><span class="form-label">Straty (zacienienie, okablowanie) [%]</span><input type="range" id="pv_loss" min="0" max="15" step="1" value="5" oninput="upd()"><span class="val-display" id="pv_loss_v">5%</span></div>
         <div class="form-row"><span class="form-label">Sezon (nasłonecznienie)</span>
@@ -373,14 +373,14 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       </div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--green)"></span>Elektrownia wiatrowa (FW)</div>
-        <div class="form-row"><span class="form-label">Moc zainstalowana FW [MW]</span><input type="range" id="fw_moc" min="2" max="25" step="1" value="16" oninput="upd()"><span class="val-display" id="fw_v">16 MW</span></div>
+        <div class="form-row"><span class="form-label">Moc zainstalowana FW [MW]</span><input type="range" id="fw_moc" min="2" max="100" step="1" value="16" oninput="upd()"><span class="val-display" id="fw_v">16 MW</span></div>
         <div class="form-row"><span class="form-label">Śr. prędkość wiatru [m/s]</span><input type="range" id="fw_wind" min="0" max="25" step="0.5" value="8" oninput="upd()"><span class="val-display" id="fw_wind_v">8 m/s</span></div>
         <div class="form-row"><span class="form-label">Zmienność dobowa wiatru [%]</span><input type="range" id="fw_var" min="0" max="60" step="5" value="20" oninput="upd()"><span class="val-display" id="fw_var_v">20%</span></div>
         <div id="fw_status_cfg" class="fw-bar"></div>
       </div>
       <div class="card">
         <div class="card-title"><span class="card-title-dot" style="background:var(--purple)"></span>Magazyn energii (MEE)</div>
-        <div class="form-row"><span class="form-label">Pojemność MEE [MWh]</span><input type="range" id="mee_kwh" min="3" max="25" step="1" value="9" oninput="upd()"><span class="val-display" id="mee_kwh_v">9 MWh</span></div>
+        <div class="form-row"><span class="form-label">Pojemność MEE [MWh]</span><input type="range" id="mee_kwh" min="1" max="100" step="1" value="9" oninput="upd()"><span class="val-display" id="mee_kwh_v">9 MWh</span></div>
         <div class="form-row"><span class="form-label">Moc MEE [MW]</span><input type="range" id="mee_mw" min="1" max="10" step="1" value="3" oninput="upd()"><span class="val-display" id="mee_mw_v">3 MW</span></div>
         <div class="form-row"><span class="form-label">Sprawność round-trip MEE [%]</span><input type="range" id="mee_eff" min="80" max="98" step="1" value="92" oninput="upd()"><span class="val-display" id="mee_eff_v">92%</span></div>
         <div class="form-row"><span class="form-label">Degradacja pojemności [%/rok]</span><input type="range" id="mee_deg" min="1" max="4" step="0.5" value="2" oninput="upd()"><span class="val-display" id="mee_deg_v">2%</span></div>
