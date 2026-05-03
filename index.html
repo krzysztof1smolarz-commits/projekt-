@@ -277,27 +277,11 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 
 /* ===== PRINT / PDF ===== */
 @media print {
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .sidebar, .header { display: none !important; }
-  .layout { display: block !important; height: auto !important; overflow: visible !important; }
-  .main { padding: 0 !important; overflow: visible !important; height: auto !important; }
-  .page { display: none !important; }
-  #page-raport { display: block !important; }
-  body { background: white !important; color: #111 !important; font-size: 12px !important; }
-  .card { background: white !important; border: 1px solid #ccc !important; }
-  .mc { background: #f5f5f5 !important; }
-  .mc-value { color: #111 !important; }
-  .mc-label { color: #555 !important; }
-  .tbl-wrap { border: 1px solid #ccc !important; }
-  th { background: #eee !important; color: #333 !important; }
-  td { color: #222 !important; }
-  h3 { color: #111 !important; border-bottom-color: #ccc !important; }
-  /* Wykresy w raporcie – renderuj jako canvas */
-  .report-chart-wrap { page-break-inside: avoid; margin: 0.75rem 0; }
-  .report-chart-wrap canvas { display: block !important; max-width: 100% !important; }
-  .report-section { page-break-inside: avoid; margin-bottom: 1.5rem; }
-  a { color: #111 !important; }
-  .btn-primary, .btn { display: none !important; }
+  .layout { display: block; }
+  .main { padding: 0; overflow: visible; height: auto; }
+  .page { display: block !important; page-break-after: always; }
+  body { background: white; color: black; }
 }
 
 /* ===== PROGRESS BAR ===== */
@@ -469,19 +453,13 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     </div>
     <div class="legend">
       <span><span class="ld" style="background:var(--blue)"></span>Zapotrzebowanie [MW]</span>
-      <span><span class="ld" style="background:var(--red);opacity:0.6"></span>Limit przyłączeniowy</span>
-      <span><span class="ld" style="background:rgba(224,90,90,0.25)"></span>Strefa droga (6–21, taryfa szczytowa)</span>
-      <span><span class="ld" style="background:rgba(77,157,224,0.25)"></span>Strefa tania (21–6, taryfa nocna)</span>
+      <span><span class="ld" style="background:var(--red);opacity:0.6"></span>Moc przyłączeniowa (limit)</span>
     </div>
     <div class="card"><div class="cwl"><canvas id="c_zak_dobowy"></canvas></div></div>
-    <div class="grid4" style="margin-top:1rem">
-      <div class="mc blue"><div class="mc-label">Szczyt dobowy (MW czynne)</div><div class="mc-value blue" id="zak_peak">—</div><div class="mc-unit">MW</div></div>
-      <div class="mc purple"><div class="mc-label">Szczyt pozorny (tgφ=0,4)</div><div class="mc-value purple" id="zak_mva">—</div><div class="mc-unit">MVA</div></div>
-      <div class="mc red"><div class="mc-label">Moc bierna przy szczycie</div><div class="mc-value red" id="zak_mvar">—</div><div class="mc-unit">MVAr</div></div>
+    <div class="grid3" style="margin-top:1rem">
+      <div class="mc blue"><div class="mc-label">Szczyt dobowy</div><div class="mc-value blue" id="zak_peak">—</div><div class="mc-unit">MW</div></div>
+      <div class="mc"><div class="mc-label">Minimum dobowe</div><div class="mc-value" id="zak_min">—</div><div class="mc-unit">MW</div></div>
       <div class="mc amber"><div class="mc-label">Energia dobowa</div><div class="mc-value amber" id="zak_energy">—</div><div class="mc-unit">MWh/dobę</div></div>
-    </div>
-    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:0.75rem 1rem;font-size:12px;color:var(--text2);margin-bottom:0.5rem">
-      <strong style="color:var(--text)">Uwaga o mocy biernej:</strong> Zakłady przemysłowe generują moc bierną indukcyjną. Standardowo w Polsce wymagane tgφ ≤ 0,4. Przy szczycie <span id="zak_min_inline">—</span> MW czynnych zapotrzebowanie na moc bierną wynosi <span id="zak_mvar_inline" style="color:var(--amber2)">—</span> MVAr, a moc pozorna <span id="zak_mva_inline" style="color:var(--purple)">—</span> MVA. Przekroczenie tgφ &gt; 0,4 skutkuje karami w rachunku za energię.
     </div>
     <div id="ins_zak1" class="ins info"></div>
   </div>
@@ -495,9 +473,9 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div class="card"><div class="cwl"><canvas id="c_zak_tygodniowy"></canvas></div></div>
     <div class="grid4" style="margin-top:1rem">
       <div class="mc blue"><div class="mc-label">Energia tygodniowa</div><div class="mc-value blue" id="zak_tyg_e">—</div><div class="mc-unit">MWh/tydzień</div></div>
-      <div class="mc"><div class="mc-label">Energia roczna (×52 tyg.)</div><div class="mc-value" id="zak_rok_e">—</div><div class="mc-unit">MWh/rok</div></div>
-      <div class="mc green"><div class="mc-label">Energia roczna realna <small style="font-size:10px">(250 dn.rob+52 sob+63 nd)</small></div><div class="mc-value green" id="zak_rok_e_real">—</div><div class="mc-unit">MWh/rok</div></div>
+      <div class="mc"><div class="mc-label">Energia roczna</div><div class="mc-value" id="zak_rok_e">—</div><div class="mc-unit">MWh/rok</div></div>
       <div class="mc amber"><div class="mc-label">Koszt roczny (bez OZE)</div><div class="mc-value amber" id="zak_rok_koszt">—</div><div class="mc-unit">PLN/rok</div></div>
+      <div class="mc purple"><div class="mc-label">Load factor</div><div class="mc-value purple" id="zak_lf">—</div><div class="mc-unit">%</div></div>
     </div>
     <div id="ins_zak2" class="ins info"></div>
   </div>
@@ -861,22 +839,18 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div class="report-section">
       <h3>2. Profil zapotrzebowania zakładu</h3>
       <div id="rep_zaklad"></div>
-      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c1"></canvas></div></div>
     </div>
     <div class="report-section">
       <h3>3. Produkcja OZE</h3>
       <div id="rep_oze"></div>
-      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c2"></canvas></div></div>
     </div>
     <div class="report-section">
       <h3>4. Magazyn energii (MEE)</h3>
       <div id="rep_mee"></div>
-      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c3"></canvas></div></div>
     </div>
     <div class="report-section">
       <h3>5. Bilans energetyczny</h3>
       <div id="rep_bilans"></div>
-      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c4"></canvas></div></div>
     </div>
     <div class="report-section">
       <h3>6. Analiza ekonomiczna inwestycji</h3>
@@ -915,12 +889,10 @@ Chart.defaults.font.size = 11;
 // PHYSICS / SIMULATION MODELS
 // ============================================================
 function windEfficiency(ws) {
-  // Realistyczna krzywa mocy turbiny wiatrowej:
-  // cut-in: 3 m/s, moc nominalna od ~14 m/s, cut-out: 25 m/s (wyłączenie burzowe)
   if (ws < 3) return 0;
-  if (ws >= 25) return 0;   // cut-out — wyłączenie burzowe przy 25 m/s
-  if (ws < 14) return Math.pow((ws - 3) / 11, 2.2);  // krzywa sześcienna do 14 m/s
-  return 1.0;               // moc nominalna 14–24.9 m/s
+  if (ws < 12) return Math.pow((ws - 3) / 9, 1.8);
+  if (ws <= 25) return 1.0;
+  return 0;
 }
 
 function pvProfile(sezon, maxMW, invEff, lossEff) {
@@ -938,17 +910,11 @@ function pvProfileNetto(sezon, maxMW, invEff, lossEff) {
 
 function fwProfile(maxMW, windSpeed, variability) {
   const baseEff = windEfficiency(windSpeed);
-  if (baseEff === 0) return Array(24).fill(0);
   const vFrac = variability / 100;
-  // Bardziej nieregularne zmiany - kilka składowych sinusoidalnych o różnych fazach
-  const hourly = [0.82,0.78,0.74,0.70,0.72,0.76,0.80,0.88,0.95,1.0,1.03,1.05,1.02,0.98,0.94,0.90,0.93,0.97,1.02,1.05,1.01,0.96,0.90,0.85];
+  const hourly = [1,0.95,0.92,0.90,0.88,0.90,0.93,0.97,1.0,1.02,1.03,1.02,1.0,0.98,0.97,0.98,1.0,1.02,1.03,1.01,0.99,0.97,0.98,0.99];
   return hourly.map((hv, i) => {
-    // Trzy nakładające się składowe o różnych częstotliwościach = realistyczna nieregularność
-    const noise1 = Math.sin(i * 1.7 + 0.8) * 0.45;
-    const noise2 = Math.sin(i * 3.1 + 2.3) * 0.30;
-    const noise3 = Math.sin(i * 5.3 + 1.1) * 0.20;
-    const totalNoise = (noise1 + noise2 + noise3) * vFrac;
-    const eff = Math.max(0, Math.min(1, baseEff * hv + totalNoise * baseEff));
+    const noise = (Math.sin(i*2.3+1.7)*0.5 + Math.sin(i*0.7+3.1)*0.5) * vFrac;
+    const eff = Math.max(0, Math.min(1, baseEff * hv + noise * baseEff));
     return parseFloat((eff * maxMW).toFixed(3));
   });
 }
@@ -978,45 +944,19 @@ function simulate(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, sezon, tryb, pp, 
   let soc = meeMWh * 0.3;
   const rtEff = meeEff / 100;
   const socArr=[], gridArr=[], surplusArr=[], meePow=[];
-
   for (let h = 0; h < 24; h++) {
     const oze = pv[h] + fw[h];
-    // Bilans: ile brakuje (ujemne) lub nadwyżka (dodatnie) bez MEE
-    let gap = dem[h] - oze;  // >0 = brakuje, <0 = nadwyżka
+    let bal = oze - dem[h];
     let mee = 0;
-
-    if (gap < 0) {
-      // Nadwyżka OZE — ładuj MEE
-      const surplusOze = -gap;
-      const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
-      soc = Math.min(meeMWh, soc + ch * rtEff);
-      mee = ch;
-      gap += ch;  // zmniejsz nadwyżkę o załadowane
-    } else if (gap > 0) {
-      // Niedobór — rozładuj MEE
-      const dis = Math.min(gap, meeMW, soc);
-      soc = Math.max(0, soc - dis);
-      mee = -dis;
-      gap -= dis * rtEff;  // MEE pokrywa część niedoboru (z uwzgl. sprawności)
+    if (bal > 0) {
+      const ch = Math.min(bal, meeMW, meeMWh - soc);
+      soc = Math.min(meeMWh, soc + ch * rtEff); mee = ch; bal -= ch;
+    } else {
+      const dis = Math.min(-bal, meeMW, soc);
+      soc = Math.max(0, soc - dis); mee = -dis; bal += dis * rtEff;
     }
-
-    // Nocny arbitraż cenowy: jeśli tania taryfa i MEE nie jest pełny, doładuj z sieci
-    const isCheapHour = (h < 6 || h >= 21);
-    if (isCheapHour && soc < meeMWh * 0.95 && gap >= 0 && meeMWh > 0) {
-      const maxCharge = Math.min(meeMW, meeMWh - soc);
-      const gridCharge = Math.min(maxCharge, meeMW * 0.7); // max 70% mocy MEE z sieci nocą
-      if (gridCharge > 0.01) {
-        soc = Math.min(meeMWh, soc + gridCharge * rtEff);
-        mee = gridCharge;  // ładowanie z sieci (mee > 0 = ładowanie)
-        gap += gridCharge;  // pobór z sieci rośnie o tyle ile ładujemy
-      }
-    }
-
-    const gridPobor = Math.max(0, gap);
-    const surplus   = Math.max(0, -gap);
-
-    gridArr.push(parseFloat(gridPobor.toFixed(3)));
-    surplusArr.push(parseFloat(surplus.toFixed(3)));
+    gridArr.push(parseFloat(Math.max(0, -bal).toFixed(3)));
+    surplusArr.push(parseFloat(Math.max(0, bal).toFixed(3)));
     socArr.push(parseFloat(soc.toFixed(3)));
     meePow.push(parseFloat(mee.toFixed(3)));
   }
@@ -1132,13 +1072,11 @@ function upd() {
   g('hdr_koszt').textContent = `Koszt sieci: ${fmt(costGrid)} PLN/dobę`;
 
   // FW status
-  const fwStatusText = fwW >= 25
-    ? `⚠️ WYŁĄCZENIE BURZOWE (cut-out) przy ${fwW} m/s — turbiny zatrzymane dla bezpieczeństwa! Produkcja = 0 MW.`
-    : eff===0
-    ? 'Turbiny zatrzymane — prędkość wiatru poniżej progu startowego (<3 m/s)'
+  const fwStatusText = eff===0
+    ? 'Turbiny zatrzymane — brak wiatru lub przekroczono limit (>25 m/s)'
     : eff<0.3 ? `Słaby wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${avgFW} MW`
     : eff<0.7 ? `Umiarkowany wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${avgFW} MW`
-    : `Dobry wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${avgFW} MW (moc nominalna od 14 m/s)`;
+    : `Dobry wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${avgFW} MW`;
   ['fw_status_cfg','fw_status_bar'].forEach(id => { if(g(id)) g(id).textContent = fwStatusText; });
 
   // ---- PAGE: KONFIGURACJA ----
@@ -1151,38 +1089,20 @@ function upd() {
     g('cfg_oszcz').textContent = fmt(savings);
     g('cfg_fw_avg').textContent = avgFW;
     const ins = g('ins_cfg');
-    const fwCutout = fwW >= 25;
-    const fwWarning = fwCutout ? ' ⚠️ UWAGA: Prędkość wiatru ≥25 m/s — turbiny wyłączone (cut-out burzowy)!' : '';
-    if (pokrycie > 60) { ins.className='ins good'; ins.textContent=`Pokrycie OZE+MEE: ${pokrycie}% zapotrzebowania. Oszczędności: ${fmt(savings)} PLN/dobę = ${fmt(savings*365)} PLN/rok.${fwWarning}`; }
-    else if (pokrycie > 35) { ins.className='ins info'; ins.textContent=`Pokrycie OZE+MEE: ${pokrycie}% zapotrzebowania. Oszczędności: ${fmt(savings)} PLN/dobę. Potencjał optymalizacji — rozważ zwiększenie mocy FW lub pojemności MEE.${fwWarning}`; }
-    else { ins.className='ins warn'; ins.textContent=`Niskie pokrycie OZE+MEE: ${pokrycie}% — zakład w dużym stopniu zależny od sieci (${Math.round(totalGrid)} MWh/dobę z sieci vs ${Math.round(totalOze)} MWh/dobę OZE). Oszczędności: ${fmt(savings)} PLN/dobę.${fwWarning}`; }
+    if (autocons > 60) { ins.className='ins good'; ins.textContent=`Doskonała autokonsumpcja ${autocons}% — zakład w dużym stopniu niezależny od sieci. Oszczędności OZE+MEE: ${fmt(savings)} PLN/dobę = ${fmt(savings*365)} PLN/rok.`; }
+    else if (autocons > 35) { ins.className='ins info'; ins.textContent=`Autokonsumpcja ${autocons}%, oszczędności: ${fmt(savings)} PLN/dobę. Potencjał optymalizacji — rozważ zwiększenie mocy FW lub pojemności MEE.`; }
+    else { ins.className='ins warn'; ins.textContent=`Niska autokonsumpcja ${autocons}% — sprawdź prędkość wiatru lub zwiększ moc PV. Oszczędności: ${fmt(savings)} PLN/dobę.`; }
   }
 
   // ---- PAGE: ZAKŁAD ----
   if (g('c_zak_dobowy') && isVisible('zaklad_0')) {
-    // Taryfa godzinowa jako tło (obszar kolorowy)
-    const tariffBg = Array.from({length:24}, (_,h) => (h>=6&&h<21) ? cS/10 : cN/10);
     mkChart('c_zak_dobowy','bar',{labels:hrs,datasets:[
-      {label:'Taryfa÷10 [PLN/MWh]',data:tariffBg,backgroundColor:Array.from({length:24},(_,h)=>(h>=6&&h<21)?'rgba(224,90,90,0.10)':'rgba(77,157,224,0.08)'),borderRadius:0,order:3,yAxisID:'y'},
-      {label:'Zapotrzebowanie [MW]',data:S.dem,backgroundColor:'rgba(77,157,224,0.75)',borderRadius:2,order:1,yAxisID:'y'},
-      {label:'Limit przyłączeniowy',data:Array(24).fill(pp),type:'line',borderColor:'rgba(224,90,90,0.6)',borderDash:[6,3],borderWidth:1.5,pointRadius:0,fill:false,order:2,yAxisID:'y'}
-    ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW (taryfa ÷10)'}}},plugins:{legend:{display:true,labels:{color:'#9896a0',font:{size:11}}}}});
+      {label:'Zapotrzebowanie',data:S.dem,backgroundColor:'rgba(77,157,224,0.7)',borderRadius:2},
+      {label:'Limit',data:Array(24).fill(pp),type:'line',borderColor:'rgba(224,90,90,0.5)',borderDash:[6,3],borderWidth:1.5,pointRadius:0,fill:false}
+    ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
     const peak=Math.max(...S.dem), peakH=S.dem.indexOf(peak);
-    // Moc bierna (tgφ ≤ 0,4)
-    const tgPhi = 0.4;
-    const peakMVA = parseFloat((peak / Math.sqrt(1/(1+tgPhi*tgPhi))).toFixed(1));
-    const demMVA  = S.dem.map(p => parseFloat((p * Math.sqrt(1+tgPhi*tgPhi)).toFixed(2)));
-    const demMVAr = S.dem.map(p => parseFloat((p * tgPhi).toFixed(2)));
     g('zak_peak').textContent=fmtD(peak,1); g('zak_min').textContent=fmtD(Math.min(...S.dem),1); g('zak_energy').textContent=Math.round(totalDem);
-    if(g('zak_mva'))  g('zak_mva').textContent = peakMVA;
-    if(g('zak_mvar')) g('zak_mvar').textContent = fmtD(peak*tgPhi,1);
-    if(g('zak_min_inline'))  g('zak_min_inline').textContent  = fmtD(peak,1);
-    if(g('zak_mvar_inline')) g('zak_mvar_inline').textContent = fmtD(peak*tgPhi,1);
-    if(g('zak_mva_inline'))  g('zak_mva_inline').textContent  = peakMVA;
-    // Roczny czas pracy: 250 dni roboczych + 52 soboty (80%) + 63 dni weekendowe (30%)
-    const rokE_real = Math.round(totalDem*250 + totalDem*0.8*52 + totalDem*0.3*63);
-    if(g('zak_rok_e_real')) g('zak_rok_e_real').textContent = fmt(rokE_real);
-    g('ins_zak1').textContent=`Szczyt: ${fmtD(peak,1)} MW (${peakMVA} MVA z tgφ=0,4) o godz. ${peakH}:00. Load factor: ${Math.round(totalDem/(pp*24)*100)}%. Energia dobowa: ${Math.round(totalDem)} MWh. Obszar czerwony = taryfa szczytowa (6-21), niebieski = tania noc.`;
+    g('ins_zak1').textContent=`Szczyt: ${fmtD(peak,1)} MW o godz. ${peakH}:00. Load factor: ${Math.round(totalDem/(pp*24)*100)}%. Energia dobowa: ${Math.round(totalDem)} MWh.`;
   }
   if (g('c_zak_tygodniowy') && isVisible('zaklad_1')) {
     const days=['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
@@ -1193,16 +1113,11 @@ function upd() {
     ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MWh/dobę'}}}});
     const tygE=dayEnergies.reduce((a,b)=>a+b,0);
     const rokE=tygE*52;
-    // Realna energia roczna: 250 dni roboczych + 52 soboty (80%) + 63 dni weekendowe (30%)
-    const eDzien=totalDem, eSob=totalDem*0.8, eNd=totalDem*0.3;
-    const rokE_real=Math.round(eDzien*250 + eSob*52 + eNd*63);
-    const rokKoszt=calcCost(S.gridArr,cS,cN)*365*0.85; // przybliżony koszt roczny
+    const rokKoszt=(tygE/7)*365*cS*0.75;
     const lf=Math.round(totalDem/(pp*24)*100);
-    g('zak_tyg_e').textContent=Math.round(tygE);
-    g('zak_rok_e').textContent=fmt(Math.round(rokE));
-    g('zak_rok_e_real').textContent=fmt(rokE_real);
-    g('zak_rok_koszt').textContent=fmt(Math.round(rokKoszt));
-    g('ins_zak2').textContent=`Energia tygodniowa: ${Math.round(tygE)} MWh. Roczna (×52): ${fmt(Math.round(rokE))} MWh. Roczna realna (250 dn.rob. + 52 sob. + 63 nd): ${fmt(rokE_real)} MWh. Load factor: ${lf}%.`;
+    g('zak_tyg_e').textContent=Math.round(tygE); g('zak_rok_e').textContent=fmt(Math.round(rokE));
+    g('zak_rok_koszt').textContent=fmt(Math.round(rokKoszt)); g('zak_lf').textContent=lf;
+    g('ins_zak2').textContent=`Energia tygodniowa: ${Math.round(tygE)} MWh. Roczna: ${fmt(Math.round(rokE))} MWh. Load factor: ${lf}%.`;
   }
   if (g('tbl_zaklad_body') && isVisible('zaklad_2')) {
     const modes=[{id:'3',name:'3-zmianowy'},{id:'2',name:'2-zmianowy'},{id:'ramp',name:'Nierównomierne'}];
@@ -1275,15 +1190,14 @@ function upd() {
     g('ins_fw1').textContent=`Prędkość wiatru: ${fwW} m/s → sprawność ${Math.round(eff*100)}%, śr. ${avgFW} MW. Energia: ${fmtD(fwDay,1)} MWh/dobę = ${fmt(Math.round(fwDay*365))} MWh/rok. Zmienność ${fwV}% powoduje odchylenia ±${fmtD(fwDay*fwV/200,1)} MWh/h.`;
   }
   if (g('c_fw_krzywa') && isVisible('fw_1')) {
-    // Krzywa mocy: co 0.5 m/s dla płynnej krzywej
-    const wsArr=Array.from({length:52},(_,i)=>parseFloat((i*0.5).toFixed(1)));
+    const wsArr=Array.from({length:26},(_,i)=>i);
     const powArr=wsArr.map(ws=>windEfficiency(ws)*fwM);
+    const pointData=wsArr.map(ws=>({x:ws,y:windEfficiency(ws)*fwM}));
     mkChart('c_fw_krzywa','line',{labels:wsArr,datasets:[
-      {label:'Krzywa mocy [MW]',data:powArr,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.10)',fill:true,tension:0.4,pointRadius:0,borderWidth:2},
-      {label:'Punkt pracy',data:wsArr.map(ws=>Math.abs(ws-fwW)<0.3?windEfficiency(ws)*fwM:null),pointRadius:6,pointBackgroundColor:fwW>=25?'#e05a5a':'#f4a535',type:'scatter',showLine:false}
-    ]},{scales:{x:{title:{display:true,text:'Prędkość wiatru [m/s]'},ticks:{callback:(v,i)=>wsArr[i]%2===0?wsArr[i]:''}},y:{beginAtZero:true,title:{display:true,text:'Moc [MW]'},max:fwM*1.05}}});
-    const cutMsg = fwW>=25 ? `⚠️ Punkt pracy ${fwW} m/s = CUT-OUT! Turbiny wyłączone.` : `Bieżący punkt pracy: ${fwW} m/s → ${fmtD(eff*fwM,1)} MW (${Math.round(eff*100)}% mocy nom.)`;
-    g('ins_fw2').textContent=`Prędkość cut-in (startowa): 3 m/s. Moc nominalna: od 14 m/s. Cut-out (wyłączenie burzowe): 25 m/s → produkcja = 0. ${cutMsg}`;
+      {label:'Krzywa mocy',data:powArr,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.10)',fill:true,tension:0.4,pointRadius:0,borderWidth:2},
+      {label:'Punkt pracy',data:wsArr.map(ws=>ws===Math.round(fwW)?eff*fwM:null),pointRadius:6,pointBackgroundColor:'#f4a535',type:'scatter',showLine:false}
+    ]},{scales:{x:{title:{display:true,text:'Prędkość wiatru [m/s]'}},y:{beginAtZero:true,title:{display:true,text:'Moc [MW]'},max:fwM*1.05}}});
+    g('ins_fw2').textContent=`Prędkość startowa (cut-in): ~3 m/s. Moc nominalna od: ~12 m/s. Wyłączenie burzowe (cut-out): 25 m/s. Bieżący punkt pracy: ${fwW} m/s → ${fmtD(eff*fwM,1)} MW (${Math.round(eff*100)}%).`;
   }
   if (g('c_fw_weibull') && isVisible('fw_2')) {
     const k=2.0, lambda=fwW*1.128;
@@ -1570,28 +1484,23 @@ function buildReport() {
     ['MEE pojemność',''+meeK+' MWh'],['MEE moc',''+meeP+' MW'],['Sprawność MEE',''+meeEff+'%'],
     ['Sezon',sezonNames[sezon]],['Cena szczytowa',''+cS+' PLN/MWh'],['Cena nocna',''+cN+' PLN/MWh']
   ]);
-  const tgPhi=0.4, peakMW=Math.max(...S.dem);
-  const rokE_real=Math.round(totalDem*250 + totalDem*0.8*52 + totalDem*0.3*63);
-  const hrs=Array.from({length:24},(_,i)=>`${i}:00`);
   g('rep_zaklad').innerHTML = tbl([
     ['Zapotrzebowanie dobowe',''+Math.round(totalDem)+' MWh/dobę'],
-    ['Szczyt (MW czynne)',''+fmtD(peakMW,1)+' MW'],
-    ['Szczyt pozorny (tgφ=0,4)',''+fmtD(peakMW*Math.sqrt(1+tgPhi*tgPhi),1)+' MVA'],
-    ['Moc bierna przy szczycie',''+fmtD(peakMW*tgPhi,1)+' MVAr'],
+    ['Szczyt zapotrzebowania',''+fmtD(Math.max(...S.dem),1)+' MW'],
     ['Load factor',''+Math.round(totalDem/(pp*24)*100)+'%'],
-    ['Energia roczna realna',''+fmt(rokE_real)+' MWh/rok (250 dn.rob.+52 sob.+63 nd)']
+    ['Energia roczna (est.)',''+fmt(Math.round(totalDem*365))+' MWh/rok']
   ]);
   const pvDay=S.pv.reduce((a,b)=>a+b,0), fwDay=S.fw.reduce((a,b)=>a+b,0);
   g('rep_oze').innerHTML = tbl([
     ['Produkcja PV dobowa',''+fmtD(pvDay,1)+' MWh/dobę'],
     ['Produkcja FW dobowa',''+fmtD(fwDay,1)+' MWh/dobę'],
-    ['Sprawność FW',''+Math.round(eff*100)+'%'+(fwW>=25?' ⚠️ CUT-OUT (≥25 m/s)!':'')],
+    ['Sprawność FW',''+Math.round(eff*100)+'%'],
     ['OZE łącznie',''+Math.round(totalOze)+' MWh/dobę'],
     ['Produkcja OZE rocznie (est.)',''+fmt(Math.round(totalOze*365))+' MWh/rok']
   ]);
   g('rep_mee').innerHTML = tbl([
     ['Energia z MEE dobowo',''+fmtD(meeE,1)+' MWh/dobę'],
-    ['Oszczędności arbitrażu (cena szcz.–nocna)',''+fmt(Math.round(meeE*(cS-cN)*0.85))+' PLN/dobę'],
+    ['Oszczędności arbitrażu',''+fmt(Math.round(meeE*(cS-cN)*0.85))+' PLN/dobę'],
     ['Rok degradacji do 70% pojemności',''+Math.ceil(Math.log(0.7)/Math.log(1-meeDeg/100))+'. rok eksploatacji']
   ]);
   g('rep_bilans').innerHTML = tbl([
@@ -1610,24 +1519,17 @@ function buildReport() {
   ]);
   g('rep_metoda').innerHTML = `
     <b>Modele obliczeniowe:</b><br>
-    • PV: kształt krzywej dobowej oparty na typowym nasłonecznieniu w Polsce. Szczyty: lato 65%, wiosna/jesień 40%, zima 20%. Uwzględniono sprawność falownika i straty.<br>
-    • FW: krzywa mocy potęgowa (v−3)^2.2/11^2.2 dla zakresu 3–14 m/s, moc nominalna 14–24,9 m/s, cut-out ≥25 m/s → P=0. Zmienność dobowa = suma trzech sinusoid.<br>
-    • Rozkład Weibulla: k=2,0, λ=v_śr×1,128.<br>
-    • MEE: round-trip efficiency, ładowanie z nadwyżki OZE i taniej taryfy nocnej; przy ładowaniu z sieci pobór sieci rośnie (zachowanie energii). Degradacja liniowa %/rok.<br>
-    • Moc bierna: tgφ=0,4 (standard PL dla zakładów przemysłowych). S=P/cosφ, Q=P·tgφ.<br>
-    • Roczny czas: 250 dni roboczych (100%) + 52 soboty (80%) + 63 dni wolne (30%) = 365 dni.<br>
-    • CAPEX PV: 3 500 PLN/kW + grunt 1,3 ha/MW × 57 000 PLN/ha lub 2 000 PLN/ha/rok dzierżawa. FW: 5 000 PLN/kW. MEE: 900 PLN/kWh + 200 PLN/kW.<br>
-    • Wyniki mają charakter szacunkowy — tylko do analiz koncepcyjnych.<br>
-    Wersja: 3.1 | Data: ${new Date().toLocaleDateString('pl-PL')}
+    • PV: kształt krzywej produkcji oparty na typowym nasłonecznieniu w Polsce, znormalizowany do szczytów: lato 65%, wiosna/jesień 40%, zima 20% mocy zainstalowanej. Uwzględniono sprawność falownika i straty systemu.<br>
+    • FW: krzywa mocy oparta na modelu potęgowym (ws-3)^1.8 / 9^1.8 dla zakresu 3–12 m/s, pełna moc dla ≥12 m/s. Zmienność dobowa wiatru modelowana sinusoidą wieloczęstotliwościową.<br>
+    • Rozkład Weibulla: parametr kształtu k=2.0, skala λ=v_śr·1.128.<br>
+    • MEE: model round-trip efficiency, strategia ładowania: nadwyżka OZE + niska taryfa nocna; rozładowanie: szczyt taryfowy. Degradacja liniowa.<br>
+    • Koszty energii: taryfa szczytowa 6:00–21:00, nocna 21:00–6:00.<br>
+    • CAPEX PV: 3 500 PLN/kW zainstalowanej mocy + grunt 1,3 ha/MW × 57 000 PLN/ha (zakup) lub 2 000 PLN/ha/rok (dzierżawa).<br>
+    • CAPEX FW: 5 000 PLN/kW. CAPEX MEE: 900 PLN/kWh + 200 PLN/kW mocy.<br>
+    • NPV obliczone dla zdefiniowanego horyzontu z uwzględnieniem wzrostu cen energii i stopy dyskontowej.<br>
+    • Wyniki mają charakter szacunkowy i służą do analiz koncepcyjnych. Dla decyzji inwestycyjnych wymagana szczegółowa analiza techniczno-ekonomiczna.<br>
+    Wersja: 3.0 | Data: ${new Date().toLocaleDateString('pl-PL')}
   `;
-
-  // Wykresy w raporcie (widoczne w PDF)
-  const rOpts={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:true,labels:{color:'#555',font:{size:10},boxWidth:10}}}};
-  const mkR=(id,type,data,extra={})=>{if(charts[id])charts[id].destroy();charts[id]=new Chart(g(id).getContext('2d'),{type,data,options:{...rOpts,...extra}});};
-  if(g('rpt_c1')) mkR('rpt_c1','bar',{labels:hrs,datasets:[{label:'Zapotrzebowanie [MW]',data:S.dem,backgroundColor:'rgba(77,157,224,0.7)',borderRadius:2},{label:'Limit',data:Array(24).fill(pp),type:'line',borderColor:'rgba(224,90,90,0.6)',borderDash:[5,3],borderWidth:1.5,pointRadius:0,fill:false}]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
-  if(g('rpt_c2')) mkR('rpt_c2','line',{labels:hrs,datasets:[{label:'PV [MW]',data:S.pv,borderColor:'#f4a535',backgroundColor:'rgba(244,165,53,0.12)',fill:true,tension:0.4,pointRadius:0,borderWidth:2},{label:'FW [MW]',data:S.fw,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.10)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},{label:'OZE łącznie',data:S.oze,borderColor:'#9b87f5',pointRadius:0,borderWidth:1.5,borderDash:[4,2],fill:false,tension:0.4}]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
-  if(g('rpt_c3')){const tariff=Array.from({length:24},(_,h)=>(h>=6&&h<21)?cS:cN);mkR('rpt_c3','line',{labels:hrs,datasets:[{label:'SOC MEE [MWh]',data:S.socArr,borderColor:'#9b87f5',backgroundColor:'rgba(155,135,245,0.12)',fill:true,tension:0.4,pointRadius:0,borderWidth:2,yAxisID:'y'},{label:'Moc MEE [MW]',data:S.meePow,borderColor:'#3ecf8e',pointRadius:0,borderWidth:1.5,tension:0.3,borderDash:[3,2],yAxisID:'y'},{label:'Taryfa÷10',data:tariff.map(v=>v/10),borderColor:'#e05a5a',pointRadius:0,borderWidth:1,tension:0,borderDash:[6,3],yAxisID:'y'}]},{scales:{y:{position:'left',beginAtZero:true,title:{display:true,text:'MWh/MW'}}}});}
-  if(g('rpt_c4')) mkR('rpt_c4','line',{labels:hrs,datasets:[{label:'Zapotrzebowanie',data:S.dem,borderColor:'#4d9de0',pointRadius:0,borderWidth:2,tension:0.3},{label:'OZE łącznie',data:S.oze,borderColor:'#9b87f5',pointRadius:0,borderWidth:1.5,borderDash:[4,2],tension:0.3},{label:'Z sieci',data:S.gridArr,borderColor:'#e05a5a',backgroundColor:'rgba(224,90,90,0.08)',fill:true,pointRadius:0,borderWidth:2,tension:0.3},{label:'Nadwyżka',data:S.surplusArr,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.10)',fill:true,pointRadius:0,borderWidth:2,tension:0.3}]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
 }
 
 function copyReport() {
