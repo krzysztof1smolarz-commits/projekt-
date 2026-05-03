@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="pl">
-<head>
-<meta charset="UTF-8">
+<html lang="pl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EnergoSym — Symulator Energetyczny Zakładu Produkcyjnego</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 /* ===== RESET & ROOT ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,7 +41,7 @@
   --shadow:   0 4px 24px rgba(0,0,0,0.4);
 }
 html { font-size: 14px; }
-body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; overflow: hidden; }
 
 /* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -116,7 +115,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .nav-item.active .nav-icon { opacity: 1; }
 
 /* ===== MAIN CONTENT ===== */
-.main { flex: 1; overflow-y: auto; padding: 1.75rem 2rem; }
+.main { flex: 1; overflow-y: auto; padding: 1.75rem 2rem; position: relative; }
 .page { display: none; }
 .page.active { display: block; }
 
@@ -138,9 +137,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 1rem; }
 .grid3 { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-bottom: 1rem; }
 .grid4 { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin-bottom: 1rem; }
-.grid-auto { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 10px; margin-bottom: 1rem; }
 @media(max-width:900px) { .grid2,.grid3,.grid4 { grid-template-columns: 1fr 1fr; } }
-@media(max-width:600px) { .grid2,.grid3,.grid4,.grid-auto { grid-template-columns: 1fr; } }
+@media(max-width:600px) { .grid2,.grid3,.grid4 { grid-template-columns: 1fr; } }
 
 /* ===== METRIC CARDS ===== */
 .mc {
@@ -169,7 +167,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 /* ===== FORM CONTROLS ===== */
 .form-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.8rem; }
 .form-label { font-size: 12px; color: var(--text2); min-width: 220px; flex-shrink: 0; }
-.form-label small { display: block; font-size: 10px; color: var(--text3); margin-top: 1px; }
 input[type=range] {
   flex: 1; min-width: 0; accent-color: var(--blue); cursor: pointer; height: 4px;
   -webkit-appearance: none; background: var(--surface2); border-radius: 2px;
@@ -195,7 +192,6 @@ select:focus { outline: none; border-color: var(--blue); }
 /* ===== SECTION DIVIDER ===== */
 .sdiv { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
 .stitle { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
-.stitle::after { content:''; flex:1; height:1px; background: var(--border); }
 
 /* ===== BADGE BUTTONS ===== */
 .btn-group { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
@@ -222,14 +218,12 @@ select:focus { outline: none; border-color: var(--blue); }
 .cw  { position: relative; width: 100%; height: 260px; }
 .cwm { position: relative; width: 100%; height: 300px; }
 .cwl { position: relative; width: 100%; height: 340px; }
-.cwxl{ position: relative; width: 100%; height: 380px; }
 
 /* ===== INSIGHT BOXES ===== */
 .ins { border-radius: var(--radius); padding: 0.8rem 1rem; font-size: 12px; line-height: 1.6; margin-top: 0.85rem; border-left: 3px solid; }
 .ins.info  { background: var(--blue-bg);   color: var(--blue2);   border-left-color: var(--blue);  }
 .ins.good  { background: var(--green-bg);  color: var(--green2);  border-left-color: var(--green); }
 .ins.warn  { background: var(--amber-bg);  color: var(--amber2);  border-left-color: var(--amber); }
-.ins.danger{ background: var(--red-bg);    color: var(--red2);    border-left-color: var(--red);   }
 
 /* ===== STATUS PILL ===== */
 .pill { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-family: var(--mono); }
@@ -240,7 +234,6 @@ select:focus { outline: none; border-color: var(--blue); }
 
 /* ===== FW STATUS BAR ===== */
 .fw-bar { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7rem 1rem; font-size: 12px; color: var(--text2); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.fw-bar strong { color: var(--text); font-weight: 500; }
 
 /* ===== TABLE ===== */
 .tbl-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); }
@@ -253,19 +246,11 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 .td-mono { font-family: var(--mono); }
 .td-green { color: var(--green2); font-family: var(--mono); font-weight: 500; }
 .td-amber { color: var(--amber2); font-family: var(--mono); }
-.td-blue  { color: var(--blue2);  font-family: var(--mono); }
 .td-red   { color: var(--red2);   font-family: var(--mono); }
 .td-best  { background: var(--green-bg) !important; }
 
 /* ===== INVESTMENT CALC ===== */
-.inv-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; margin-bottom: 0.75rem; }
-.inv-label { font-size: 13px; color: var(--text2); }
-.inv-input { width: 100px; }
 .inv-unit { font-size: 12px; color: var(--text3); width: 40px; }
-
-/* ===== REPORT ===== */
-.report-section { margin-bottom: 1.5rem; }
-.report-section h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
 
 /* ===== TABS (sub) ===== */
 .sub-tabs { display: flex; gap: 2px; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
@@ -292,17 +277,11 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   th { background: #eee !important; color: #333 !important; }
   td { color: #222 !important; }
   h3 { color: #111 !important; border-bottom-color: #ccc !important; }
-  /* Wykresy w raporcie – renderuj jako canvas */
   .report-chart-wrap { page-break-inside: avoid; margin: 0.75rem 0; }
   .report-chart-wrap canvas { display: block !important; max-width: 100% !important; }
   .report-section { page-break-inside: avoid; margin-bottom: 1.5rem; }
-  a { color: #111 !important; }
   .btn-primary, .btn { display: none !important; }
 }
-
-/* ===== PROGRESS BAR ===== */
-.prog-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-top: 4px; }
-.prog-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
 </style>
 </head>
 <body>
@@ -310,10 +289,10 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 <!-- HEADER -->
 <header class="header">
   <div class="header-logo">EnergoSym<span>.pl</span></div>
-  <div class="header-sub">Symulator energetyczny zakładu produkcyjnego — v3.0</div>
+  <div class="header-sub">Symulator energetyczny zakładu produkcyjnego — v3.1</div>
   <div style="margin-left:auto;display:flex;align-items:center;gap:0.75rem">
-    <span id="hdr_pokrycie" class="pill blue">Ładowanie...</span>
-    <span id="hdr_koszt" style="font-family:var(--mono);font-size:12px;color:var(--text3)">—</span>
+    <span id="hdr_pokrycie" class="pill amber">Pokrycie 20%</span>
+    <span id="hdr_koszt" style="font-family:var(--mono);font-size:12px;color:var(--text3)">Koszt sieci: — PLN/dobę</span>
   </div>
 </header>
 
@@ -324,53 +303,29 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 <nav class="sidebar">
   <div class="nav-group">
     <div class="nav-group-label">Konfiguracja</div>
-    <button class="nav-item active" onclick="showPage('cfg')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
-      Parametry ogólne
-    </button>
+    <button class="nav-item active" onclick="showPage('cfg')">Parametry ogólne</button>
   </div>
   <div class="nav-group">
     <div class="nav-group-label">Zakład</div>
-    <button class="nav-item" onclick="showPage('zaklad')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="6" width="14" height="9" rx="1"/><path d="M1 9h14M5 6V3M11 6V3M5 3h6"/></svg>
-      Profil produkcyjny
-    </button>
+    <button class="nav-item" onclick="showPage('zaklad')">Profil produkcyjny</button>
   </div>
   <div class="nav-group">
     <div class="nav-group-label">OZE</div>
-    <button class="nav-item" onclick="showPage('pv')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
-      Fotowoltaika (PV)
-    </button>
-    <button class="nav-item" onclick="showPage('fw')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="1.5"/><path d="M8 6.5V2M8 6.5l3.5-2M8 6.5l-3.5-2"/></svg>
-      Elektrownia wiatrowa (FW)
-    </button>
+    <button class="nav-item" onclick="showPage('pv')">Fotowoltaika (PV)</button>
+    <button class="nav-item" onclick="showPage('fw')">Elektrownia wiatrowa (FW)</button>
   </div>
   <div class="nav-group">
     <div class="nav-group-label">Magazyn</div>
-    <button class="nav-item" onclick="showPage('mee')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="10" height="10" rx="1"/><path d="M6 8h4M8 6v4"/></svg>
-      Magazyn energii (MEE)
-    </button>
+    <button class="nav-item" onclick="showPage('mee')">Magazyn energii (MEE)</button>
   </div>
   <div class="nav-group">
     <div class="nav-group-label">Analiza</div>
-    <button class="nav-item" onclick="showPage('bilans')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,12 5,7 9,9 15,3"/></svg>
-      Bilans energetyczny
-    </button>
-    <button class="nav-item" onclick="showPage('inwest')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14l3-4 3 2 3-5 3-3"/><circle cx="14" cy="4" r="1.5"/></svg>
-      Analiza inwestycji
-    </button>
+    <button class="nav-item" onclick="showPage('bilans')">Bilans energetyczny</button>
+    <button class="nav-item" onclick="showPage('inwest')">Analiza inwestycji</button>
   </div>
   <div class="nav-group">
     <div class="nav-group-label">Dokumentacja</div>
-    <button class="nav-item" onclick="showPage('raport')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1h6l4 4v10H4V1z"/><polyline points="10,1 10,5 14,5"/><line x1="6" y1="9" x2="10" y2="9"/><line x1="6" y1="12" x2="10" y2="12"/></svg>
-      Raport sprawozdanie
-    </button>
+    <button class="nav-item" onclick="showPage('raport')">Raport sprawozdanie</button>
   </div>
 </nav>
 
@@ -381,14 +336,14 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 <div class="page active" id="page-cfg">
   <div class="page-header">
     <h1 class="page-title">Parametry ogólne</h1>
-    <p class="page-desc">Ustaw wszystkie parametry zakładu, instalacji OZE i MEE. Wyniki są przeliczane automatycznie na wszystkich zakładkach.</p>
+    <p class="page-desc">Ustaw wszystkie parametry zakładu, instalacji OZE i MEE.</p>
   </div>
   <div class="grid2">
     <div class="card">
       <div class="card-title"><span class="card-title-dot" style="background:var(--blue)"></span>Zakład produkcyjny</div>
       <div class="form-row"><span class="form-label">Moc przyłączeniowa [MW]</span><input type="range" id="p_przyl" min="20" max="50" step="5" value="30" oninput="upd()"><span class="val-display" id="p_przyl_v">30 MW</span></div>
-      <div class="form-row"><span class="form-label">Zapotrzebowanie nocne 22–6 [%]</span><input type="range" id="p_noc" min="20" max="60" step="5" value="50" oninput="upd()"><span class="val-display" id="p_noc_v">50%</span></div>
-      <div class="form-row"><span class="form-label">Zapotrzebowanie dzienne 6–22 [%]</span><input type="range" id="p_dzien" min="60" max="95" step="5" value="80" oninput="upd()"><span class="val-display" id="p_dzien_v">80%</span></div>
+      <div class="form-row"><span class="form-label">Zapotrzebowanie nocne 22–6 [%]</span><input type="range" id="p_noc" min="20" max="60" step="5" value="35" oninput="upd()"><span class="val-display" id="p_noc_v">35%</span></div>
+      <div class="form-row"><span class="form-label">Zapotrzebowanie dzienne 6–22 [%]</span><input type="range" id="p_dzien" min="60" max="95" step="5" value="85" oninput="upd()"><span class="val-display" id="p_dzien_v">85%</span></div>
       <div class="form-row"><span class="form-label">Tryb pracy zakładu</span>
         <select id="tryb" onchange="upd()">
           <option value="3">3-zmianowy (równomierne 24h)</option>
@@ -405,7 +360,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--amber)"></span>Fotowoltaika (PV)</div>
-        <div class="form-row"><span class="form-label">Moc zainstalowana PV [MW]</span><input type="range" id="pv_moc" min="2" max="35" step="1" value="20" oninput="upd()"><span class="val-display" id="pv_v">20 MW</span></div>
+        <div class="form-row"><span class="form-label">Moc zainstalowana PV [MW]</span><input type="range" id="pv_moc" min="2" max="35" step="1" value="30" oninput="upd()"><span class="val-display" id="pv_v">30 MW</span></div>
         <div class="form-row"><span class="form-label">Sprawność falownika [%]</span><input type="range" id="pv_inv" min="92" max="99" step="0.5" value="97" oninput="upd()"><span class="val-display" id="pv_inv_v">97%</span></div>
         <div class="form-row"><span class="form-label">Straty (zacienienie, okablowanie) [%]</span><input type="range" id="pv_loss" min="0" max="15" step="1" value="5" oninput="upd()"><span class="val-display" id="pv_loss_v">5%</span></div>
         <div class="form-row"><span class="form-label">Sezon (nasłonecznienie)</span>
@@ -418,15 +373,15 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       </div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--green)"></span>Elektrownia wiatrowa (FW)</div>
-        <div class="form-row"><span class="form-label">Moc zainstalowana FW [MW]</span><input type="range" id="fw_moc" min="2" max="25" step="1" value="14" oninput="upd()"><span class="val-display" id="fw_v">14 MW</span></div>
+        <div class="form-row"><span class="form-label">Moc zainstalowana FW [MW]</span><input type="range" id="fw_moc" min="2" max="25" step="1" value="16" oninput="upd()"><span class="val-display" id="fw_v">16 MW</span></div>
         <div class="form-row"><span class="form-label">Śr. prędkość wiatru [m/s]</span><input type="range" id="fw_wind" min="0" max="25" step="0.5" value="8" oninput="upd()"><span class="val-display" id="fw_wind_v">8 m/s</span></div>
         <div class="form-row"><span class="form-label">Zmienność dobowa wiatru [%]</span><input type="range" id="fw_var" min="0" max="60" step="5" value="20" oninput="upd()"><span class="val-display" id="fw_var_v">20%</span></div>
-        <div id="fw_status_cfg" class="fw-bar">Obliczanie...</div>
+        <div id="fw_status_cfg" class="fw-bar"></div>
       </div>
       <div class="card">
         <div class="card-title"><span class="card-title-dot" style="background:var(--purple)"></span>Magazyn energii (MEE)</div>
-        <div class="form-row"><span class="form-label">Pojemność MEE [MWh]</span><input type="range" id="mee_kwh" min="3" max="25" step="1" value="12" oninput="upd()"><span class="val-display" id="mee_kwh_v">12 MWh</span></div>
-        <div class="form-row"><span class="form-label">Moc MEE [MW]</span><input type="range" id="mee_mw" min="1" max="10" step="1" value="4" oninput="upd()"><span class="val-display" id="mee_mw_v">4 MW</span></div>
+        <div class="form-row"><span class="form-label">Pojemność MEE [MWh]</span><input type="range" id="mee_kwh" min="3" max="25" step="1" value="9" oninput="upd()"><span class="val-display" id="mee_kwh_v">9 MWh</span></div>
+        <div class="form-row"><span class="form-label">Moc MEE [MW]</span><input type="range" id="mee_mw" min="1" max="10" step="1" value="3" oninput="upd()"><span class="val-display" id="mee_mw_v">3 MW</span></div>
         <div class="form-row"><span class="form-label">Sprawność round-trip MEE [%]</span><input type="range" id="mee_eff" min="80" max="98" step="1" value="92" oninput="upd()"><span class="val-display" id="mee_eff_v">92%</span></div>
         <div class="form-row"><span class="form-label">Degradacja pojemności [%/rok]</span><input type="range" id="mee_deg" min="1" max="4" step="0.5" value="2" oninput="upd()"><span class="val-display" id="mee_deg_v">2%</span></div>
       </div>
@@ -445,14 +400,14 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div class="mc green"><div class="mc-label">Oszczędności vs. bez OZE</div><div class="mc-value green" id="cfg_oszcz">—</div><div class="mc-unit">PLN/dobę</div></div>
     <div class="mc blue"><div class="mc-label">Śr. prod. FW</div><div class="mc-value blue" id="cfg_fw_avg">—</div><div class="mc-unit">MW (chwilowo)</div></div>
   </div>
-  <div id="ins_cfg" class="ins info"></div>
+  <div id="ins_cfg" class="ins warn"></div>
 </div>
 
 <!-- ===================== PAGE: ZAKŁAD ===================== -->
 <div class="page" id="page-zaklad">
   <div class="page-header">
     <h1 class="page-title">Profil produkcyjny zakładu</h1>
-    <p class="page-desc">Dobowy i tygodniowy profil zapotrzebowania na energię elektryczną. Parametry z zakładki Konfiguracja.</p>
+    <p class="page-desc">Dobowy i tygodniowy profil zapotrzebowania na energię elektryczną.</p>
   </div>
 
   <div class="sub-tabs">
@@ -481,7 +436,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       <div class="mc amber"><div class="mc-label">Energia dobowa</div><div class="mc-value amber" id="zak_energy">—</div><div class="mc-unit">MWh/dobę</div></div>
     </div>
     <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:0.75rem 1rem;font-size:12px;color:var(--text2);margin-bottom:0.5rem">
-      <strong style="color:var(--text)">Uwaga o mocy biernej:</strong> Zakłady przemysłowe generują moc bierną indukcyjną. Standardowo w Polsce wymagane tgφ ≤ 0,4. Przy szczycie <span id="zak_min_inline">—</span> MW czynnych zapotrzebowanie na moc bierną wynosi <span id="zak_mvar_inline" style="color:var(--amber2)">—</span> MVAr, a moc pozorna <span id="zak_mva_inline" style="color:var(--purple)">—</span> MVA. Przekroczenie tgφ &gt; 0,4 skutkuje karami w rachunku za energię.
+      <strong style="color:var(--text)">Uwaga o mocy biernej:</strong> Zakłady przemysłowe generują moc bierną indukcyjną. Standardowo w Polsce wymagane tgφ ≤ 0,4. Przy szczycie <span id="zak_min_inline">—</span> MW czynnych zapotrzebowanie na moc bierną wynosi <span id="zak_mvar_inline" style="color:var(--amber2)">—</span> MVAr, a moc pozorna <span id="zak_mva_inline" style="color:var(--purple)">—</span> MVA. Przekroczenie tgφ > 0,4 skutkuje karami.
     </div>
     <div id="ins_zak1" class="ins info"></div>
   </div>
@@ -496,21 +451,20 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div class="grid4" style="margin-top:1rem">
       <div class="mc blue"><div class="mc-label">Energia tygodniowa</div><div class="mc-value blue" id="zak_tyg_e">—</div><div class="mc-unit">MWh/tydzień</div></div>
       <div class="mc"><div class="mc-label">Energia roczna (×52 tyg.)</div><div class="mc-value" id="zak_rok_e">—</div><div class="mc-unit">MWh/rok</div></div>
-      <div class="mc green"><div class="mc-label">Energia roczna realna <small style="font-size:10px">(250 dn.rob+52 sob+63 nd)</small></div><div class="mc-value green" id="zak_rok_e_real">—</div><div class="mc-unit">MWh/rok</div></div>
+      <div class="mc green"><div class="mc-label">Energia roczna realna</div><div class="mc-value green" id="zak_rok_e_real">—</div><div class="mc-unit">MWh/rok</div></div>
       <div class="mc amber"><div class="mc-label">Koszt roczny (bez OZE)</div><div class="mc-value amber" id="zak_rok_koszt">—</div><div class="mc-unit">PLN/rok</div></div>
     </div>
     <div id="ins_zak2" class="ins info"></div>
   </div>
 
   <div class="sub-section" id="zaklad_2">
-    <div class="stitle">Zestawienie wskaźników dobowych (wszystkie tryby pracy)</div>
+    <div class="stitle">Zestawienie wskaźników dobowych</div>
     <div class="tbl-wrap" style="margin-bottom:1rem">
       <table id="tbl_zaklad">
         <thead><tr><th>Tryb pracy</th><th>Energia [MWh/dobę]</th><th>Szczyt [MW]</th><th>Min [MW]</th><th>Load factor [%]</th><th>Koszt bez OZE [PLN/dobę]</th></tr></thead>
         <tbody id="tbl_zaklad_body"></tbody>
       </table>
     </div>
-    <div id="ins_zak3" class="ins info"></div>
   </div>
 </div>
 
@@ -518,7 +472,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 <div class="page" id="page-pv">
   <div class="page-header">
     <h1 class="page-title">Fotowoltaika (PV)</h1>
-    <p class="page-desc">Profil produkcji energii słonecznej — warunki sezonowe, wpływ strat i porównanie miesięczne.</p>
   </div>
 
   <div class="sub-tabs">
@@ -529,8 +482,8 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 
   <div class="sub-section active" id="pv_0">
     <div class="btn-group">
-      <button class="btn active" id="psl" onclick="setPvSezon('lato')">Lato</button>
-      <button class="btn" id="psw" onclick="setPvSezon('wiosna')">Wiosna/Jesień</button>
+      <button class="btn" id="psl" onclick="setPvSezon('lato')">Lato</button>
+      <button class="btn active" id="psw" onclick="setPvSezon('wiosna')">Wiosna/Jesień</button>
       <button class="btn" id="psz" onclick="setPvSezon('zima')">Zima</button>
     </div>
     <div class="legend"><span><span class="ld" style="background:var(--amber)"></span>Produkcja PV brutto [MW]</span><span><span class="ld" style="background:var(--amber2);opacity:0.5"></span>Produkcja netto (po stratach)</span></div>
@@ -570,7 +523,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 <div class="page" id="page-fw">
   <div class="page-header">
     <h1 class="page-title">Elektrownia wiatrowa (FW)</h1>
-    <p class="page-desc">Krzywa mocy turbiny, rozkład Weibulla prędkości wiatru, profil dobowy i zmienność produkcji.</p>
   </div>
 
   <div class="sub-tabs">
@@ -581,7 +533,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 
   <div class="sub-section active" id="fw_0">
-    <div id="fw_status_bar" class="fw-bar">Obliczanie...</div>
+    <div id="fw_status_bar" class="fw-bar"></div>
     <div class="legend">
       <span><span class="ld" style="background:var(--green)"></span>Produkcja FW [MW]</span>
       <span><span class="ld" style="background:var(--green2);opacity:0.4"></span>Zakres zmienności</span>
@@ -625,7 +577,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 <div class="page" id="page-mee">
   <div class="page-header">
     <h1 class="page-title">Magazyn energii elektrycznej (MEE)</h1>
-    <p class="page-desc">Strategia ładowania i rozładowania, analiza oszczędności, degradacja pojemności w czasie.</p>
   </div>
 
   <div class="sub-tabs">
@@ -683,7 +634,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 <div class="page" id="page-bilans">
   <div class="page-header">
     <h1 class="page-title">Bilans energetyczny</h1>
-    <p class="page-desc">Pełna analiza bilansu: zakład vs OZE vs sieć — dobowo i tygodniowo.</p>
   </div>
 
   <div class="sub-tabs">
@@ -740,7 +690,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 <div class="page" id="page-inwest">
   <div class="page-header">
     <h1 class="page-title">Analiza inwestycji</h1>
-    <p class="page-desc">Kalkulator opłacalności rozbudowy instalacji PV, FW lub MEE. Uwzględnia grunt, NPV, IRR i przepływy w horyzoncie 25 lat.</p>
   </div>
 
   <div class="sub-tabs">
@@ -798,7 +747,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 
   <div class="sub-section" id="inwest_1">
-    <p style="font-size:13px;color:var(--text2);margin-bottom:1rem">Automatyczne porównanie 3 scenariuszy: +25% PV / +25% FW / +50% MEE względem bieżącej konfiguracji.</p>
     <div class="grid3" style="margin-bottom:1rem">
       <div class="mc amber"><div class="mc-label">+25% PV — oszczędność</div><div class="mc-value amber" id="cmp_pv_sav">—</div><div class="mc-unit">PLN/dobę</div></div>
       <div class="mc green"><div class="mc-label">+25% FW — oszczędność</div><div class="mc-value green" id="cmp_fw_sav">—</div><div class="mc-unit">PLN/dobę</div></div>
@@ -822,7 +770,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 
   <div class="sub-section" id="inwest_2">
-    <p style="font-size:13px;color:var(--text2);margin-bottom:1rem">Skumulowane przepływy gotówkowe dla inwestycji zdefiniowanej w Kalkulatorze inwestycji.</p>
     <div class="legend">
       <span><span class="ld" style="background:var(--green)"></span>Skumulowane przepływy [tys. PLN]</span>
       <span><span class="ld" style="background:var(--blue);opacity:0.4"></span>Próg rentowności</span>
@@ -846,7 +793,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 <div class="page" id="page-raport">
   <div class="page-header">
     <h1 class="page-title">Raport — Sprawozdanie</h1>
-    <p class="page-desc">Zbiorcze zestawienie wyników do sprawozdania. Użyj Ctrl+P lub przycisku aby wydrukować / zapisać PDF.</p>
+    <p class="page-desc">Zbiorcze zestawienie wyników do sprawozdania.</p>
   </div>
   <div style="margin-bottom:1.25rem;display:flex;gap:10px;flex-wrap:wrap">
     <button class="btn-primary" onclick="window.print()">Drukuj / Zapisz PDF</button>
@@ -915,12 +862,10 @@ Chart.defaults.font.size = 11;
 // PHYSICS / SIMULATION MODELS
 // ============================================================
 function windEfficiency(ws) {
-  // Realistyczna krzywa mocy turbiny wiatrowej:
-  // cut-in: 3 m/s, moc nominalna od ~14 m/s, cut-out: 25 m/s (wyłączenie burzowe)
   if (ws < 3) return 0;
-  if (ws >= 25) return 0;   // cut-out — wyłączenie burzowe przy 25 m/s
-  if (ws < 14) return Math.pow((ws - 3) / 11, 2.2);  // krzywa sześcienna do 14 m/s
-  return 1.0;               // moc nominalna 14–24.9 m/s
+  if (ws >= 25) return 0;   // cut-out
+  if (ws < 14) return Math.pow((ws - 3) / 11, 2.2);  
+  return 1.0;               
 }
 
 function pvProfile(sezon, maxMW, invEff, lossEff) {
@@ -940,10 +885,8 @@ function fwProfile(maxMW, windSpeed, variability) {
   const baseEff = windEfficiency(windSpeed);
   if (baseEff === 0) return Array(24).fill(0);
   const vFrac = variability / 100;
-  // Bardziej nieregularne zmiany - kilka składowych sinusoidalnych o różnych fazach
   const hourly = [0.82,0.78,0.74,0.70,0.72,0.76,0.80,0.88,0.95,1.0,1.03,1.05,1.02,0.98,0.94,0.90,0.93,0.97,1.02,1.05,1.01,0.96,0.90,0.85];
   return hourly.map((hv, i) => {
-    // Trzy nakładające się składowe o różnych częstotliwościach = realistyczna nieregularność
     const noise1 = Math.sin(i * 1.7 + 0.8) * 0.45;
     const noise2 = Math.sin(i * 3.1 + 2.3) * 0.30;
     const noise3 = Math.sin(i * 5.3 + 1.1) * 0.20;
@@ -981,34 +924,30 @@ function simulate(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, sezon, tryb, pp, 
 
   for (let h = 0; h < 24; h++) {
     const oze = pv[h] + fw[h];
-    // Bilans: ile brakuje (ujemne) lub nadwyżka (dodatnie) bez MEE
-    let gap = dem[h] - oze;  // >0 = brakuje, <0 = nadwyżka
+    let gap = dem[h] - oze;  
     let mee = 0;
 
     if (gap < 0) {
-      // Nadwyżka OZE — ładuj MEE
       const surplusOze = -gap;
       const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
       soc = Math.min(meeMWh, soc + ch * rtEff);
       mee = ch;
-      gap += ch;  // zmniejsz nadwyżkę o załadowane
+      gap += ch;  
     } else if (gap > 0) {
-      // Niedobór — rozładuj MEE
       const dis = Math.min(gap, meeMW, soc);
       soc = Math.max(0, soc - dis);
       mee = -dis;
-      gap -= dis * rtEff;  // MEE pokrywa część niedoboru (z uwzgl. sprawności)
+      gap -= dis * rtEff;  
     }
 
-    // Nocny arbitraż cenowy: jeśli tania taryfa i MEE nie jest pełny, doładuj z sieci
     const isCheapHour = (h < 6 || h >= 21);
     if (isCheapHour && soc < meeMWh * 0.95 && gap >= 0 && meeMWh > 0) {
       const maxCharge = Math.min(meeMW, meeMWh - soc);
-      const gridCharge = Math.min(maxCharge, meeMW * 0.7); // max 70% mocy MEE z sieci nocą
+      const gridCharge = Math.min(maxCharge, meeMW * 0.7); 
       if (gridCharge > 0.01) {
         soc = Math.min(meeMWh, soc + gridCharge * rtEff);
-        mee = gridCharge;  // ładowanie z sieci (mee > 0 = ładowanie)
-        gap += gridCharge;  // pobór z sieci rośnie o tyle ile ładujemy
+        mee = gridCharge;  
+        gap += gridCharge;  
       }
     }
 
@@ -1035,7 +974,6 @@ function mkChart(id, type, data, opts={}) {
   const el = document.getElementById(id);
   if (!el) return null;
   if (charts[id]) { charts[id].destroy(); delete charts[id]; }
-  // Tymczasowo pokaż ukryte kontenery żeby Chart.js mógł zmierzyć wymiary
   const hiddenParents = [];
   let node = el.parentElement;
   while (node && node !== document.body) {
@@ -1051,7 +989,6 @@ function mkChart(id, type, data, opts={}) {
     type, data,
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, ...opts }
   });
-  // Przywróć stan ukrycia
   hiddenParents.forEach(n => {
     n.style.display = '';
     n.style.visibility = '';
@@ -1084,12 +1021,9 @@ function showSub(page, idx) {
   const tabs = document.querySelectorAll('#page-'+page+' .sub-tab');
   subs.forEach((s,i) => s.classList.toggle('active', i===idx));
   tabs.forEach((t,i) => t.classList.toggle('active', i===idx));
-  // Poczekaj aż element stanie się widoczny, potem przerysuj wykresy
   setTimeout(() => {
-    // Resize wszystkich istniejących chartów (Chart.js nie widzi nowych wymiarów po display:none)
     Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} });
     upd();
-    // Drugi pass dla pewności
     setTimeout(() => {
       Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} });
       upd();
@@ -1153,7 +1087,13 @@ function upd() {
   const totalSurp = S.surplusArr.reduce((a,b)=>a+b,0);
   const meeE      = S.meePow.filter(v=>v<0).reduce((a,b)=>a+Math.abs(b),0);
   const autocons  = totalOze > 0 ? Math.min(100, Math.round((1-totalSurp/totalOze)*100)) : 0;
-  const pokrycie  = Math.min(100, Math.round((totalDem-totalGrid)/totalDem*100));
+  
+  // POPRAWKA AUTARKII
+  let pokrycie = 0;
+  if(totalDem > 0) {
+      pokrycie = Math.min(100, Math.round(((totalDem - totalGrid) / totalDem) * 100));
+  }
+  
   const costGrid  = calcCost(S.gridArr, cS, cN);
   const costNoOze = calcCost(S.dem, cS, cN);
   const savings   = Math.max(0, costNoOze - costGrid);
@@ -1163,9 +1103,11 @@ function upd() {
 
   // Header pills
   const pillEl = g('hdr_pokrycie');
-  pillEl.textContent = `Pokrycie ${pokrycie}%`;
-  pillEl.className = pokrycie > 60 ? 'pill green' : pokrycie > 35 ? 'pill blue' : 'pill amber';
-  g('hdr_koszt').textContent = `Koszt sieci: ${fmt(costGrid)} PLN/dobę`;
+  if(pillEl){
+      pillEl.textContent = `Pokrycie ${pokrycie}%`;
+      pillEl.className = pokrycie > 60 ? 'pill green' : pokrycie > 35 ? 'pill blue' : 'pill amber';
+  }
+  if(g('hdr_koszt')) g('hdr_koszt').textContent = `Koszt sieci: ${fmt(costGrid)} PLN/dobę`;
 
   // FW status
   const fwStatusText = fwW >= 25
@@ -1189,14 +1131,15 @@ function upd() {
     const ins = g('ins_cfg');
     const fwCutout = fwW >= 25;
     const fwWarning = fwCutout ? ' ⚠️ UWAGA: Prędkość wiatru ≥25 m/s — turbiny wyłączone (cut-out burzowy)!' : '';
-    if (pokrycie > 60) { ins.className='ins good'; ins.textContent=`Pokrycie OZE+MEE: ${pokrycie}% zapotrzebowania. Oszczędności: ${fmt(savings)} PLN/dobę = ${fmt(savings*365)} PLN/rok.${fwWarning}`; }
-    else if (pokrycie > 35) { ins.className='ins info'; ins.textContent=`Pokrycie OZE+MEE: ${pokrycie}% zapotrzebowania. Oszczędności: ${fmt(savings)} PLN/dobę. Potencjał optymalizacji — rozważ zwiększenie mocy FW lub pojemności MEE.${fwWarning}`; }
-    else { ins.className='ins warn'; ins.textContent=`Niskie pokrycie OZE+MEE: ${pokrycie}% — zakład w dużym stopniu zależny od sieci (${Math.round(totalGrid)} MWh/dobę z sieci vs ${Math.round(totalOze)} MWh/dobę OZE). Oszczędności: ${fmt(savings)} PLN/dobę.${fwWarning}`; }
+    
+    // POPRAWIONY KOMUNIKAT BAZUJĄCY NA POKRYCIU A NIE AUTOKONSUMPCJI
+    if (pokrycie > 60) { ins.className='ins good'; ins.textContent=`Doskonałe pokrycie zapotrzebowania (${pokrycie}%) — zakład w dużym stopniu niezależny od sieci. Oszczędności: ${fmt(savings)} PLN/dobę = ${fmt(savings*365)} PLN/rok.${fwWarning}`; }
+    else if (pokrycie > 30) { ins.className='ins info'; ins.textContent=`Umiarkowane pokrycie zapotrzebowania (${pokrycie}%). Zakład częściowo zależny od sieci. Oszczędności: ${fmt(savings)} PLN/dobę. Rozważ rozbudowę OZE.${fwWarning}`; }
+    else { ins.className='ins warn'; ins.textContent=`Niskie pokrycie zapotrzebowania (${pokrycie}%) — zakład w pełni zależny od sieci energetycznej (wymaga zakupu ${Math.round(totalGrid)} MWh dziennie). Oszczędności: ${fmt(savings)} PLN/dobę.${fwWarning}`; }
   }
 
   // ---- PAGE: ZAKŁAD ----
-  if (g('c_zak_dobowy')) {
-    // Taryfa godzinowa jako tło (obszar kolorowy)
+  if (g('c_zak_dobowy') && isVisible('zaklad_0')) {
     const tariffBg = Array.from({length:24}, (_,h) => (h>=6&&h<21) ? cS/10 : cN/10);
     mkChart('c_zak_dobowy','bar',{labels:hrs,datasets:[
       {label:'Taryfa÷10 [PLN/MWh]',data:tariffBg,backgroundColor:Array.from({length:24},(_,h)=>(h>=6&&h<21)?'rgba(224,90,90,0.10)':'rgba(77,157,224,0.08)'),borderRadius:0,order:3,yAxisID:'y'},
@@ -1204,23 +1147,17 @@ function upd() {
       {label:'Limit przyłączeniowy',data:Array(24).fill(pp),type:'line',borderColor:'rgba(224,90,90,0.6)',borderDash:[6,3],borderWidth:1.5,pointRadius:0,fill:false,order:2,yAxisID:'y'}
     ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW (taryfa ÷10)'}}},plugins:{legend:{display:true,labels:{color:'#9896a0',font:{size:11}}}}});
     const peak=Math.max(...S.dem), peakH=S.dem.indexOf(peak);
-    // Moc bierna (tgφ ≤ 0,4)
     const tgPhi = 0.4;
     const peakMVA = parseFloat((peak / Math.sqrt(1/(1+tgPhi*tgPhi))).toFixed(1));
-    const demMVA  = S.dem.map(p => parseFloat((p * Math.sqrt(1+tgPhi*tgPhi)).toFixed(2)));
-    const demMVAr = S.dem.map(p => parseFloat((p * tgPhi).toFixed(2)));
     g('zak_peak').textContent=fmtD(peak,1); g('zak_min').textContent=fmtD(Math.min(...S.dem),1); g('zak_energy').textContent=Math.round(totalDem);
     if(g('zak_mva'))  g('zak_mva').textContent = peakMVA;
     if(g('zak_mvar')) g('zak_mvar').textContent = fmtD(peak*tgPhi,1);
     if(g('zak_min_inline'))  g('zak_min_inline').textContent  = fmtD(peak,1);
     if(g('zak_mvar_inline')) g('zak_mvar_inline').textContent = fmtD(peak*tgPhi,1);
     if(g('zak_mva_inline'))  g('zak_mva_inline').textContent  = peakMVA;
-    // Roczny czas pracy: 250 dni roboczych + 52 soboty (80%) + 63 dni weekendowe (30%)
-    const rokE_real = Math.round(totalDem*250 + totalDem*0.8*52 + totalDem*0.3*63);
-    if(g('zak_rok_e_real')) g('zak_rok_e_real').textContent = fmt(rokE_real);
     g('ins_zak1').textContent=`Szczyt: ${fmtD(peak,1)} MW (${peakMVA} MVA z tgφ=0,4) o godz. ${peakH}:00. Load factor: ${Math.round(totalDem/(pp*24)*100)}%. Energia dobowa: ${Math.round(totalDem)} MWh. Obszar czerwony = taryfa szczytowa (6-21), niebieski = tania noc.`;
   }
-  if (g('c_zak_tygodniowy')) {
+  if (g('c_zak_tygodniowy') && isVisible('zaklad_1')) {
     const days=['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
     const scales=[1,1,1,1,1,0.8,0.3];
     const dayEnergies=scales.map(s=>demandProfile(tryb,pp,pn,pd,s).reduce((a,b)=>a+b,0));
@@ -1229,18 +1166,17 @@ function upd() {
     ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MWh/dobę'}}}});
     const tygE=dayEnergies.reduce((a,b)=>a+b,0);
     const rokE=tygE*52;
-    // Realna energia roczna: 250 dni roboczych + 52 soboty (80%) + 63 dni weekendowe (30%)
     const eDzien=totalDem, eSob=totalDem*0.8, eNd=totalDem*0.3;
     const rokE_real=Math.round(eDzien*250 + eSob*52 + eNd*63);
-    const rokKoszt=calcCost(S.gridArr,cS,cN)*365*0.85; // przybliżony koszt roczny
+    const rokKoszt=calcCost(S.gridArr,cS,cN)*365*0.85; 
     const lf=Math.round(totalDem/(pp*24)*100);
     g('zak_tyg_e').textContent=Math.round(tygE);
     g('zak_rok_e').textContent=fmt(Math.round(rokE));
-    g('zak_rok_e_real').textContent=fmt(rokE_real);
+    if(g('zak_rok_e_real')) g('zak_rok_e_real').textContent=fmt(rokE_real);
     g('zak_rok_koszt').textContent=fmt(Math.round(rokKoszt));
     g('ins_zak2').textContent=`Energia tygodniowa: ${Math.round(tygE)} MWh. Roczna (×52): ${fmt(Math.round(rokE))} MWh. Roczna realna (250 dn.rob. + 52 sob. + 63 nd): ${fmt(rokE_real)} MWh. Load factor: ${lf}%.`;
   }
-  if (g('tbl_zaklad_body')) {
+  if (g('tbl_zaklad_body') && isVisible('zaklad_2')) {
     const modes=[{id:'3',name:'3-zmianowy'},{id:'2',name:'2-zmianowy'},{id:'ramp',name:'Nierównomierne'}];
     g('tbl_zaklad_body').innerHTML=modes.map(m=>{
       const dem2=demandProfile(m.id,pp,pn,pd);
@@ -1251,7 +1187,7 @@ function upd() {
   }
 
   // ---- PAGE: PV ----
-  if (g('c_pv_dobowy')) {
+  if (g('c_pv_dobowy') && isVisible('pv_0')) {
     const pvBrutto=pvProfile(sezon,pvM,100,0);
     const pvNetto=pvProfileNetto(sezon,pvM,invEff,lossEff);
     mkChart('c_pv_dobowy','line',{labels:hrs,datasets:[
@@ -1265,7 +1201,7 @@ function upd() {
     g('pv_straty').textContent=stratTotal; g('pv_hours').textContent=hSol;
     g('ins_pv1').textContent=`Moc szczytowa: ${fmtD(pk,2)} MW. Energia netto: ${fmtD(eNetto,1)} MWh/dobę. Straty łączne (falownik+zacienienie): ${stratTotal}%. Godziny słoneczne: ${hSol}h.`;
   }
-  if (g('c_pv_sezony')) {
+  if (g('c_pv_sezony') && isVisible('pv_1')) {
     const colors=['#f4a535','#3ecf8e','#4d9de0'];
     const sezons=['lato','wiosna','zima'];
     mkChart('c_pv_sezony','line',{labels:hrs,datasets:sezons.map((s,i)=>({
@@ -1276,7 +1212,7 @@ function upd() {
     const eZ=pvProfileNetto('zima',pvM,invEff,lossEff).reduce((a,b)=>a+b,0);
     g('ins_pv2').textContent=`Lato: ${fmtD(eL,1)} MWh/dobę | Wiosna/Jesień: ${fmtD(eW,1)} MWh/dobę | Zima: ${fmtD(eZ,1)} MWh/dobę. Różnica lato/zima: ${fmtD(eL/Math.max(eZ,0.1),1)}x.`;
   }
-  if (g('c_pv_miesiace')) {
+  if (g('c_pv_miesiace') && isVisible('pv_2')) {
     const months=['Sty','Lut','Mar','Kwi','Maj','Cze','Lip','Sie','Wrz','Paź','Lis','Gru'];
     const monthFactors=[0.20,0.25,0.38,0.42,0.55,0.65,0.65,0.60,0.45,0.32,0.22,0.18];
     const daysInMonth=[31,28,31,30,31,30,31,31,30,31,30,31];
@@ -1296,7 +1232,7 @@ function upd() {
   }
 
   // ---- PAGE: FW ----
-  if (g('c_fw_dobowy')) {
+  if (g('c_fw_dobowy') && isVisible('fw_0')) {
     const fwHigh=fwProfile(fwM,fwW,fwV*1.5);
     const fwLow=fwProfile(fwM,fwW,0);
     const fwMid=S.fw;
@@ -1310,8 +1246,7 @@ function upd() {
     g('fw_e_day').textContent=fmtD(fwDay,1); g('fw_e_rok').textContent=fmt(Math.round(fwDay*365));
     g('ins_fw1').textContent=`Prędkość wiatru: ${fwW} m/s → sprawność ${Math.round(eff*100)}%, śr. ${avgFW} MW. Energia: ${fmtD(fwDay,1)} MWh/dobę = ${fmt(Math.round(fwDay*365))} MWh/rok. Zmienność ${fwV}% powoduje odchylenia ±${fmtD(fwDay*fwV/200,1)} MWh/h.`;
   }
-  if (g('c_fw_krzywa')) {
-    // Krzywa mocy: co 0.5 m/s dla płynnej krzywej
+  if (g('c_fw_krzywa') && isVisible('fw_1')) {
     const wsArr=Array.from({length:52},(_,i)=>parseFloat((i*0.5).toFixed(1)));
     const powArr=wsArr.map(ws=>windEfficiency(ws)*fwM);
     mkChart('c_fw_krzywa','line',{labels:wsArr,datasets:[
@@ -1321,7 +1256,7 @@ function upd() {
     const cutMsg = fwW>=25 ? `⚠️ Punkt pracy ${fwW} m/s = CUT-OUT! Turbiny wyłączone.` : `Bieżący punkt pracy: ${fwW} m/s → ${fmtD(eff*fwM,1)} MW (${Math.round(eff*100)}% mocy nom.)`;
     g('ins_fw2').textContent=`Prędkość cut-in (startowa): 3 m/s. Moc nominalna: od 14 m/s. Cut-out (wyłączenie burzowe): 25 m/s → produkcja = 0. ${cutMsg}`;
   }
-  if (g('c_fw_weibull')) {
+  if (g('c_fw_weibull') && isVisible('fw_2')) {
     const k=2.0, lambda=fwW*1.128;
     const wsW=Array.from({length:25},(_,i)=>i+1);
     function weibullPDF(v){return (k/lambda)*Math.pow(v/lambda,k-1)*Math.exp(-Math.pow(v/lambda,k));}
@@ -1334,7 +1269,7 @@ function upd() {
     const modeWs=wsW[prob.indexOf(Math.max(...prob))];
     g('ins_fw3').textContent=`Rozkład Weibulla (k=${k}, λ=${fmtD(lambda,1)} m/s). Najczęstsza prędkość wiatru: ~${modeWs} m/s. Przy śr. ${fwW} m/s turbiny są zatrzymane przez ok. ${Math.round(prob[0]*2)}% czasu.`;
   }
-  if (g('c_fw_porownanie')) {
+  if (g('c_fw_porownanie') && isVisible('fw_3')) {
     const wsLevels=[4,6,8,10,12];
     const colors=['#e05a5a','#f4a535','#3ecf8e','#4d9de0','#9b87f5'];
     mkChart('c_fw_porownanie','line',{labels:hrs,datasets:wsLevels.map((ws,i)=>({
@@ -1345,7 +1280,7 @@ function upd() {
   }
 
   // ---- PAGE: MEE ----
-  if (g('c_mee_dobowy')) {
+  if (g('c_mee_dobowy') && isVisible('mee_0')) {
     const tariff=Array.from({length:24},(_,h)=>(h>=6&&h<21)?cS:cN);
     mkChart('c_mee_dobowy','line',{labels:hrs,datasets:[
       {label:'SOC [MWh]',data:S.socArr,borderColor:'#9b87f5',backgroundColor:'rgba(155,135,245,0.12)',fill:true,tension:0.4,pointRadius:0,borderWidth:2,yAxisID:'y'},
@@ -1357,7 +1292,7 @@ function upd() {
     g('mee_sav_rok').textContent=fmt(meeSav*365); g('mee_cycles').textContent=cycles||'<1';
     g('ins_mee1').textContent=`MEE ładuje przy nadwyżce OZE lub nocnym tanim prądzie (${cN} PLN/MWh) i rozładowuje w szczycie (${cS} PLN/MWh). Oszczędności arbitrażu: ${fmt(meeSav)} PLN/dobę = ${fmt(meeSav*365)} PLN/rok.`;
   }
-  if (g('c_mee_porownanie')) {
+  if (g('c_mee_porownanie') && isVisible('mee_1')) {
     const S_bez=simulate(pvM,fwM,fwW,fwV,0,0,meeEff,sezon,tryb,pp,pn,pd,invEff,lossEff);
     mkChart('c_mee_porownanie','line',{labels:hrs,datasets:[
       {label:'BEZ MEE',data:S_bez.gridArr,borderColor:'#4d9de0',pointRadius:0,borderWidth:2,tension:0.3,fill:false},
@@ -1367,10 +1302,10 @@ function upd() {
     const pkBez=Math.max(...S_bez.gridArr), pkZ=Math.max(...S.gridArr);
     const pkRed=Math.round((pkBez-pkZ)/pkBez*100);
     g('mee_koszt_bez').textContent=fmt(Math.round(c_bez)); g('mee_koszt_z').textContent=fmt(Math.round(c_z));
-    g('mee_peak_red').textContent=`${fmtD(pkBez-pkZ,1)} (${pkRed}%)`;
-    g('ins_mee2').textContent=`MEE redukuje szczyt poboru z sieci o ${fmtD(pkBez-pkZ,1)} MW (${pkRed}%). Dzienny koszt sieci spada z ${fmt(Math.round(c_bez))} do ${fmt(Math.round(c_z))} PLN.`;
+    g('mee_peak_red').textContent=`${fmtD(pkBez-pkZ,1)} (${pkRed||0}%)`;
+    g('ins_mee2').textContent=`MEE redukuje szczyt poboru z sieci o ${fmtD(pkBez-pkZ,1)} MW (${pkRed||0}%). Dzienny koszt sieci spada z ${fmt(Math.round(c_bez))} do ${fmt(Math.round(c_z))} PLN.`;
   }
-  if (g('c_mee_degradacja')) {
+  if (g('c_mee_degradacja') && isVisible('mee_2')) {
     const years=Array.from({length:21},(_,i)=>i);
     const capNom=years.map(()=>meeK);
     const capReal=years.map(y=>meeK*Math.pow(1-meeDeg/100,y));
@@ -1386,7 +1321,7 @@ function upd() {
   }
 
   // ---- PAGE: BILANS ----
-  if (g('c_bil_dobowy')) {
+  if (g('c_bil_dobowy') && isVisible('bilans_0')) {
     mkChart('c_bil_dobowy','line',{labels:hrs,datasets:[
       {label:'Zapotrzebowanie',data:S.dem,borderColor:'#4d9de0',pointRadius:0,borderWidth:2,tension:0.3},
       {label:'OZE łącznie',data:S.oze,borderColor:'#9b87f5',pointRadius:0,borderWidth:2,tension:0.3,borderDash:[4,2]},
@@ -1399,7 +1334,7 @@ function upd() {
     g('bil_pokrycie').textContent=pokrycie;
     g('ins_bil1').textContent=`Pobór z sieci: ${Math.round(totalGrid)} MWh/dobę. MEE: ${fmtD(meeE,1)} MWh. Nadwyżka OZE: ${Math.round(totalSurp)} MWh. Pokrycie OZE+MEE: ${pokrycie}%.`;
   }
-  if (g('c_bil_tygodniowy')) {
+  if (g('c_bil_tygodniowy') && isVisible('bilans_1')) {
     const days=['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
     const scales=[1,1,1,1,1,0.8,0.3];
     const tygDem=scales.map(s=>demandProfile(tryb,pp,pn,pd,s).reduce((a,b)=>a+b,0));
@@ -1422,7 +1357,7 @@ function upd() {
     g('bil_tyg_siec').textContent=Math.round(siecTyg); g('bil_tyg_koszt').textContent=fmt(Math.round(kosztTyg)); g('bil_tyg_oszcz').textContent=fmt(Math.round(oszczTyg));
     g('ins_bil2').textContent=`Tygodniowy pobór z sieci: ${Math.round(siecTyg)} MWh. Koszt: ${fmt(Math.round(kosztTyg))} PLN. Oszczędności OZE: ${fmt(Math.round(oszczTyg))} PLN/tydzień.`;
   }
-  if (g('tbl_bilans_body')) {
+  if (g('tbl_bilans_body') && isVisible('bilans_2')) {
     g('tbl_bilans_body').innerHTML=Array.from({length:24},(_,h)=>{
       const gridColor=S.gridArr[h]>pp*0.8?'td-red':S.gridArr[h]>0?'td-amber':'';
       const kost=Math.round(S.gridArr[h]*((h>=6&&h<21)?cS:cN));
@@ -1431,8 +1366,8 @@ function upd() {
     g('ins_bil3').textContent=`Suma dzienna: zapotrzebowanie ${fmtD(totalDem,1)} MWh | OZE ${fmtD(totalOze,1)} MWh | z sieci ${fmtD(totalGrid,1)} MWh | nadwyżka ${fmtD(totalSurp,1)} MWh.`;
   }
 
-  // ---- PAGE: INWESTYCJE (comparison part) ----
-  if (g('c_cmp_koszt')) {
+  // ---- PAGE: INWESTYCJE ----
+  if (g('c_cmp_koszt') && isVisible('inwest_1')) {
     const S1=simulate(pvM*1.25,fwM,fwW,fwV,meeK,meeP,meeEff,sezon,tryb,pp,pn,pd,invEff,lossEff);
     const S2=simulate(pvM,fwM*1.25,fwW,fwV,meeK,meeP,meeEff,sezon,tryb,pp,pn,pd,invEff,lossEff);
     const S3=simulate(pvM,fwM,fwW,fwV,meeK*1.5,Math.min(meeP*1.3,12),meeEff,sezon,tryb,pp,pn,pd,invEff,lossEff);
@@ -1548,7 +1483,7 @@ function calcInv() {
   }
 
   // Cashflow chart
-  if (g('c_cashflow')) {
+  if (g('c_cashflow') && isVisible('inwest_2')) {
     const years2 = Array.from({length:horizon+1},(_,i)=>i===0?'Rok 0':`Rok ${i}`);
     const cumCF = [-capexNet];
     for (let y=1; y<=horizon; y++) {
@@ -1564,7 +1499,7 @@ function calcInv() {
   }
 
   // Cashflow table
-  if (g('tbl_cashflow_body')) {
+  if (g('tbl_cashflow_body') && isVisible('inwest_3')) {
     let cum = -capexNet*1000;
     g('tbl_cashflow_body').innerHTML = Array.from({length:horizon+1}, (_,y) => {
       const pf = Math.pow(1+cWzrost/100,y);
@@ -1589,7 +1524,9 @@ function buildReport() {
   const totalGrid = S.gridArr.reduce((a,b)=>a+b,0);
   const totalSurp = S.surplusArr.reduce((a,b)=>a+b,0);
   const meeE      = S.meePow.filter(v=>v<0).reduce((a,b)=>a+Math.abs(b),0);
-  const pokrycie  = Math.min(100,Math.round((totalDem-totalGrid)/totalDem*100));
+  let pokrycie = 0;
+  if(totalDem > 0) pokrycie = Math.min(100,Math.round(((totalDem-totalGrid)/totalDem)*100));
+  
   const costGrid  = calcCost(S.gridArr,cS,cN);
   const costNoOze = calcCost(S.dem,cS,cN);
   const savings   = Math.max(0,costNoOze-costGrid);
@@ -1654,7 +1591,7 @@ function buildReport() {
     • Roczny czas: 250 dni roboczych (100%) + 52 soboty (80%) + 63 dni wolne (30%) = 365 dni.<br>
     • CAPEX PV: 3 500 PLN/kW + grunt 1,3 ha/MW × 57 000 PLN/ha lub 2 000 PLN/ha/rok dzierżawa. FW: 5 000 PLN/kW. MEE: 900 PLN/kWh + 200 PLN/kW.<br>
     • Wyniki mają charakter szacunkowy — tylko do analiz koncepcyjnych.<br>
-    Wersja: 3.1 | Data: ${new Date().toLocaleDateString('pl-PL')}
+    Wersja: 3.1 | Data: 03.05.2026
   `;
 
   // Wykresy w raporcie (widoczne w PDF)
@@ -1678,7 +1615,6 @@ function isVisible(id) {
   const el = g(id);
   if (!el) return false;
   if (!el.classList.contains('active')) return false;
-  // Sprawdź czy strona-rodzic też jest aktywna
   const parentPage = el.closest('.page');
   if (parentPage && !parentPage.classList.contains('active')) return false;
   return true;
@@ -1689,5 +1625,5 @@ function isVisible(id) {
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => setTimeout(upd, 300));
 </script>
-</body>
-</html>
+
+</body></html>
