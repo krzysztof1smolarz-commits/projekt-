@@ -35,7 +35,7 @@
   --purple:   #9b87f5;
   --purple-bg:rgba(155,135,245,0.10);
   --radius:   6px;
-  --radius-lg:10px;
+  --radius-lg:8px;
   --font:     'IBM Plex Sans', sans-serif;
   --mono:     'IBM Plex Mono', monospace;
   --shadow:   0 4px 24px rgba(0,0,0,0.4);
@@ -66,11 +66,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
   font-size: 15px;
   font-weight: 500;
   color: var(--green);
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   white-space: nowrap;
 }
 .header-logo span { color: var(--text3); }
 .header-sub { font-size: 12px; color: var(--text3); border-left: 1px solid var(--border2); padding-left: 1rem; margin-left: 0.5rem; }
+.header-metrics { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; }
 
 /* ===== LAYOUT ===== */
 .layout { display: flex; height: calc(100vh - 56px); }
@@ -218,6 +219,26 @@ select:focus { outline: none; border-color: var(--blue); }
 .cw  { position: relative; width: 100%; height: 260px; }
 .cwm { position: relative; width: 100%; height: 300px; }
 .cwl { position: relative; width: 100%; height: 340px; }
+.report-chart-wrap {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.85rem;
+}
+.chart-fallback {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius);
+  background: var(--amber-bg);
+  color: var(--amber2);
+  text-align: center;
+  font-size: 12px;
+}
+.chart-hidden { display: none !important; }
 
 /* ===== INSIGHT BOXES ===== */
 .ins { border-radius: var(--radius); padding: 0.8rem 1rem; font-size: 12px; line-height: 1.6; margin-top: 0.85rem; border-left: 3px solid; }
@@ -260,6 +281,77 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 .sub-section { display: none; }
 .sub-section.active { display: block; }
 
+/* ===== RESPONSIVE ===== */
+@media(max-width:760px) {
+  body { overflow: auto; }
+  .header {
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding: 0.75rem 1rem;
+  }
+  .header-sub {
+    width: 100%;
+    border-left: 0;
+    padding-left: 0;
+    margin-left: 0;
+  }
+  .header-metrics {
+    width: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+  .layout {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 56px);
+  }
+  .sidebar {
+    width: 100%;
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.55rem 0.75rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-group {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+  }
+  .nav-group-label { padding: 0.25rem 0.5rem 0.15rem; }
+  .nav-item {
+    white-space: nowrap;
+    border-left: 0;
+    border-bottom: 2px solid transparent;
+    padding: 0.5rem 0.7rem;
+  }
+  .nav-item.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--blue);
+  }
+  .main {
+    overflow: visible;
+    padding: 1rem;
+  }
+  .form-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .form-label {
+    min-width: 0;
+    width: 100%;
+  }
+  .val-display {
+    min-width: 0;
+    text-align: left;
+  }
+  .cw, .cwm, .cwl { height: 240px; }
+}
+
 /* ===== PRINT / PDF ===== */
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -277,6 +369,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   th { background: #eee !important; color: #333 !important; }
   td { color: #222 !important; }
   h3 { color: #111 !important; border-bottom-color: #ccc !important; }
+  .report-chart-wrap { background: white !important; border: 1px solid #ccc !important; }
   .report-chart-wrap { page-break-inside: avoid; margin: 0.75rem 0; }
   .report-chart-wrap canvas { display: block !important; max-width: 100% !important; }
   .report-section { page-break-inside: avoid; margin-bottom: 1.5rem; }
@@ -290,7 +383,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 <header class="header">
   <div class="header-logo">EnergoSym<span>.pl</span></div>
   <div class="header-sub">Symulator energetyczny zakładu produkcyjnego — v3.1</div>
-  <div style="margin-left:auto;display:flex;align-items:center;gap:0.75rem">
+  <div class="header-metrics">
     <span id="hdr_pokrycie" class="pill amber">Pokrycie 20%</span>
     <span id="hdr_koszt" style="font-family:var(--mono);font-size:12px;color:var(--text3)">Koszt sieci: — PLN/dobę</span>
   </div>
@@ -325,7 +418,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
   <div class="nav-group">
     <div class="nav-group-label">Dokumentacja</div>
-    <button class="nav-item" onclick="showPage('raport')">Raport sprawozdanie</button>
+    <button class="nav-item" onclick="showPage('raport')">Raport / sprawozdanie</button>
   </div>
 </nav>
 
@@ -797,7 +890,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
   <div style="margin-bottom:1.25rem;display:flex;gap:10px;flex-wrap:wrap">
     <button class="btn-primary" onclick="window.print()">Drukuj / Zapisz PDF</button>
-    <button class="btn" onclick="copyReport()">Kopiuj tekst raportu</button>
+    <button class="btn" id="btn_copy_report" onclick="copyReport()">Kopiuj tekst raportu</button>
   </div>
 
   <div class="card" id="report-content">
@@ -808,22 +901,22 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div class="report-section">
       <h3>2. Profil zapotrzebowania zakładu</h3>
       <div id="rep_zaklad"></div>
-      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c1"></canvas></div></div>
+      <div class="report-chart-wrap" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c1"></canvas></div></div>
     </div>
     <div class="report-section">
       <h3>3. Produkcja OZE</h3>
       <div id="rep_oze"></div>
-      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c2"></canvas></div></div>
+      <div class="report-chart-wrap" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c2"></canvas></div></div>
     </div>
     <div class="report-section">
       <h3>4. Magazyn energii (MEE)</h3>
       <div id="rep_mee"></div>
-      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c3"></canvas></div></div>
+      <div class="report-chart-wrap" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c3"></canvas></div></div>
     </div>
     <div class="report-section">
       <h3>5. Bilans energetyczny</h3>
       <div id="rep_bilans"></div>
-      <div class="report-chart-wrap card" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c4"></canvas></div></div>
+      <div class="report-chart-wrap" style="margin-top:0.75rem"><div style="height:220px;position:relative"><canvas id="rpt_c4"></canvas></div></div>
     </div>
     <div class="report-section">
       <h3>6. Analiza ekonomiczna inwestycji</h3>
@@ -849,14 +942,19 @@ let lastSim = null;
 const g  = id => document.getElementById(id);
 const iv = id => parseFloat(g(id).value);
 const fmt  = n => Math.round(n).toLocaleString('pl-PL');
-const fmtD = (n,d) => n.toFixed(d);
-const fmtK = n => (n/1000).toFixed(1);
+const fmtD = (n,d) => Number(n).toLocaleString('pl-PL', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtK = n => (n/1000).toLocaleString('pl-PL', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const chartAvailable = typeof Chart !== 'undefined';
 
 // Chart defaults
-Chart.defaults.color = '#9896a0';
-Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
-Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
-Chart.defaults.font.size = 11;
+if (chartAvailable) {
+  Chart.defaults.color = '#9896a0';
+  Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+  Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+  Chart.defaults.font.size = 11;
+} else {
+  console.warn('Nie załadowano Chart.js. Obliczenia i tabele działają, ale wykresy nie będą widoczne.');
+}
 
 // ============================================================
 // PHYSICS / SIMULATION MODELS
@@ -967,12 +1065,35 @@ function calcCost(arr, cS, cN) {
   return arr.reduce((a,v,h) => a + v * ((h>=6&&h<21) ? cS : cN), 0);
 }
 
+function showChartWarning(canvas) {
+  canvas.classList.add('chart-hidden');
+  const parent = canvas.parentElement;
+  if (!parent) return;
+  let msg = parent.querySelector('.chart-fallback');
+  if (!msg) {
+    msg = document.createElement('div');
+    msg.className = 'chart-fallback';
+    parent.appendChild(msg);
+  }
+  msg.textContent = 'Nie załadowano biblioteki Chart.js. Połącz z internetem albo dodaj lokalny plik chart.js, aby zobaczyć wykres.';
+}
+
+function clearChartWarning(canvas) {
+  canvas.classList.remove('chart-hidden');
+  canvas.parentElement?.querySelector('.chart-fallback')?.remove();
+}
+
 // ============================================================
 // CHART FACTORY
 // ============================================================
 function mkChart(id, type, data, opts={}) {
   const el = document.getElementById(id);
   if (!el) return null;
+  if (!chartAvailable) {
+    showChartWarning(el);
+    return null;
+  }
+  clearChartWarning(el);
   if (charts[id]) { charts[id].destroy(); delete charts[id]; }
   const hiddenParents = [];
   let node = el.parentElement;
@@ -1001,10 +1122,16 @@ function mkChart(id, type, data, opts={}) {
 // ============================================================
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active');
+    n.removeAttribute('aria-current');
+  });
   g('page-'+name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => {
-    if (n.getAttribute('onclick')?.includes("'"+name+"'")) n.classList.add('active');
+    if (n.getAttribute('onclick')?.includes("'"+name+"'")) {
+      n.classList.add('active');
+      n.setAttribute('aria-current', 'page');
+    }
   });
   setTimeout(() => {
     Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} });
@@ -1114,9 +1241,9 @@ function upd() {
     ? `⚠️ WYŁĄCZENIE BURZOWE (cut-out) przy ${fwW} m/s — turbiny zatrzymane dla bezpieczeństwa! Produkcja = 0 MW.`
     : eff===0
     ? 'Turbiny zatrzymane — prędkość wiatru poniżej progu startowego (<3 m/s)'
-    : eff<0.3 ? `Słaby wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${avgFW} MW`
-    : eff<0.7 ? `Umiarkowany wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${avgFW} MW`
-    : `Dobry wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${avgFW} MW (moc nominalna od 14 m/s)`;
+    : eff<0.3 ? `Słaby wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${fmtD(avgFW,1)} MW`
+    : eff<0.7 ? `Umiarkowany wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${fmtD(avgFW,1)} MW`
+    : `Dobry wiatr ${fwW} m/s — sprawność ${Math.round(eff*100)}%, śr. produkcja: ${fmtD(avgFW,1)} MW (moc nominalna od 14 m/s)`;
   ['fw_status_cfg','fw_status_bar'].forEach(id => { if(g(id)) g(id).textContent = fwStatusText; });
 
   // ---- PAGE: KONFIGURACJA ----
@@ -1127,7 +1254,7 @@ function upd() {
     g('cfg_auto').textContent = autocons;
     g('cfg_koszt').textContent = fmt(costGrid);
     g('cfg_oszcz').textContent = fmt(savings);
-    g('cfg_fw_avg').textContent = avgFW;
+    g('cfg_fw_avg').textContent = fmtD(avgFW,1);
     const ins = g('ins_cfg');
     const fwCutout = fwW >= 25;
     const fwWarning = fwCutout ? ' ⚠️ UWAGA: Prędkość wiatru ≥25 m/s — turbiny wyłączone (cut-out burzowy)!' : '';
@@ -1150,12 +1277,12 @@ function upd() {
     const tgPhi = 0.4;
     const peakMVA = parseFloat((peak / Math.sqrt(1/(1+tgPhi*tgPhi))).toFixed(1));
     g('zak_peak').textContent=fmtD(peak,1); g('zak_min').textContent=fmtD(Math.min(...S.dem),1); g('zak_energy').textContent=Math.round(totalDem);
-    if(g('zak_mva'))  g('zak_mva').textContent = peakMVA;
+    if(g('zak_mva'))  g('zak_mva').textContent = fmtD(peakMVA,1);
     if(g('zak_mvar')) g('zak_mvar').textContent = fmtD(peak*tgPhi,1);
     if(g('zak_min_inline'))  g('zak_min_inline').textContent  = fmtD(peak,1);
     if(g('zak_mvar_inline')) g('zak_mvar_inline').textContent = fmtD(peak*tgPhi,1);
-    if(g('zak_mva_inline'))  g('zak_mva_inline').textContent  = peakMVA;
-    g('ins_zak1').textContent=`Szczyt: ${fmtD(peak,1)} MW (${peakMVA} MVA z tgφ=0,4) o godz. ${peakH}:00. Load factor: ${Math.round(totalDem/(pp*24)*100)}%. Energia dobowa: ${Math.round(totalDem)} MWh. Obszar czerwony = taryfa szczytowa (6-21), niebieski = tania noc.`;
+    if(g('zak_mva_inline'))  g('zak_mva_inline').textContent  = fmtD(peakMVA,1);
+    g('ins_zak1').textContent=`Szczyt: ${fmtD(peak,1)} MW (${fmtD(peakMVA,1)} MVA z tgφ=0,4) o godz. ${peakH}:00. Load factor: ${Math.round(totalDem/(pp*24)*100)}%. Energia dobowa: ${Math.round(totalDem)} MWh. Obszar czerwony = taryfa szczytowa (6-21), niebieski = tania noc.`;
   }
   if (g('c_zak_tygodniowy') && isVisible('zaklad_1')) {
     const days=['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
@@ -1242,9 +1369,9 @@ function upd() {
       {label:'Min',data:fwLow,borderColor:'rgba(62,207,142,0.3)',fill:false,tension:0.4,pointRadius:0,borderWidth:1,borderDash:[2,3]}
     ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
     const fwDay=fwMid.reduce((a,b)=>a+b,0);
-    g('fw_avg').textContent=avgFW; g('fw_eff').textContent=Math.round(eff*100);
+    g('fw_avg').textContent=fmtD(avgFW,1); g('fw_eff').textContent=Math.round(eff*100);
     g('fw_e_day').textContent=fmtD(fwDay,1); g('fw_e_rok').textContent=fmt(Math.round(fwDay*365));
-    g('ins_fw1').textContent=`Prędkość wiatru: ${fwW} m/s → sprawność ${Math.round(eff*100)}%, śr. ${avgFW} MW. Energia: ${fmtD(fwDay,1)} MWh/dobę = ${fmt(Math.round(fwDay*365))} MWh/rok. Zmienność ${fwV}% powoduje odchylenia ±${fmtD(fwDay*fwV/200,1)} MWh/h.`;
+    g('ins_fw1').textContent=`Prędkość wiatru: ${fwW} m/s → sprawność ${Math.round(eff*100)}%, śr. ${fmtD(avgFW,1)} MW. Energia: ${fmtD(fwDay,1)} MWh/dobę = ${fmt(Math.round(fwDay*365))} MWh/rok. Zmienność ${fwV}% powoduje odchylenia ±${fmtD(fwDay*fwV/200,1)} MWh/h.`;
   }
   if (g('c_fw_krzywa') && isVisible('fw_1')) {
     const wsArr=Array.from({length:52},(_,i)=>parseFloat((i*0.5).toFixed(1)));
@@ -1596,7 +1723,18 @@ function buildReport() {
 
   // Wykresy w raporcie (widoczne w PDF)
   const rOpts={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:true,labels:{color:'#555',font:{size:10},boxWidth:10}}}};
-  const mkR=(id,type,data,extra={})=>{if(charts[id])charts[id].destroy();charts[id]=new Chart(g(id).getContext('2d'),{type,data,options:{...rOpts,...extra}});};
+  const mkR=(id,type,data,extra={})=>{
+    const el = g(id);
+    if (!el) return null;
+    if (!chartAvailable) {
+      showChartWarning(el);
+      return null;
+    }
+    clearChartWarning(el);
+    if(charts[id])charts[id].destroy();
+    charts[id]=new Chart(el.getContext('2d'),{type,data,options:{...rOpts,...extra}});
+    return charts[id];
+  };
   if(g('rpt_c1')) mkR('rpt_c1','bar',{labels:hrs,datasets:[{label:'Zapotrzebowanie [MW]',data:S.dem,backgroundColor:'rgba(77,157,224,0.7)',borderRadius:2},{label:'Limit',data:Array(24).fill(pp),type:'line',borderColor:'rgba(224,90,90,0.6)',borderDash:[5,3],borderWidth:1.5,pointRadius:0,fill:false}]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
   if(g('rpt_c2')) mkR('rpt_c2','line',{labels:hrs,datasets:[{label:'PV [MW]',data:S.pv,borderColor:'#f4a535',backgroundColor:'rgba(244,165,53,0.12)',fill:true,tension:0.4,pointRadius:0,borderWidth:2},{label:'FW [MW]',data:S.fw,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.10)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},{label:'OZE łącznie',data:S.oze,borderColor:'#9b87f5',pointRadius:0,borderWidth:1.5,borderDash:[4,2],fill:false,tension:0.4}]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
   if(g('rpt_c3')){const tariff=Array.from({length:24},(_,h)=>(h>=6&&h<21)?cS:cN);mkR('rpt_c3','line',{labels:hrs,datasets:[{label:'SOC MEE [MWh]',data:S.socArr,borderColor:'#9b87f5',backgroundColor:'rgba(155,135,245,0.12)',fill:true,tension:0.4,pointRadius:0,borderWidth:2,yAxisID:'y'},{label:'Moc MEE [MW]',data:S.meePow,borderColor:'#3ecf8e',pointRadius:0,borderWidth:1.5,tension:0.3,borderDash:[3,2],yAxisID:'y'},{label:'Taryfa÷10',data:tariff.map(v=>v/10),borderColor:'#e05a5a',pointRadius:0,borderWidth:1,tension:0,borderDash:[6,3],yAxisID:'y'}]},{scales:{y:{position:'left',beginAtZero:true,title:{display:true,text:'MWh/MW'}}}});}
@@ -1605,12 +1743,59 @@ function buildReport() {
 
 function copyReport() {
   const el = g('report-content');
-  navigator.clipboard?.writeText(el.innerText || el.textContent);
+  const text = el.innerText || el.textContent || '';
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text)
+      .then(() => setCopyStatus('Skopiowano'))
+      .catch(() => copyReportFallback(text));
+  } else {
+    copyReportFallback(text);
+  }
+}
+
+function copyReportFallback(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    setCopyStatus('Skopiowano');
+  } catch (e) {
+    setCopyStatus('Nie skopiowano');
+  }
+  ta.remove();
+}
+
+function setCopyStatus(text) {
+  const btn = g('btn_copy_report');
+  if (!btn) return;
+  const original = btn.dataset.originalText || btn.textContent;
+  btn.dataset.originalText = original;
+  btn.textContent = text;
+  setTimeout(() => { btn.textContent = original; }, 1600);
 }
 
 // ============================================================
 // HELPERS
 // ============================================================
+function initAccessibility() {
+  document.querySelectorAll('.form-row').forEach(row => {
+    const label = row.querySelector('.form-label');
+    const control = row.querySelector('input, select');
+    if (label && control && !control.getAttribute('aria-label')) {
+      control.setAttribute('aria-label', label.textContent.trim());
+    }
+  });
+  document.querySelectorAll('button').forEach(btn => {
+    if (!btn.getAttribute('type')) btn.setAttribute('type', 'button');
+  });
+  document.querySelector('.nav-item.active')?.setAttribute('aria-current', 'page');
+}
+
 function isVisible(id) {
   const el = g(id);
   if (!el) return false;
@@ -1623,7 +1808,10 @@ function isVisible(id) {
 // ============================================================
 // INIT
 // ============================================================
-window.addEventListener('DOMContentLoaded', () => setTimeout(upd, 300));
+window.addEventListener('DOMContentLoaded', () => {
+  initAccessibility();
+  setTimeout(upd, 300);
+});
 </script>
 
 </body></html>
