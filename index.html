@@ -392,10 +392,9 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="header">
   <div class="header-logo">EnergoSym<span>.pl</span></div>
-  <div class="header-sub">Symulator energetyczny zakładu produkcyjnego — v3.1</div>
+  <div class="header-sub" data-i18n="header-sub">Symulator energetyczny zakładu produkcyjnego — v3.1</div>
   <div class="header-metrics">
     <span id="hdr_pokrycie" class="pill amber">Pokrycie 20%</span>
     <span id="hdr_koszt" style="font-family:var(--mono);font-size:12px;color:var(--text3)">Koszt sieci: — PLN/dobę</span>
@@ -403,43 +402,39 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 </header>
 
-<!-- LAYOUT -->
 <div class="layout">
 
-<!-- SIDEBAR -->
 <nav class="sidebar">
   <div class="nav-group">
-    <div class="nav-group-label">Konfiguracja</div>
-    <button class="nav-item active" onclick="showPage('cfg')">Parametry ogólne</button>
+    <div class="nav-group-label" data-i18n="group-cfg">Konfiguracja</div>
+    <button class="nav-item active" onclick="showPage('cfg')" data-i18n="nav-cfg">Parametry ogólne</button>
   </div>
   <div class="nav-group">
-    <div class="nav-group-label">Zakład</div>
-    <button class="nav-item" onclick="showPage('zaklad')">Profil produkcyjny</button>
+    <div class="nav-group-label" data-i18n="group-zaklad">Zakład</div>
+    <button class="nav-item" onclick="showPage('zaklad')" data-i18n="nav-zaklad">Profil produkcyjny</button>
   </div>
   <div class="nav-group">
-    <div class="nav-group-label">OZE</div>
-    <button class="nav-item" onclick="showPage('pv')">Fotowoltaika (PV)</button>
-    <button class="nav-item" onclick="showPage('fw')">Elektrownia wiatrowa (FW)</button>
+    <div class="nav-group-label" data-i18n="group-oze">OZE</div>
+    <button class="nav-item" onclick="showPage('pv')" data-i18n="nav-pv">Fotowoltaika (PV)</button>
+    <button class="nav-item" onclick="showPage('fw')" data-i18n="nav-fw">Elektrownia wiatrowa (FW)</button>
   </div>
   <div class="nav-group">
-    <div class="nav-group-label">Magazyn</div>
-    <button class="nav-item" onclick="showPage('mee')">Magazyn energii (MEE)</button>
+    <div class="nav-group-label" data-i18n="group-mee">Magazyn</div>
+    <button class="nav-item" onclick="showPage('mee')" data-i18n="nav-mee">Magazyn energii (MEE)</button>
   </div>
   <div class="nav-group">
-    <div class="nav-group-label">Analiza</div>
-    <button class="nav-item" onclick="showPage('bilans')">Bilans energetyczny</button>
-    <button class="nav-item" onclick="showPage('inwest')">Analiza inwestycji</button>
+    <div class="nav-group-label" data-i18n="group-analiza">Analiza</div>
+    <button class="nav-item" onclick="showPage('bilans')" data-i18n="nav-bilans">Bilans energetyczny</button>
+    <button class="nav-item" onclick="showPage('inwest')" data-i18n="nav-inwest">Analiza inwestycji</button>
   </div>
   <div class="nav-group">
-    <div class="nav-group-label">Dokumentacja</div>
-    <button class="nav-item" onclick="showPage('raport')">Raport / sprawozdanie</button>
+    <div class="nav-group-label" data-i18n="group-doc">Dokumentacja</div>
+    <button class="nav-item" onclick="showPage('raport')" data-i18n="nav-raport">Raport / sprawozdanie</button>
   </div>
 </nav>
 
-<!-- MAIN -->
 <main class="main">
 
-<!-- ===================== PAGE: KONFIGURACJA ===================== -->
 <div class="page active" id="page-cfg">
   <div class="page-header">
     <h1 class="page-title">Parametry ogólne</h1>
@@ -510,7 +505,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   <div id="ins_cfg" class="ins warn"></div>
 </div>
 
-<!-- ===================== PAGE: ZAKŁAD ===================== -->
 <div class="page" id="page-zaklad">
   <div class="page-header">
     <h1 class="page-title">Profil produkcyjny zakładu</h1>
@@ -575,7 +569,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 </div>
 
-<!-- ===================== PAGE: PV ===================== -->
 <div class="page" id="page-pv">
   <div class="page-header">
     <h1 class="page-title">Fotowoltaika (PV)</h1>
@@ -626,7 +619,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 </div>
 
-<!-- ===================== PAGE: FW ===================== -->
 <div class="page" id="page-fw">
   <div class="page-header">
     <h1 class="page-title">Elektrownia wiatrowa (FW)</h1>
@@ -680,7 +672,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 </div>
 
-<!-- ===================== PAGE: MEE ===================== -->
 <div class="page" id="page-mee">
   <div class="page-header">
     <h1 class="page-title">Magazyn energii elektrycznej (MEE)</h1>
@@ -737,7 +728,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 </div>
 
-<!-- ===================== PAGE: BILANS ===================== -->
 <div class="page" id="page-bilans">
   <div class="page-header">
     <h1 class="page-title">Bilans energetyczny</h1>
@@ -793,7 +783,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 </div>
 
-<!-- ===================== PAGE: INWESTYCJE ===================== -->
 <div class="page" id="page-inwest">
   <div class="page-header">
     <h1 class="page-title">Analiza inwestycji</h1>
@@ -896,7 +885,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 </div>
 
-<!-- ===================== PAGE: RAPORT ===================== -->
 <div class="page" id="page-raport">
   <div class="page-header">
     <h1 class="page-title">Raport — Sprawozdanie</h1>
@@ -944,14 +932,60 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 </div>
 
 </main>
-</div><!-- end .layout -->
-
-<script>
+</div><script>
 // ============================================================
 // GLOBALS & STATE
 // ============================================================
 const charts = {};
 let lastSim = null;
+
+// ============================================================
+// JĘZYK / LANGUAGE (I18N)
+// ============================================================
+let currentLang = 'pl';
+
+// Tutaj dodajesz kolejne tłumaczenia do swojego programu:
+const translations = {
+  'header-sub': { pl: 'Symulator energetyczny zakładu produkcyjnego — v3.1', en: 'Manufacturing Plant Energy Simulator — v3.1' },
+  'nav-cfg': { pl: 'Parametry ogólne', en: 'General Parameters' },
+  'nav-zaklad': { pl: 'Profil produkcyjny', en: 'Production Profile' },
+  'nav-pv': { pl: 'Fotowoltaika (PV)', en: 'Photovoltaics (PV)' },
+  'nav-fw': { pl: 'Elektrownia wiatrowa (FW)', en: 'Wind Power Plant (FW)' },
+  'nav-mee': { pl: 'Magazyn energii (MEE)', en: 'Energy Storage (BESS)' },
+  'nav-bilans': { pl: 'Bilans energetyczny', en: 'Energy Balance' },
+  'nav-inwest': { pl: 'Analiza inwestycji', en: 'Investment Analysis' },
+  'nav-raport': { pl: 'Raport / sprawozdanie', en: 'Report / Summary' },
+  'group-cfg': { pl: 'Konfiguracja', en: 'Configuration' },
+  'group-zaklad': { pl: 'Zakład', en: 'Plant' },
+  'group-oze': { pl: 'OZE', en: 'Renewables' },
+  'group-mee': { pl: 'Magazyn', en: 'Storage' },
+  'group-analiza': { pl: 'Analiza', en: 'Analysis' },
+  'group-doc': { pl: 'Dokumentacja', en: 'Documentation' }
+};
+
+function toggleLanguage() {
+  currentLang = currentLang === 'pl' ? 'en' : 'pl';
+  
+  // Zmiana tekstu przycisku na odwrót - jeśli mamy EN, przycisk pokazuje PL, by móc wrócić
+  const btn = document.getElementById('lang_toggle');
+  if (btn) {
+    btn.textContent = currentLang === 'pl' ? 'EN' : 'PL';
+    btn.setAttribute('title', currentLang === 'pl' ? 'Zmień język na angielski' : 'Change language to Polish');
+  }
+
+  // Wyszukiwanie wszystkich znaczników z atrybutem data-i18n i podmiana na podstawie słownika
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[key] && translations[key][currentLang]) {
+      el.textContent = translations[key][currentLang];
+    }
+  });
+
+  // Wymusza przeliczenie i odświeżenie tekstów dynamicznych generowanych przez JavaScript (zobacz niżej funkcję upd)
+  upd();
+}
+
+// ------------------------------------------------------------
 
 const g  = id => document.getElementById(id);
 const iv = id => parseFloat(g(id).value);
@@ -1229,7 +1263,6 @@ function upd() {
   const meeE      = S.meePow.filter(v=>v<0).reduce((a,b)=>a+Math.abs(b),0);
   const autocons  = totalOze > 0 ? Math.min(100, Math.round((1-totalSurp/totalOze)*100)) : 0;
   
-  // POPRAWKA AUTARKII
   let pokrycie = 0;
   if(totalDem > 0) {
       pokrycie = Math.min(100, Math.round(((totalDem - totalGrid) / totalDem) * 100));
@@ -1242,13 +1275,13 @@ function upd() {
   const eff       = windEfficiency(fwW);
   const avgFW     = parseFloat((eff*fwM).toFixed(1));
 
-  // Header pills
+  // Oznaczamy tekst nagłówka zależny od wybranego języka
   const pillEl = g('hdr_pokrycie');
   if(pillEl){
-      pillEl.textContent = `Pokrycie ${pokrycie}%`;
+      pillEl.textContent = currentLang === 'pl' ? `Pokrycie ${pokrycie}%` : `Coverage ${pokrycie}%`;
       pillEl.className = pokrycie > 60 ? 'pill green' : pokrycie > 35 ? 'pill blue' : 'pill amber';
   }
-  if(g('hdr_koszt')) g('hdr_koszt').textContent = `Koszt sieci: ${fmt(costGrid)} PLN/dobę`;
+  if(g('hdr_koszt')) g('hdr_koszt').textContent = currentLang === 'pl' ? `Koszt sieci: ${fmt(costGrid)} PLN/dobę` : `Grid cost: ${fmt(costGrid)} PLN/day`;
 
   // FW status
   const fwStatusText = fwW >= 25
@@ -1273,7 +1306,6 @@ function upd() {
     const fwCutout = fwW >= 25;
     const fwWarning = fwCutout ? ' ⚠️ UWAGA: Prędkość wiatru ≥25 m/s — turbiny wyłączone (cut-out burzowy)!' : '';
     
-    // POPRAWIONY KOMUNIKAT BAZUJĄCY NA POKRYCIU A NIE AUTOKONSUMPCJI
     if (pokrycie > 60) { ins.className='ins good'; ins.textContent=`Doskonałe pokrycie zapotrzebowania (${pokrycie}%) — zakład w dużym stopniu niezależny od sieci. Oszczędności: ${fmt(savings)} PLN/dobę = ${fmt(savings*365)} PLN/rok.${fwWarning}`; }
     else if (pokrycie > 30) { ins.className='ins info'; ins.textContent=`Umiarkowane pokrycie zapotrzebowania (${pokrycie}%). Zakład częściowo zależny od sieci. Oszczędności: ${fmt(savings)} PLN/dobę. Rozważ rozbudowę OZE.${fwWarning}`; }
     else { ins.className='ins warn'; ins.textContent=`Niskie pokrycie zapotrzebowania (${pokrycie}%) — zakład w pełni zależny od sieci energetycznej (wymaga zakupu ${Math.round(totalGrid)} MWh dziennie). Oszczędności: ${fmt(savings)} PLN/dobę.${fwWarning}`; }
