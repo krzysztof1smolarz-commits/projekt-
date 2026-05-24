@@ -40,6 +40,25 @@
   --mono:     'IBM Plex Mono', monospace;
   --shadow:   0 4px 24px rgba(0,0,0,0.4);
 }
+/* ===== TRYB JASNY ===== */
+body.light-theme {
+  --bg:       #f3f4f6;
+  --bg2:      #ffffff;
+  --bg3:      #f9fafb;
+  --surface:  #ffffff;
+  --surface2: #e5e7eb;
+  --border:   rgba(0,0,0,0.1);
+  --border2:  rgba(0,0,0,0.15);
+  --text:     #111827;
+  --text2:    #4b5563;
+  --text3:    #6b7280;
+  /* Delikatnie przyciemniamy tła dla pastelowych kafelków w trybie jasnym */
+  --blue-bg:  rgba(77,157,224,0.15);
+  --green-bg: rgba(62,207,142,0.15);
+  --amber-bg: rgba(244,165,53,0.15);
+  --red-bg:   rgba(224,90,90,0.15);
+  --purple-bg:rgba(155,135,245,0.15);
+}
 html { font-size: 14px; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; overflow: hidden; }
 
@@ -399,6 +418,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <span id="hdr_pokrycie" class="pill amber">Pokrycie 20%</span>
     <span id="hdr_koszt" style="font-family:var(--mono);font-size:12px;color:var(--text3)">Koszt sieci: — PLN/dobę</span>
     <button class="lang-toggle" id="lang_toggle" onclick="toggleLanguage()" aria-label="Zmień język na angielski" title="Zmień język na angielski">EN</button>
+    <button class="btn" onclick="toggleTheme()" id="btn_theme" style="margin-left:4px; border-color:var(--text3); color:var(--text3)">☀️ Jasny</button>
   </div>
 </header>
 
@@ -1190,8 +1210,28 @@ function toggleLanguage() {
     if (translations[key] && translations[key][currentLang]) {
       el.textContent = translations[key][currentLang];
     }
-  });
+let isLight = false;
+function toggleTheme() {
+  isLight = !isLight;
+  document.body.classList.toggle('light-theme', isLight);
+  
+  // Zmiana tekstu i ikony na przycisku
+  const btn = g('btn_theme');
+  if (currentLang === 'pl') {
+    btn.textContent = isLight ? '🌙 Ciemny' : '☀️ Jasny';
+  } else {
+    btn.textContent = isLight ? '🌙 Dark' : '☀️ Light';
+  }
 
+  // Zmiana domyślnych kolorów czcionek i siatki na wykresach Chart.js
+  if (chartAvailable) {
+    Chart.defaults.color = isLight ? '#6b7280' : '#9896a0';
+    Chart.defaults.borderColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.06)';
+    upd(); // Odświeża stronę, aby wykresy narysowały się w nowych kolorach
+  }
+}
+  });
+if (g('btn_theme')) g('btn_theme').textContent = isLight ? (currentLang === 'pl' ? '🌙 Ciemny' : '🌙 Dark') : (currentLang === 'pl' ? '☀️ Jasny' : '☀️ Light');
   upd();
 }
 
