@@ -1197,6 +1197,7 @@ const translations = {
 };
 
 function toggleLanguage() {
+  function toggleLanguage() {
   currentLang = currentLang === 'pl' ? 'en' : 'pl';
   
   const btn = document.getElementById('lang_toggle');
@@ -1210,6 +1211,14 @@ function toggleLanguage() {
     if (translations[key] && translations[key][currentLang]) {
       el.textContent = translations[key][currentLang];
     }
+  });
+
+  if (g('btn_theme')) {
+    g('btn_theme').textContent = isLight ? (currentLang === 'pl' ? '🌙 Ciemny' : '🌙 Dark') : (currentLang === 'pl' ? '☀️ Jasny' : '☀️ Light');
+  }
+  upd();
+}
+
 let isLight = false;
 function toggleTheme() {
   isLight = !isLight;
@@ -1230,9 +1239,6 @@ function toggleTheme() {
     upd(); // Odświeża stronę, aby wykresy narysowały się w nowych kolorach
   }
 }
-  });
-if (g('btn_theme')) g('btn_theme').textContent = isLight ? (currentLang === 'pl' ? '🌙 Ciemny' : '🌙 Dark') : (currentLang === 'pl' ? '☀️ Jasny' : '☀️ Light');
-  upd();
 }
 
 // ------------------------------------------------------------
