@@ -1321,7 +1321,7 @@ function simulate(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, sezon, tryb, pp, 
   const pv  = pvProfileNetto(sezon, pvMW, invEff, lossEff);
   const fw  = fwProfile(fwMW, fwW, fwV);
   const dem = window.uploadedProfileMW 
-    ? window.uploadedProfileMW.map(v => parseFloat((v * dayScale).toFixed(3)))
+    ? window.uploadedProfileMW[h] = parseFloat(((avgKwhPerDayForThisHour / 1000) * 50).toFixed(3));
     : demandProfile(tryb, pp, pn, pd, dayScale);
   let soc = meeMWh * 0.3;
   const rtEff = meeEff / 100;
