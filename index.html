@@ -477,7 +477,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   <div class="card-title"><span class="card-title-dot" style="background:var(--blue)"></span>TEST WERSJI 2.0: Wczytaj plik CSV (35k wierszy)</div>
   <div class="form-row">
     <span class="form-label">Wybierz plik z licznika (.csv):</span>
-    <input type="file" id="csv_upload" accept=".csv" style="color: var(--text);" onchange="testCSVPerformance(event)">
+    <input type="file" id="csv_upload" accept=".csv" style="color: var(--text);" onchange="loadCSVData(event)">
   </div>
 </div>
       <hr class="sdiv">
@@ -1320,7 +1320,9 @@ function demandProfile(tryb, pp, pn, pd, dayScale=1.0) {
 function simulate(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, sezon, tryb, pp, pn, pd, invEff, lossEff, dayScale=1.0) {
   const pv  = pvProfileNetto(sezon, pvMW, invEff, lossEff);
   const fw  = fwProfile(fwMW, fwW, fwV);
-  const dem = demandProfile(tryb, pp, pn, pd, dayScale);
+  const dem = window.uploadedProfileMW 
+    ? window.uploadedProfileMW.map(v => parseFloat((v * dayScale).toFixed(3)))
+    : demandProfile(tryb, pp, pn, pd, dayScale);
   let soc = meeMWh * 0.3;
   const rtEff = meeEff / 100;
   const socArr=[], gridArr=[], surplusArr=[], meePow=[];
@@ -2183,48 +2185,57 @@ window.addEventListener('DOMContentLoaded', () => {
   initAccessibility();
   setTimeout(upd, 300);
 });
-// ============================================================
-// TEST WYDAJNOŚCI - WERSJA 2.0 (CSV)
-// ============================================================
-function testCSVPerformance(event) {
+window.uploadedProfileMW = null; // Globalna zmienna trzymająca profil z CSV
+
+function loadCSVData(event) {
   const file = event.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = function(e) {
-    const text = e.target.result;
-    
-    // Uruchamiamy stoper!
-    const startTime = performance.now();
+    const lines = e.target.result.split('\n');
+    let hourlySumkWh = new Array(24).fill(0);
+    let hourlyCounts = new Array(24).fill(0);
 
-    // Dzielimy plik na wiersze
-    const lines = text.split('\n');
-    let totalEnergy = 0;
-    let validRows = 0;
-
-    // Przetwarzamy każdą linijkę (pomijamy nagłówek i=0)
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
       
-      const parts = line.split(';'); // Nasz skrypt CSV używał średnika
+      const parts = line.split(';');
       if (parts.length >= 2) {
-        // Zamiana polskiego przecinka na kropkę, żeby JS to zrozumiał
+        const dateStr = parts[0];
         const val = parseFloat(parts[1].replace(',', '.'));
+        
         if (!isNaN(val)) {
-          totalEnergy += val;
-          validRows++;
+          const timePart = dateStr.split(' ')[1]; 
+          if (timePart) {
+            const hour = parseInt(timePart.split(':')[0], 10);
+            if (hour >= 0 && hour <= 23) {
+              hourlySumkWh[hour] += val;
+              hourlyCounts[hour]++;
+            }
+          }
         }
       }
     }
 
-    // Zatrzymujemy stoper!
-    const endTime = performance.now();
-    const timeTook = (endTime - startTime).toFixed(2);
+    // Przeliczenie sumy kWh z kwadransów na średnią moc (MW) w danej godzinie
+    window.uploadedProfileMW = new Array(24).fill(0);
+    for(let h = 0; h < 24; h++) {
+        if (hourlyCounts[h] > 0) {
+            const daysCount = hourlyCounts[h] / 4; // 4 kwadranse to 1 godzina
+            const avgKwhPerDayForThisHour = hourlySumkWh[h] / daysCount;
+            window.uploadedProfileMW[h] = parseFloat((avgKwhPerDayForThisHour / 1000).toFixed(3));
+        }
+    }
 
-    // Wynik
-    alert(`⚡ SUKCES TESTU ⚡\n\nPrzetworzono: ${validRows} wierszy danych.\nCałkowite zużycie z pliku: ${totalEnergy.toFixed(2)} kWh.\n\nCZAS PRZETWARZANIA: ${timeTook} milisekund!`);
-    console.log(`Zakończono test. Czas: ${timeTook} ms. Wierszy: ${validRows}. Energia: ${totalEnergy.toFixed(2)}`);
+    alert(t("Zakończono analizę! Wykresy używają teraz danych z Twojego pliku CSV.", "Analysis complete! Charts now use data from your CSV file."));
+    
+    // Blokada ręcznego wyboru trybu zakładu
+    const trybSelect = document.getElementById('tryb');
+    if(trybSelect) trybSelect.disabled = true;
+    
+    upd(); // Odśwież aplikację z nowymi danymi
   };
   
   reader.readAsText(file);
