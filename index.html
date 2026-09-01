@@ -1321,7 +1321,71 @@ function simulate(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, sezon, tryb, pp, 
   const pv  = pvProfileNetto(sezon, pvMW, invEff, lossEff);
   const fw  = fwProfile(fwMW, fwW, fwV);
   const dem = window.uploadedProfileMW 
-    ? window.uploadedProfileMW.map(v => parseFloat(((avgKwhPerDayForThisHour / 1000) * 50).toFixed(3));
+  window.uploadedProfileMW = null; // Globalna zmienna trzymająca profil z CSV
+
+function loadCSVData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const lines = e.target.result.split('\n');
+      let hourlySumkWh = new Array(24).fill(0);
+      let hourlyCounts = new Array(24).fill(0);
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const parts = line.split(';');
+        if (parts.length >= 2) {
+          const dateStr = parts[0];
+          const val = parseFloat(parts[1].replace(',', '.'));
+          
+          if (!isNaN(val)) {
+            const timePart = dateStr.split(' ')[1]; 
+            if (timePart) {
+              const hour = parseInt(timePart.split(':')[0], 10);
+              if (hour >= 0 && hour <= 23) {
+                hourlySumkWh[hour] += val;
+                hourlyCounts[hour]++;
+              }
+            }
+          }
+        }
+      }
+
+      // Przeliczenie i MNOŻNIK x50
+      window.uploadedProfileMW = new Array(24).fill(0);
+      for(let h = 0; h < 24; h++) {
+          if (hourlyCounts[h] > 0) {
+              const daysCount = hourlyCounts[h] / 4; // 4 kwadranse to 1 godzina
+              const avgKwhPerDayForThisHour = hourlySumkWh[h] / daysCount;
+              
+              // Tutaj powiększamy zakład 50-krotnie!
+              window.uploadedProfileMW[h] = parseFloat(((avgKwhPerDayForThisHour / 1000) * 50).toFixed(3));
+          }
+      }
+
+      alert(t("Zakończono analizę! Wykresy używają teraz powiększonych danych z CSV.", "Analysis complete! Charts use scaled data from CSV."));
+      
+      // Blokada ręcznego wyboru trybu zakładu
+      const trybSelect = document.getElementById('tryb');
+      if(trybSelect) trybSelect.disabled = true;
+      
+      upd(); // Odśwież aplikację z nowymi danymi
+      
+    } catch(err) {
+      alert("Wystąpił błąd w kodzie: " + err.message);
+    }
+  };
+  
+  reader.readAsText(file);
+  
+  // RESET POLA: Pozwala na ponowne wgranie tego samego pliku bez odświeżania strony!
+  event.target.value = '';
+}
     : demandProfile(tryb, pp, pn, pd, dayScale);
   let soc = meeMWh * 0.3;
   const rtEff = meeEff / 100;
