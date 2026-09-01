@@ -473,6 +473,13 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
           <option value="ramp" data-i18n="opt-ramp">Nierównomierne (przerwy produkcyjne)</option>
         </select>
       </div>
+	<div class="card" style="margin-bottom:14px; border: 2px dashed var(--blue);">
+  <div class="card-title"><span class="card-title-dot" style="background:var(--blue)"></span>TEST WERSJI 2.0: Wczytaj plik CSV (35k wierszy)</div>
+  <div class="form-row">
+    <span class="form-label">Wybierz plik z licznika (.csv):</span>
+    <input type="file" id="csv_upload" accept=".csv" style="color: var(--text);" onchange="testCSVPerformance(event)">
+  </div>
+</div>
       <hr class="sdiv">
       <div class="stitle" data-i18n="cfg-ceny">Ceny energii elektrycznej</div>
       <div class="form-row"><span class="form-label" data-i18n="cfg-cszczyt">Cena szczytowa 6–21 [PLN/MWh]</span><input type="range" id="c_szczyt" min="100" max="1000" step="10" value="600" oninput="upd()"><span class="val-display" id="c_szczyt_v">600</span></div>
@@ -2176,6 +2183,52 @@ window.addEventListener('DOMContentLoaded', () => {
   initAccessibility();
   setTimeout(upd, 300);
 });
+// ============================================================
+// TEST WYDAJNOŚCI - WERSJA 2.0 (CSV)
+// ============================================================
+function testCSVPerformance(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    
+    // Uruchamiamy stoper!
+    const startTime = performance.now();
+
+    // Dzielimy plik na wiersze
+    const lines = text.split('\n');
+    let totalEnergy = 0;
+    let validRows = 0;
+
+    // Przetwarzamy każdą linijkę (pomijamy nagłówek i=0)
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      const parts = line.split(';'); // Nasz skrypt CSV używał średnika
+      if (parts.length >= 2) {
+        // Zamiana polskiego przecinka na kropkę, żeby JS to zrozumiał
+        const val = parseFloat(parts[1].replace(',', '.'));
+        if (!isNaN(val)) {
+          totalEnergy += val;
+          validRows++;
+        }
+      }
+    }
+
+    // Zatrzymujemy stoper!
+    const endTime = performance.now();
+    const timeTook = (endTime - startTime).toFixed(2);
+
+    // Wynik
+    alert(`⚡ SUKCES TESTU ⚡\n\nPrzetworzono: ${validRows} wierszy danych.\nCałkowite zużycie z pliku: ${totalEnergy.toFixed(2)} kWh.\n\nCZAS PRZETWARZANIA: ${timeTook} milisekund!`);
+    console.log(`Zakończono test. Czas: ${timeTook} ms. Wierszy: ${validRows}. Energia: ${totalEnergy.toFixed(2)}`);
+  };
+  
+  reader.readAsText(file);
+}
 </script>
 
 </body></html>
