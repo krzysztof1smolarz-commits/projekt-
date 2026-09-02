@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EnergoSym — Symulator Energetyczny Zakładu Produkcyjnego V2.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com/">
@@ -195,6 +194,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 .sub-tab.active { color: var(--blue2); border-bottom-color: var(--blue); font-weight: 500; }
 .sub-section { display: none; }
 .sub-section.active { display: block; }
+.inv-unit { font-size: 12px; color: var(--text3); width: 40px; }
 
 /* ===== RESPONSIVE ===== */
 @media(max-width:760px) {
@@ -810,7 +810,8 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 </div>
 
 </main>
-</div><script>
+</div>
+<script>
 // ============================================================
 // GLOBALS & STATE
 // ============================================================
@@ -1207,6 +1208,55 @@ function demandProfile(tryb, pp, pn, pd, dayScale=1.0) {
   });
 }
 
+function simulate(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, sezon, tryb, pp, pn, pd, invEff, lossEff, dayScale=1.0) {
+  const pv  = pvProfileNetto(sezon, pvMW, invEff, lossEff);
+  const fw  = fwProfile(fwMW, fwW, fwV);
+  const dem = demandProfile(tryb, pp, pn, pd, dayScale);
+  let soc = meeMWh * 0.3;
+  const rtEff = meeEff / 100;
+  const socArr=[], gridArr=[], surplusArr=[], meePow=[];
+
+  for (let h = 0; h < 24; h++) {
+    const oze = pv[h] + fw[h];
+    let gap = dem[h] - oze;  
+    let mee = 0;
+
+    if (gap < 0) {
+      const surplusOze = -gap;
+      const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
+      soc = Math.min(meeMWh, soc + ch * rtEff);
+      mee = ch;
+      gap += ch;  
+    } else if (gap > 0) {
+      const dis = Math.min(gap, meeMW, soc);
+      soc = Math.max(0, soc - dis);
+      mee = -dis;
+      gap -= dis * rtEff;  
+    }
+
+    const isCheapHour = (h < 6 || h >= 21);
+    if (isCheapHour && soc < meeMWh * 0.95 && gap >= 0 && meeMWh > 0) {
+      const maxCharge = Math.min(meeMW, meeMWh - soc);
+      const gridCharge = Math.min(maxCharge, meeMW * 0.7); 
+      if (gridCharge > 0.01) {
+        soc = Math.min(meeMWh, soc + gridCharge * rtEff);
+        mee = gridCharge;  
+        gap += gridCharge;  
+      }
+    }
+
+    const gridPobor = Math.max(0, gap);
+    const surplus   = Math.max(0, -gap);
+
+    gridArr.push(parseFloat(gridPobor.toFixed(3)));
+    surplusArr.push(parseFloat(surplus.toFixed(3)));
+    socArr.push(parseFloat(soc.toFixed(3)));
+    meePow.push(parseFloat(mee.toFixed(3)));
+  }
+  const oze = pv.map((v,i) => parseFloat((v + fw[i]).toFixed(3)));
+  return { pv, fw, dem, oze, socArr, gridArr, surplusArr, meePow };
+}
+
 // ----------------------------------------------------
 // SILNIK V2.0 (8760h) Z INTELIGENTNYM EMS (ARBITRAŻ)
 // ----------------------------------------------------
@@ -1238,8 +1288,8 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     if (dayOfWeek === 6) dayScale = 0.3; 
     
     // Zapotrzebowanie (CSV z pliku lub suwaki)
-    out.dem[h] = window.uploadedProfileMW 
-      ? window.uploadedProfileMW[hourOfDay] * dayScale 
+    out.dem[h] = window.uploadedProfile8760 
+      ? window.uploadedProfile8760[h] 
       : demandProfile(tryb, pp, pn, pd, dayScale)[hourOfDay];
 
     // OZE z sezonowością
@@ -1255,21 +1305,18 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
 
     // LOGIKA STRATEGII EMS (Maksymalna Autokonsumpcja vs Arbitraż RDN)
     if (emsMode === 'arbitrage') {
-        // Taryfa nocna/tania -> Ładujemy z sieci (lub OZE) do oporu
         if (isCheapHour && soc < meeMWh) {
             const ch = Math.min(meeMW, meeMWh - soc);
             soc = Math.min(meeMWh, soc + ch * rtEff);
             mee = ch;
             gap += ch; 
         } 
-        // Taryfa dzienna/droga -> Rozładowujemy na pokrycie zakładu
         else if (!isCheapHour && soc > 0 && gap > 0) {
             const dis = Math.min(gap, meeMW, soc);
             soc = Math.max(0, soc - dis);
             mee = -dis;
             gap -= dis * rtEff;
         } 
-        // Ładowanie darmowych nadwyżek niezależnie od pory dnia
         else if (gap < 0 && soc < meeMWh) {
             const ch = Math.min(-gap, meeMW, meeMWh - soc);
             soc = Math.min(meeMWh, soc + ch * rtEff);
@@ -1277,7 +1324,6 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
             gap += ch;
         }
     } else {
-        // STANDARD (Autokonsumpcja): Ładuje tylko z nadwyżek, zrzuca gdy brakuje słońca
         if (gap < 0) {
             const surplusOze = -gap;
             const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
@@ -1416,7 +1462,7 @@ function renderV2(type) {
     oze = aggregate8760.toAverageWeek(S8.oze);
     grid = aggregate8760.toAverageWeek(S8.gridArr);
     surp = aggregate8760.toAverageWeek(S8.surplusArr);
-    titleY = t('MW (Średnia dzienna)','MW (Daily Average)');
+    titleY = t('MWh (Średnia dzienna)','MWh (Daily Average)');
   } else if (view === 'month') {
     labels = t(['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'], ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
     dem = aggregate8760.toMonthlySum(S8.dem);
@@ -1682,13 +1728,13 @@ function upd() {
   }
   
   if (g('c_mee_porownanie') && isVisible('mee_1')) {
-    const S_bez = { gridArr: S_8760.dem }; // W uproszczeniu dla porównania BESS
+    const S_bez = { gridArr: aggregate8760.toAverageDay(S_8760.dem) }; 
     mkChart('c_mee_porownanie','line',{labels:hrs,datasets:[
-      {label:t('BEZ MEE', 'NO BESS'),data:aggregate8760.toAverageDay(S_8760.dem),borderColor:'#4d9de0',pointRadius:0,borderWidth:2,tension:0.3,fill:false},
+      {label:t('BEZ MEE', 'NO BESS'),data:S_bez.gridArr,borderColor:'#4d9de0',pointRadius:0,borderWidth:2,tension:0.3,fill:false},
       {label:t('Z MEE', 'WITH BESS'),data:S.gridArr,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.08)',fill:true,pointRadius:0,borderWidth:2,tension:0.3}
     ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:{legend:{display:true,labels:{color:'#9896a0'}}}});
-    const c_bez=calcCost(aggregate8760.toAverageDay(S_8760.dem),cS,cN), c_z=calcCost(S.gridArr,cS,cN);
-    const pkBez=Math.max(...aggregate8760.toAverageDay(S_8760.dem)), pkZ=Math.max(...S.gridArr);
+    const c_bez=calcCost(S_bez.gridArr,cS,cN), c_z=calcCost(S.gridArr,cS,cN);
+    const pkBez=Math.max(...S_bez.gridArr), pkZ=Math.max(...S.gridArr);
     const pkRed=Math.round((pkBez-pkZ)/pkBez*100);
     g('mee_koszt_bez').textContent=fmt(Math.round(c_bez)); g('mee_koszt_z').textContent=fmt(Math.round(c_z));
     g('mee_peak_red').textContent=`${fmtD(pkBez-pkZ,1)} (${pkRed||0}%)`;
@@ -1737,6 +1783,14 @@ function upd() {
     g('bil_tyg_siec').textContent=Math.round(siecTyg); g('bil_tyg_koszt').textContent=fmt(Math.round(kosztTyg)); g('bil_tyg_oszcz').textContent=fmt(Math.round(oszczTyg));
   }
   
+  if (g('tbl_bilans_body') && isVisible('bilans_2')) {
+    g('tbl_bilans_body').innerHTML=Array.from({length:24},(_,h)=>{
+      const gridColor=S.gridArr[h]>pp*0.8?'td-red':S.gridArr[h]>0?'td-amber':'';
+      const kost=Math.round(S.gridArr[h]*((h>=6&&h<21)?cS:cN));
+      return `<tr><td class="td-mono">${h}:00</td><td class="td-mono">${fmtD(S.dem[h],2)}</td><td class="td-mono">${fmtD(S.pv[h],2)}</td><td class="td-mono">${fmtD(S.fw[h],2)}</td><td class="td-mono">${fmtD(S.meePow[h],2)}</td><td class="td-mono ${gridColor}">${fmtD(S.gridArr[h],2)}</td><td class="td-green">${fmtD(S.surplusArr[h],2)}</td><td class="td-amber">${fmt(kost)}</td></tr>`;
+    }).join('');
+  }
+
   if (isVisible('bilans_3')) {
       renderV2();
   }
@@ -1746,9 +1800,9 @@ function upd() {
 }
 
 // ============================================================
-// WCZYTYWANIE PLIKU CSV
+// WCZYTYWANIE PLIKU CSV WERSJA 2.0 (8760h)
 // ============================================================
-window.uploadedProfileMW = null; 
+window.uploadedProfile8760 = null; 
 
 function loadCSVData(event) {
   const file = event.target.files[0];
@@ -1758,8 +1812,8 @@ function loadCSVData(event) {
   reader.onload = function(e) {
     try {
       const lines = e.target.result.split('\n');
-      let hourlySumkWh = new Array(24).fill(0);
-      let hourlyCounts = new Array(24).fill(0);
+      const hrData = new Float32Array(8760).fill(0);
+      let validLines = 0;
 
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
@@ -1767,32 +1821,21 @@ function loadCSVData(event) {
         
         const parts = line.split(';');
         if (parts.length >= 2) {
-          const dateStr = parts[0];
           const val = parseFloat(parts[1].replace(',', '.'));
-          
           if (!isNaN(val)) {
-            const timePart = dateStr.split(' ')[1]; 
-            if (timePart) {
-              const hour = parseInt(timePart.split(':')[0], 10);
-              if (hour >= 0 && hour <= 23) {
-                hourlySumkWh[hour] += val;
-                hourlyCounts[hour]++;
-              }
+            // Zamiana 15-minutowych kwadransów na godziny (4 linie = 1 godzina)
+            const hIndex = Math.floor(validLines / 4);
+            if (hIndex < 8760) {
+              // MNOŻNIK x50
+              hrData[hIndex] += (val / 1000) * 50; 
             }
+            validLines++;
           }
         }
       }
 
-      window.uploadedProfileMW = new Array(24).fill(0);
-      for(let h = 0; h < 24; h++) {
-          if (hourlyCounts[h] > 0) {
-              const daysCount = hourlyCounts[h] / 4; 
-              const avgKwhPerDayForThisHour = hourlySumkWh[h] / daysCount;
-              window.uploadedProfileMW[h] = parseFloat(((avgKwhPerDayForThisHour / 1000) * 50).toFixed(3));
-          }
-      }
-
-      alert(t("Zakończono analizę! Wykresy używają teraz powiększonych danych z CSV.", "Analysis complete! Charts use scaled data from CSV."));
+      window.uploadedProfile8760 = hrData;
+      alert(t("Zakończono analizę! Wykresy używają teraz powiększonych danych z CSV (pełne 8760h).", "Analysis complete! Charts use scaled data from CSV (full 8760h)."));
       
       const trybSelect = document.getElementById('tryb');
       if(trybSelect) trybSelect.disabled = true;
@@ -1835,7 +1878,6 @@ function calcInv() {
   const dotacjaKwota   = capexTotal * dotacja/100;
 
   const costGrid = calcCost(S.gridArr, cS, cN);
-  // Do testu wariantów również używamy silnika 8760h (agregowanego do uśrednionych 24h) aby było to wiarygodne
   const S2_8760 = simulate8760(pvM+addPV, fwM+addFW, fwW, fwV, meeK+addMEE, meeP+addMEEP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode);
   const S2 = { gridArr: aggregate8760.toAverageDay(S2_8760.gridArr) };
   
@@ -1916,8 +1958,155 @@ function calcInv() {
 }
 
 // ============================================================
-// INIT
+// REPORT BUILDER
 // ============================================================
+function buildReport() {
+  if (!lastSim) return;
+  if (!g('rep_params')) return;
+  const { S, pp, pn, pd, pvM, fwM, fwW, fwV, meeK, meeP, meeEff, meeDeg, sezon, tryb, cS, cN, cWzrost, invEff, lossEff } = lastSim;
+  const totalDem  = S.dem.reduce((a,b)=>a+b,0);
+  const totalOze  = S.oze.reduce((a,b)=>a+b,0);
+  const totalGrid = S.gridArr.reduce((a,b)=>a+b,0);
+  const totalSurp = S.surplusArr.reduce((a,b)=>a+b,0);
+  const meeE      = S.meePow.filter(v=>v<0).reduce((a,b)=>a+Math.abs(b),0);
+  let pokrycie = 0;
+  if(totalDem > 0) pokrycie = Math.min(100,Math.round(((totalDem-totalGrid)/totalDem)*100));
+  
+  const costGrid  = calcCost(S.gridArr,cS,cN);
+  const costNoOze = calcCost(S.dem,cS,cN);
+  const savings   = Math.max(0,costNoOze-costGrid);
+  const eff       = windEfficiency(fwW);
+  const trybNames = {'3':t('3-zmianowy','3-shift'),'2':t('2-zmianowy','2-shift'),'ramp':t('Nierównomierne','Uneven')};
+  const sezonNames = {lato:t('Lato','Summer'),wiosna:t('Wiosna/Jesień','Spring/Autumn'),zima:t('Zima','Winter')};
+  const tbl = (rows) => `<div class="tbl-wrap"><table><tbody>${rows.map(([l,v])=>`<tr><td style="width:55%;color:var(--text2)">${l}</td><td class="td-mono">${v}</td></tr>`).join('')}</tbody></table></div>`;
+
+  g('rep_params').innerHTML = tbl([
+    [t('Moc przyłączeniowa','Connection capacity'),''+pp+' MW'],[t('Tryb pracy','Operation mode'),trybNames[tryb]],
+    [t('Zapotrzebowanie nocne (22–6)','Night demand (22-6)'),''+pn+'%'],[t('Zapotrzebowanie dzienne (6–22)','Day demand (6-22)'),''+pd+'%'],
+    [t('Moc PV','PV capacity'),''+pvM+' MW'],[t('Sprawność falownika PV','PV inverter efficiency'),''+invEff+'%'],[t('Straty PV','PV losses'),''+lossEff+'%'],
+    [t('Moc FW','FW capacity'),''+fwM+' MW'],[t('Prędkość wiatru śr.','Avg. wind speed'),''+fwW+' m/s'],[t('Zmienność FW','FW variability'),''+fwV+'%'],
+    [t('MEE pojemność','BESS capacity'),''+meeK+' MWh'],[t('MEE moc','BESS power'),''+meeP+' MW'],[t('Sprawność MEE','BESS efficiency'),''+meeEff+'%'],
+    [t('Sezon','Season'),sezonNames[sezon]],[t('Cena szczytowa','Peak price'),''+cS+' PLN/MWh'],[t('Cena nocna','Night price'),''+cN+' PLN/MWh']
+  ]);
+  const tgPhi=0.4, peakMW=Math.max(...S.dem);
+  const rokE_real=Math.round(totalDem*250 + totalDem*0.8*52 + totalDem*0.3*63);
+  const hrs=Array.from({length:24},(_,i)=>`${i}:00`);
+  g('rep_zaklad').innerHTML = tbl([
+    [t('Zapotrzebowanie dobowe','Daily demand'),''+Math.round(totalDem)+' MWh/dobę'],
+    [t('Szczyt (MW czynne)','Peak (Active MW)'),''+fmtD(peakMW,1)+' MW'],
+    [t('Szczyt pozorny (tgφ=0,4)','Apparent peak (tgφ=0.4)'),''+fmtD(peakMW*Math.sqrt(1+tgPhi*tgPhi),1)+' MVA'],
+    [t('Moc bierna przy szczycie','Reactive power at peak'),''+fmtD(peakMW*tgPhi,1)+' MVAr'],
+    [t('Load factor','Load factor'),''+Math.round(totalDem/(pp*24)*100)+'%'],
+    [t('Energia roczna realna','Real yearly energy'),''+fmt(rokE_real)+' MWh/rok']
+  ]);
+  const pvDay=S.pv.reduce((a,b)=>a+b,0), fwDay=S.fw.reduce((a,b)=>a+b,0);
+  g('rep_oze').innerHTML = tbl([
+    [t('Produkcja PV dobowa','Daily PV production'),''+fmtD(pvDay,1)+' MWh/dobę'],
+    [t('Produkcja FW dobowa','Daily FW production'),''+fmtD(fwDay,1)+' MWh/dobę'],
+    [t('Sprawność FW','FW efficiency'),''+Math.round(eff*100)+'%'+(fwW>=25?t(' ⚠️ CUT-OUT!',' ⚠️ CUT-OUT!'):'')],
+    [t('OZE łącznie','Total RES'),''+Math.round(totalOze)+' MWh/dobę'],
+    [t('Produkcja OZE rocznie (est.)','Yearly RES production (est.)'),''+fmt(Math.round(totalOze*365))+' MWh/rok']
+  ]);
+  g('rep_mee').innerHTML = tbl([
+    [t('Energia z MEE dobowo','Daily energy from BESS'),''+fmtD(meeE,1)+' MWh/dobę'],
+    [t('Oszczędności arbitrażu','Arbitrage savings'),''+fmt(Math.round(meeE*(cS-cN)*0.85))+' PLN/dobę'],
+    [t('Rok degradacji do 70% pojemności','Year to 70% degradation'),''+Math.ceil(Math.log(0.7)/Math.log(1-meeDeg/100))+'.']
+  ]);
+  g('rep_bilans').innerHTML = tbl([
+    [t('Pobór z sieci','Grid draw'),''+Math.round(totalGrid)+' MWh/dobę'],
+    [t('Nadwyżka OZE','RES surplus'),''+Math.round(totalSurp)+' MWh/dobę'],
+    [t('Pokrycie zapotrzebowania OZE+MEE','RES+BESS demand coverage'),''+pokrycie+'%'],
+    [t('Koszt energii z sieci','Grid energy cost'),''+fmt(Math.round(costGrid))+' PLN/dobę'],
+    [t('Oszczędności vs. brak OZE','Savings vs. no RES'),''+fmt(Math.round(savings))+' PLN/dobę'],
+    [t('Oszczędności rocznie','Yearly savings'),''+fmt(Math.round(savings*365))+' PLN/rok']
+  ]);
+  g('rep_inwest').innerHTML = tbl([
+    [t('Koszt bez OZE (roczny est.)','Cost without RES (yearly est.)'),''+fmt(Math.round(costNoOze*365))+' PLN/rok'],
+    [t('Koszt z OZE+MEE (roczny est.)','Cost with RES+BESS (yearly est.)'),''+fmt(Math.round(costGrid*365))+' PLN/rok'],
+    [t('Oszczędności roczne','Yearly savings'),''+fmt(Math.round(savings*365))+' PLN/rok'],
+    [t('Wzrost cen energii','Energy price increase'),''+cWzrost+'%/rok']
+  ]);
+  g('rep_metoda').innerHTML = t(`
+    <b>Modele obliczeniowe:</b><br>
+    • PV: kształt krzywej dobowej oparty na typowym nasłonecznieniu w Polsce. Szczyty: lato 65%, wiosna/jesień 40%, zima 20%. Uwzględniono sprawność falownika i straty.<br>
+    • FW: krzywa mocy potęgowa (v−3)^2.2/11^2.2 dla zakresu 3–14 m/s, moc nominalna 14–24,9 m/s, cut-out ≥25 m/s → P=0. Zmienność dobowa = suma trzech sinusoid.<br>
+    • Rozkład Weibulla: k=2,0, λ=v_śr×1,128.<br>
+    • MEE: round-trip efficiency, ładowanie z nadwyżki OZE i taniej taryfy nocnej; przy ładowaniu z sieci pobór sieci rośnie (zachowanie energii). Degradacja liniowa %/rok.<br>
+    • Moc bierna: tgφ=0,4 (standard PL dla zakładów przemysłowych). S=P/cosφ, Q=P·tgφ.<br>
+    • Roczny czas: 250 dni roboczych (100%) + 52 soboty (80%) + 63 dni wolne (30%) = 365 dni.<br>
+    • CAPEX PV: 3 500 PLN/kW + grunt 1,3 ha/MW × 57 000 PLN/ha lub 2 000 PLN/ha/rok dzierżawa. FW: 5 000 PLN/kW. MEE: 900 PLN/kWh + 200 PLN/kW.<br>
+    • Wyniki mają charakter szacunkowy — tylko do analiz koncepcyjnych.<br>
+    Wersja: 3.2 | Data: 03.05.2026
+  `,`
+    <b>Calculation Models:</b><br>
+    • PV: daily curve based on typical insolation in Poland. Peaks: summer 65%, spring/autumn 40%, winter 20%. Inverter efficiency and losses included.<br>
+    • FW: power curve (v−3)^2.2/11^2.2 for 3–14 m/s, nominal power 14–24.9 m/s, cut-out ≥25 m/s → P=0. Daily variability = sum of three sinusoids.<br>
+    • Weibull Distribution: k=2.0, λ=v_avg×1.128.<br>
+    • BESS: round-trip efficiency, charging from RES surplus and cheap night tariff; charging from grid increases grid draw. Linear degradation %/year.<br>
+    • Reactive power: tgφ=0.4 (PL standard for industrial plants). S=P/cosφ, Q=P·tgφ.<br>
+    • Yearly time: 250 workdays (100%) + 52 Saturdays (80%) + 63 holidays (30%) = 365 days.<br>
+    • CAPEX PV: 3,500 PLN/kW + land 1.3 ha/MW × 57,000 PLN/ha or 2,000 PLN/ha/year lease. FW: 5,000 PLN/kW. BESS: 900 PLN/kWh + 200 PLN/kW.<br>
+    • Results are estimates — for conceptual analysis only.<br>
+    Version: 3.2 | Date: 03.05.2026
+  `);
+
+  const rOpts={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:true,labels:{color:'#555',font:{size:10},boxWidth:10}}}};
+  const mkR=(id,type,data,extra={})=>{
+    const el = g(id);
+    if (!el) return null;
+    if (!chartAvailable) {
+      showChartWarning(el);
+      return null;
+    }
+    clearChartWarning(el);
+    if(charts[id])charts[id].destroy();
+    charts[id]=new Chart(el.getContext('2d'),{type,data,options:{...rOpts,...extra}});
+    return charts[id];
+  };
+  if(g('rpt_c1')) mkR('rpt_c1','bar',{labels:hrs,datasets:[{label:t('Zapotrzebowanie [MW]','Demand [MW]'),data:S.dem,backgroundColor:'rgba(77,157,224,0.7)',borderRadius:2},{label:t('Limit','Limit'),data:Array(24).fill(pp),type:'line',borderColor:'rgba(224,90,90,0.6)',borderDash:[5,3],borderWidth:1.5,pointRadius:0,fill:false}]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
+  if(g('rpt_c2')) mkR('rpt_c2','line',{labels:hrs,datasets:[{label:t('PV [MW]','PV [MW]'),data:S.pv,borderColor:'#f4a535',backgroundColor:'rgba(244,165,53,0.12)',fill:true,tension:0.4,pointRadius:0,borderWidth:2},{label:t('FW [MW]','FW [MW]'),data:S.fw,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.10)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},{label:t('OZE łącznie','Total RES'),data:S.oze,borderColor:'#9b87f5',pointRadius:0,borderWidth:1.5,borderDash:[4,2],fill:false,tension:0.4}]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
+  if(g('rpt_c3')){const tariff=Array.from({length:24},(_,h)=>(h>=6&&h<21)?cS:cN);mkR('rpt_c3','line',{labels:hrs,datasets:[{label:t('SOC MEE [MWh]','BESS SOC [MWh]'),data:S.socArr,borderColor:'#9b87f5',backgroundColor:'rgba(155,135,245,0.12)',fill:true,tension:0.4,pointRadius:0,borderWidth:2,yAxisID:'y'},{label:t('Moc MEE [MW]','BESS Power [MW]'),data:S.meePow,borderColor:'#3ecf8e',pointRadius:0,borderWidth:1.5,tension:0.3,borderDash:[3,2],yAxisID:'y'},{label:t('Taryfa÷10','Tariff÷10'),data:tariff.map(v=>v/10),borderColor:'#e05a5a',pointRadius:0,borderWidth:1,tension:0,borderDash:[6,3],yAxisID:'y'}]},{scales:{y:{position:'left',beginAtZero:true,title:{display:true,text:'MWh/MW'}}}});}
+  if(g('rpt_c4')) mkR('rpt_c4','line',{labels:hrs,datasets:[{label:t('Zapotrzebowanie','Demand'),data:S.dem,borderColor:'#4d9de0',pointRadius:0,borderWidth:2,tension:0.3},{label:t('OZE łącznie','Total RES'),data:S.oze,borderColor:'#9b87f5',pointRadius:0,borderWidth:1.5,borderDash:[4,2],tension:0.3},{label:t('Z sieci','Grid draw'),data:S.gridArr,borderColor:'#e05a5a',backgroundColor:'rgba(224,90,90,0.08)',fill:true,pointRadius:0,borderWidth:2,tension:0.3},{label:t('Nadwyżka','Surplus'),data:S.surplusArr,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.10)',fill:true,pointRadius:0,borderWidth:2,tension:0.3}]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}}});
+}
+
+function copyReport() {
+  const el = g('report-content');
+  const text = el.innerText || el.textContent || '';
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text)
+      .then(() => setCopyStatus(t('Skopiowano','Copied')))
+      .catch(() => copyReportFallback(text));
+  } else {
+    copyReportFallback(text);
+  }
+}
+
+function copyReportFallback(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    setCopyStatus(t('Skopiowano','Copied'));
+  } catch (e) {
+    setCopyStatus(t('Nie skopiowano','Not copied'));
+  }
+  ta.remove();
+}
+
+function setCopyStatus(text) {
+  const btn = g('btn_copy_report');
+  if (!btn) return;
+  const original = btn.dataset.originalText || btn.textContent;
+  btn.dataset.originalText = original;
+  btn.textContent = text;
+  setTimeout(() => { btn.textContent = original; }, 1600);
+}
+
 function initAccessibility() {
   document.querySelectorAll('.form-row').forEach(row => {
     const label = row.querySelector('.form-label');
@@ -1930,6 +2119,15 @@ function initAccessibility() {
     if (!btn.getAttribute('type')) btn.setAttribute('type', 'button');
   });
   document.querySelector('.nav-item.active')?.setAttribute('aria-current', 'page');
+}
+
+function isVisible(id) {
+  const el = g(id);
+  if (!el) return false;
+  if (!el.classList.contains('active')) return false;
+  const parentPage = el.closest('.page');
+  if (parentPage && !parentPage.classList.contains('active')) return false;
+  return true;
 }
 
 window.addEventListener('DOMContentLoaded', () => {
