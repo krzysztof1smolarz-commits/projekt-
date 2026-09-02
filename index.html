@@ -1459,6 +1459,118 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
 
   return out;
 }
+// ============================================================
+// SILNIK WERSJA 2.0 (8760 GODZIN) & AGREGATOR
+// ============================================================
+
+const aggregate8760 = {
+  // 1. Uśredniony profil dobowy (24 godziny)
+  toAverageDay: function(arr8760) {
+    let avgDay = new Array(24).fill(0);
+    for(let h = 0; h < 8760; h++) {
+       avgDay[h % 24] += arr8760[h];
+    }
+    return avgDay.map(val => parseFloat((val / 365).toFixed(3)));
+  },
+
+  // 2. Uśredniony profil tygodniowy (7 dni) - sumy energii w danym dniu
+  toAverageWeek: function(arr8760) {
+    let avgWeek = new Array(7).fill(0);
+    for(let h = 0; h < 8760; h++) {
+       let dayOfYear = Math.floor(h / 24);
+       let dayOfWeek = (dayOfYear + 3) % 7; // Założenie: Rok zaczyna się w poniedziałek
+       avgWeek[dayOfWeek] += arr8760[h];
+    }
+    return avgWeek.map(val => parseFloat((val / 52).toFixed(3)));
+  },
+
+  // 3. Sumy miesięczne (12 miesięcy)
+  toMonthlySum: function(arr8760) {
+    let monthly = new Array(12).fill(0);
+    const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    for(let h = 0; h < 8760; h++) {
+        let dayOfYear = Math.floor(h / 24);
+        let m = 0, d = dayOfYear;
+        while(d >= daysInMonth[m]) { d -= daysInMonth[m]; m++; }
+        monthly[m] += arr8760[h];
+    }
+    return monthly.map(val => parseFloat(val.toFixed(3)));
+  }
+};
+
+function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, invEff, lossEff, tryb) {
+  const hoursInYear = 8760;
+  const rtEff = meeEff / 100;
+  
+  const out = {
+    dem: new Float32Array(hoursInYear),
+    pv: new Float32Array(hoursInYear),
+    fw: new Float32Array(hoursInYear),
+    oze: new Float32Array(hoursInYear),
+    socArr: new Float32Array(hoursInYear),
+    gridArr: new Float32Array(hoursInYear),
+    surplusArr: new Float32Array(hoursInYear),
+    meePow: new Float32Array(hoursInYear),
+  };
+
+  let soc = meeMWh * 0.3; 
+  const basePv = pvProfileNetto('wiosna', pvMW, invEff, lossEff);
+  
+  for (let h = 0; h < hoursInYear; h++) {
+    const dayOfYear = Math.floor(h / 24);
+    const hourOfDay = h % 24;
+    const dayOfWeek = (dayOfYear + 3) % 7;
+
+    let dayScale = 1.0;
+    if (dayOfWeek === 5) dayScale = 0.8; 
+    if (dayOfWeek === 6) dayScale = 0.3; 
+    
+    // Zapotrzebowanie (CSV lub z suwaków)
+    out.dem[h] = window.uploadedProfileMW 
+      ? window.uploadedProfileMW[hourOfDay] * dayScale 
+      : demandProfile(tryb, pp, pn, pd, dayScale)[hourOfDay];
+
+    // OZE z sezonowością
+    const seasonFactor = 1 + Math.sin((dayOfYear / 365) * Math.PI * 2 - Math.PI/2) * 0.4; 
+    out.pv[h] = basePv[hourOfDay] * seasonFactor;
+    out.fw[h] = fwProfile(fwMW, fwW, fwV)[hourOfDay]; 
+    out.oze[h] = out.pv[h] + out.fw[h];
+
+    const isCheapHour = (hourOfDay < 6 || hourOfDay >= 21);
+
+    let gap = out.dem[h] - out.oze[h];
+    let mee = 0;
+
+    if (gap < 0) {
+      const surplusOze = -gap;
+      const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
+      soc = Math.min(meeMWh, soc + ch * rtEff);
+      mee = ch;
+      gap += ch;
+    } else if (gap > 0) {
+      const dis = Math.min(gap, meeMW, soc);
+      soc = Math.max(0, soc - dis);
+      mee = -dis;
+      gap -= dis * rtEff;
+    }
+
+    if (isCheapHour && soc < meeMWh * 0.95 && gap >= 0 && meeMWh > 0) {
+      const maxCharge = Math.min(meeMW, meeMWh - soc);
+      const gridCharge = Math.min(maxCharge, meeMW * 0.7);
+      if (gridCharge > 0.01) {
+        soc = Math.min(meeMWh, soc + gridCharge * rtEff);
+        mee = gridCharge;
+        gap += gridCharge;
+      }
+    }
+
+    out.gridArr[h] = Math.max(0, gap);
+    out.surplusArr[h] = Math.max(0, -gap);
+    out.socArr[h] = soc;
+    out.meePow[h] = mee;
+  }
+  return out;
+}
 
 function calcCost(arr, cS, cN) {
   return arr.reduce((a,v,h) => a + v * ((h>=6&&h<21) ? cS : cN), 0);
@@ -1588,8 +1700,21 @@ function upd() {
   ['psl','psw','psz'].forEach(id => g(id)?.classList.remove('active'));
   g(sznMap[sezon])?.classList.add('active');
 
-  const S = simulate(pvM, fwM, fwW, fwV, meeK, meeP, meeEff, sezon, tryb, pp, pn, pd, invEff, lossEff);
-  lastSim = { S, pp, pn, pd, pvM, fwM, fwW, fwV, meeK, meeP, meeEff, meeDeg, sezon, tryb, cS, cN, cWzrost, invEff, lossEff };
+  // URUCHAMIAMY NOWY SILNIK 8760 GODZIN
+  const S_8760 = simulate8760(pvM, fwM, fwW, fwV, meeK, meeP, meeEff, pp, pn, pd, invEff, lossEff, tryb);
+  
+  // AGREGUJEMY DANE DO ZWYKŁYCH TABLIC 24H, ABY WYKRESY NADAL DZIAŁAŁY
+  const S = {
+    dem: aggregate8760.toAverageDay(S_8760.dem),
+    pv: aggregate8760.toAverageDay(S_8760.pv),
+    fw: aggregate8760.toAverageDay(S_8760.fw),
+    oze: aggregate8760.toAverageDay(S_8760.oze),
+    gridArr: aggregate8760.toAverageDay(S_8760.gridArr),
+    surplusArr: aggregate8760.toAverageDay(S_8760.surplusArr),
+    socArr: aggregate8760.toAverageDay(S_8760.socArr),
+    meePow: aggregate8760.toAverageDay(S_8760.meePow)
+  };
+    lastSim = { S, pp, pn, pd, pvM, fwM, fwW, fwV, meeK, meeP, meeEff, meeDeg, sezon, tryb, cS, cN, cWzrost, invEff, lossEff };
 
   const hrs = Array.from({length:24}, (_,i)=>`${i}:00`);
   const totalDem  = S.dem.reduce((a,b)=>a+b,0);
