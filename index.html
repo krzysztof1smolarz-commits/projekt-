@@ -1371,6 +1371,94 @@ function simulate(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, sezon, tryb, pp, 
   return { pv, fw, dem, oze, socArr, gridArr, surplusArr, meePow };
 }
 
+// ============================================================
+// SILNIK WERSJA 2.0 (8760 GODZIN)
+// ============================================================
+function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, invEff, lossEff, tryb) {
+  const hoursInYear = 8760;
+  const rtEff = meeEff / 100;
+  
+  // Typed Arrays - gigantyczny skok wydajnościowy dla 8760 kroków
+  const out = {
+    dem: new Float32Array(hoursInYear),
+    pv: new Float32Array(hoursInYear),
+    fw: new Float32Array(hoursInYear),
+    oze: new Float32Array(hoursInYear),
+    socArr: new Float32Array(hoursInYear),
+    gridArr: new Float32Array(hoursInYear),
+    surplusArr: new Float32Array(hoursInYear),
+    meePow: new Float32Array(hoursInYear),
+    prices: new Float32Array(hoursInYear)
+  };
+
+  let soc = meeMWh * 0.3; // Bateria naładowana w 30% na starcie roku
+
+  // Pobieramy bazowe uśrednione profile 24h, żeby z nich "lepić" cały rok
+  const basePv = pvProfileNetto('wiosna', pvMW, invEff, lossEff);
+  
+  for (let h = 0; h < hoursInYear; h++) {
+    const dayOfYear = Math.floor(h / 24);
+    const hourOfDay = h % 24;
+    const dayOfWeek = (dayOfYear + 3) % 7; // np. 0 to Poniedziałek, 5 to Sobota, 6 to Niedziela
+
+    // 1. ZAPOTRZEBOWANIE ZAKŁADU (uwzględniamy spadek pracy w weekendy)
+    let dayScale = 1.0;
+    if (dayOfWeek === 5) dayScale = 0.8; // Sobota
+    if (dayOfWeek === 6) dayScale = 0.3; // Niedziela
+    
+    // DOCELOWO: out.dem[h] = profileFromCSV[h]; (wczytywane co do godziny)
+    out.dem[h] = demandProfile(tryb, pp, pn, pd, dayScale)[hourOfDay];
+
+    // 2. GENERACJA OZE (dodajemy sezonowość i losowość)
+    // DOCELOWO: Wczytywanie z API np. Open-Meteo
+    const seasonFactor = 1 + Math.sin((dayOfYear / 365) * Math.PI * 2 - Math.PI/2) * 0.4; // Słońce latem mocniejsze, zimą słabsze
+    out.pv[h] = basePv[hourOfDay] * seasonFactor;
+    out.fw[h] = fwProfile(fwMW, fwW, fwV)[hourOfDay]; // Funkcja wiatru ma już losowość
+    out.oze[h] = out.pv[h] + out.fw[h];
+
+    // 3. CENY ENERGII (Później podepniemy tu historyczne RDN, na razie stałe strefy)
+    const isCheapHour = (hourOfDay < 6 || hourOfDay >= 21);
+    out.prices[h] = isCheapHour ? 250 : 600;
+
+    // 4. ALGORYTM MAGAZYNU ENERGII (EMS - na razie standardowa autokonsumpcja)
+    let gap = out.dem[h] - out.oze[h];
+    let mee = 0;
+
+    if (gap < 0) {
+      // Nadwyżka energii: Ładujemy baterię z darmowego słońca/wiatru
+      const surplusOze = -gap;
+      const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
+      soc = Math.min(meeMWh, soc + ch * rtEff);
+      mee = ch;
+      gap += ch;
+    } else if (gap > 0) {
+      // Niedobór: Bateria ratuje zakład, zrzucając energię w celu "Peak Shaving"
+      const dis = Math.min(gap, meeMW, soc);
+      soc = Math.max(0, soc - dis);
+      mee = -dis;
+      gap -= dis * rtEff;
+    }
+
+    // Nocny arbitraż: doładowanie baterii tanią energią z sieci (opcja tradycyjna)
+    if (isCheapHour && soc < meeMWh * 0.95 && gap >= 0 && meeMWh > 0) {
+      const maxCharge = Math.min(meeMW, meeMWh - soc);
+      const gridCharge = Math.min(maxCharge, meeMW * 0.7);
+      if (gridCharge > 0.01) {
+        soc = Math.min(meeMWh, soc + gridCharge * rtEff);
+        mee = gridCharge;
+        gap += gridCharge;
+      }
+    }
+
+    // 5. ZAPIS WYNIKU DO WEKTORA
+    out.gridArr[h] = Math.max(0, gap);
+    out.surplusArr[h] = Math.max(0, -gap);
+    out.socArr[h] = soc;
+    out.meePow[h] = mee;
+  }
+
+  return out;
+}
 
 function calcCost(arr, cS, cN) {
   return arr.reduce((a,v,h) => a + v * ((h>=6&&h<21) ? cS : cN), 0);
