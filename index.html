@@ -2229,7 +2229,7 @@ function loadCSVData(event) {
         if (hourlyCounts[h] > 0) {
             const daysCount = hourlyCounts[h] / 4; // 4 kwadranse to 1 godzina
             const avgKwhPerDayForThisHour = hourlySumkWh[h] / daysCount;
-            window.uploadedProfileMW[h] = parseFloat((avgKwhPerDayForThisHour / 1000).toFixed(3));
+            window.uploadedProfileMW[h] = parseFloat(((avgKwhPerDayForThisHour / 1000) * 50).toFixed(3));
         }
     }
 
