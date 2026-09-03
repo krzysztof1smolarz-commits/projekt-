@@ -1208,55 +1208,6 @@ function demandProfile(tryb, pp, pn, pd, dayScale=1.0) {
   });
 }
 
-function simulate(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, sezon, tryb, pp, pn, pd, invEff, lossEff, dayScale=1.0) {
-  const pv  = pvProfileNetto(sezon, pvMW, invEff, lossEff);
-  const fw  = fwProfile(fwMW, fwW, fwV);
-  const dem = demandProfile(tryb, pp, pn, pd, dayScale);
-  let soc = meeMWh * 0.3;
-  const rtEff = meeEff / 100;
-  const socArr=[], gridArr=[], surplusArr=[], meePow=[];
-
-  for (let h = 0; h < 24; h++) {
-    const oze = pv[h] + fw[h];
-    let gap = dem[h] - oze;  
-    let mee = 0;
-
-    if (gap < 0) {
-      const surplusOze = -gap;
-      const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
-      soc = Math.min(meeMWh, soc + ch * rtEff);
-      mee = ch;
-      gap += ch;  
-    } else if (gap > 0) {
-      const dis = Math.min(gap, meeMW, soc);
-      soc = Math.max(0, soc - dis);
-      mee = -dis;
-      gap -= dis * rtEff;  
-    }
-
-    const isCheapHour = (h < 6 || h >= 21);
-    if (isCheapHour && soc < meeMWh * 0.95 && gap >= 0 && meeMWh > 0) {
-      const maxCharge = Math.min(meeMW, meeMWh - soc);
-      const gridCharge = Math.min(maxCharge, meeMW * 0.7); 
-      if (gridCharge > 0.01) {
-        soc = Math.min(meeMWh, soc + gridCharge * rtEff);
-        mee = gridCharge;  
-        gap += gridCharge;  
-      }
-    }
-
-    const gridPobor = Math.max(0, gap);
-    const surplus   = Math.max(0, -gap);
-
-    gridArr.push(parseFloat(gridPobor.toFixed(3)));
-    surplusArr.push(parseFloat(surplus.toFixed(3)));
-    socArr.push(parseFloat(soc.toFixed(3)));
-    meePow.push(parseFloat(mee.toFixed(3)));
-  }
-  const oze = pv.map((v,i) => parseFloat((v + fw[i]).toFixed(3)));
-  return { pv, fw, dem, oze, socArr, gridArr, surplusArr, meePow };
-}
-
 // ----------------------------------------------------
 // SILNIK V2.0 (8760h) Z INTELIGENTNYM EMS (ARBITRAŻ)
 // ----------------------------------------------------
@@ -1529,7 +1480,7 @@ function upd() {
   lastSim = { S, S_8760, pp, pn, pd, pvM, fwM, fwW, fwV, meeK, meeP, meeEff, meeDeg, sezon, tryb, cS, cN, cWzrost, invEff, lossEff };
 
   const hrs = Array.from({length:24}, (_,i)=>`${i}:00`);
-  const totalDem  = S_8760.dem.reduce((a,b)=>a+b,0) / 365; // Średnio dziennie
+  const totalDem  = S_8760.dem.reduce((a,b)=>a+b,0) / 365; 
   const totalOze  = S_8760.oze.reduce((a,b)=>a+b,0) / 365;
   const totalGrid = S_8760.gridArr.reduce((a,b)=>a+b,0) / 365;
   const totalSurp = S_8760.surplusArr.reduce((a,b)=>a+b,0) / 365;
@@ -1629,6 +1580,27 @@ function upd() {
     g('zak_rok_e').textContent=fmt(Math.round(rokE));
     if(g('zak_rok_e_real')) g('zak_rok_e_real').textContent=fmt(rokE_real);
     g('zak_rok_koszt').textContent=fmt(Math.round(rokKoszt));
+  }
+  
+  if (g('tbl_zaklad_body') && isVisible('zaklad_2')) {
+    let modesHTML = '';
+    if (window.uploadedProfile8760) {
+      const avgDem = aggregate8760.toAverageDay(S_8760.dem);
+      const e = avgDem.reduce((a,b)=>a+b,0);
+      const pk = Math.max(...avgDem), mn = Math.min(...avgDem);
+      const lf2 = pp > 0 ? Math.round(e/(pp*24)*100) : 0;
+      const kost = calcCost(avgDem, cS, cN);
+      modesHTML = `<tr><td><strong>${t('Wczytany plik CSV', 'Uploaded CSV')}</strong></td><td class="td-mono">${Math.round(e)}</td><td class="td-mono">${fmtD(pk,1)}</td><td class="td-mono">${fmtD(mn,1)}</td><td class="td-mono">${lf2}%</td><td class="td-amber">${fmt(Math.round(kost))}</td></tr>`;
+    } else {
+      const modes=[{id:'3',name: t('3-zmianowy','3-shift')},{id:'2',name: t('2-zmianowy','2-shift')},{id:'ramp',name: t('Nierównomierne','Uneven')}];
+      modesHTML = modes.map(m=>{
+        const dem2=demandProfile(m.id,pp,pn,pd);
+        const e=dem2.reduce((a,b)=>a+b,0), pk=Math.max(...dem2), mn=Math.min(...dem2);
+        const lf2=Math.round(e/(pp*24)*100), kost=calcCost(dem2,cS,cN);
+        return `<tr><td>${m.name}</td><td class="td-mono">${Math.round(e)}</td><td class="td-mono">${fmtD(pk,1)}</td><td class="td-mono">${fmtD(mn,1)}</td><td class="td-mono">${lf2}%</td><td class="td-amber">${fmt(Math.round(kost))}</td></tr>`;
+      }).join('');
+    }
+    g('tbl_zaklad_body').innerHTML = modesHTML;
   }
 
   if (g('c_pv_dobowy') && isVisible('pv_0')) {
@@ -1823,10 +1795,8 @@ function loadCSVData(event) {
         if (parts.length >= 2) {
           const val = parseFloat(parts[1].replace(',', '.'));
           if (!isNaN(val)) {
-            // Zamiana 15-minutowych kwadransów na godziny (4 linie = 1 godzina)
             const hIndex = Math.floor(validLines / 4);
             if (hIndex < 8760) {
-              // MNOŻNIK x50
               hrData[hIndex] += (val / 1000) * 50; 
             }
             validLines++;
@@ -1878,11 +1848,22 @@ function calcInv() {
   const dotacjaKwota   = capexTotal * dotacja/100;
 
   const costGrid = calcCost(S.gridArr, cS, cN);
-  const S2_8760 = simulate8760(pvM+addPV, fwM+addFW, fwW, fwV, meeK+addMEE, meeP+addMEEP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode);
-  const S2 = { gridArr: aggregate8760.toAverageDay(S2_8760.gridArr) };
   
-  const costGrid2 = calcCost(S2.gridArr, cS, cN);
-  const savDay = Math.max(0, costGrid - costGrid2);
+  // Analiza wariantów (używamy silnika V2.0 8760h)
+  const S1_8760 = simulate8760(pvM*1.25, fwM, fwW, fwV, meeK, meeP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode);
+  const S2_8760 = simulate8760(pvM, fwM*1.25, fwW, fwV, meeK, meeP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode);
+  const S3_8760 = simulate8760(pvM, fwM, fwW, fwV, meeK*1.5, Math.min(meeP*1.3,12), meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode);
+  
+  const c0 = Math.round(costGrid);
+  const c1 = Math.round(calcCost(aggregate8760.toAverageDay(S1_8760.gridArr), cS, cN));
+  const c2 = Math.round(calcCost(aggregate8760.toAverageDay(S2_8760.gridArr), cS, cN));
+  const c3 = Math.round(calcCost(aggregate8760.toAverageDay(S3_8760.gridArr), cS, cN));
+  
+  const sav1 = Math.max(0, c0 - c1);
+  const sav2 = Math.max(0, c0 - c2);
+  const sav3 = Math.max(0, c0 - c3);
+  
+  const savDay = Math.max(0, costGrid - c1); // Do głównych zysków
   const savRok = Math.round(savDay * 365);
 
   const spbt = savRok > 0 ? +(capexNet*1000 / savRok).toFixed(1) : 99;
@@ -1929,6 +1910,32 @@ function calcInv() {
   if (g('inv_npv'))         g('inv_npv').textContent = fmt(Math.round(npv/1000));
   if (g('inv_irr'))         g('inv_irr').textContent = irrVal > 0 ? fmtD(irrVal,1) : '—';
   if (g('inv_dotacja_v'))   g('inv_dotacja_v').textContent = fmt(Math.round(dotacjaKwota));
+
+  if (g('c_cmp_koszt') && isVisible('inwest_1')) {
+    g('cmp_pv_sav').textContent=fmt(sav1); g('cmp_fw_sav').textContent=fmt(sav2); g('cmp_mee_sav').textContent=fmt(sav3);
+    mkChart('c_cmp_koszt','bar',{labels:[t('Obecna', 'Current'),'+25% PV','+25% FW','+50% MEE'],datasets:[{label:t('Koszt sieci PLN/dobę', 'Grid cost PLN/day'),data:[c0,c1,c2,c3],backgroundColor:['rgba(136,135,128,0.6)','rgba(244,165,53,0.7)','rgba(62,207,142,0.7)','rgba(155,135,245,0.7)'],borderRadius:4}]},{scales:{y:{beginAtZero:false,title:{display:true,text:t('PLN/dobę', 'PLN/day')},ticks:{callback:v=>fmt(v)}}}});
+    const savs=[sav1,sav2,sav3],bst=savs.indexOf(Math.max(...savs)),bnames=['+25% PV','+25% FW','+50% MEE'];
+    const ins=g('ins_cmp1'); ins.className=savs[bst]>0?'ins good':'ins warn';
+    ins.textContent=savs[bst]>0?t(
+      `Najlepsza inwestycja: ${bnames[bst]} — oszczędności ${fmt(savs[bst])} PLN/dobę = ${fmt(savs[bst]*365)} PLN/rok.`,
+      `Best investment: ${bnames[bst]} — savings ${fmt(savs[bst])} PLN/day = ${fmt(savs[bst]*365)} PLN/year.`
+    ) : t(
+      'Obecna konfiguracja jest już dobrze zoptymalizowana — oszczędności z rozbudowy są minimalne.',
+      'Current configuration is already well optimized — savings from expansion are minimal.'
+    );
+    
+    const cPV=Math.round(pvM*0.25*3500),cFW=Math.round(fwM*0.25*5000),cMEE=Math.round(meeK*0.5*900);
+    const rPV=sav1>0?+(cPV/(sav1*0.365)).toFixed(1):99,rFW=sav2>0?+(cFW/(sav2*0.365)).toFixed(1):99,rMEE=sav3>0?+(cMEE/(sav3*0.365)).toFixed(1):99;
+    mkChart('c_cmp_roi','bar',{labels:['+25% PV','+25% FW','+50% MEE'],datasets:[
+      {label:t('CAPEX [tys. PLN]', 'CAPEX [k PLN]'),data:[cPV,cFW,cMEE],backgroundColor:'rgba(77,157,224,0.6)',borderRadius:4,yAxisID:'y'},
+      {label:t('Zwrot [lata]', 'Payback [years]'),data:[rPV,rFW,rMEE],backgroundColor:'rgba(244,165,53,0.6)',borderRadius:4,yAxisID:'y2'}
+    ]},{scales:{y:{position:'left',title:{display:true,text:t('CAPEX [tys. PLN]', 'CAPEX [k PLN]')},beginAtZero:true},y2:{position:'right',title:{display:true,text:t('Zwrot [lata]', 'Payback [years]')},grid:{drawOnChartArea:false},beginAtZero:true}},plugins:{legend:{display:true,labels:{color:'#9896a0'}}}});
+    const rMin=Math.min(rPV,rFW,rMEE),rName=['+25% PV','+25% FW','+50% MEE'][[rPV,rFW,rMEE].indexOf(rMin)];
+    g('ins_cmp2').textContent=t(
+      `Najszybszy zwrot: ${rName} — ${rMin} lat. CAPEX: PV ${fmt(cPV)} | FW ${fmt(cFW)} | MEE ${fmt(cMEE)} tys. PLN.`,
+      `Fastest payback: ${rName} — ${rMin} years. CAPEX: PV ${fmt(cPV)} | FW ${fmt(cFW)} | BESS ${fmt(cMEE)} k PLN.`
+    );
+  }
 
   if (g('c_cashflow') && isVisible('inwest_2')) {
         const years2 = Array.from({length:horizon+1},(_,i)=>i===0?t('Rok 0','Year 0'):t(`Rok ${i}`, `Year ${i}`));
