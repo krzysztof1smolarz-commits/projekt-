@@ -1231,6 +1231,7 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     gridArr: new Float32Array(hoursInYear),
     surplusArr: new Float32Array(hoursInYear),
     meePow: new Float32Array(hoursInYear),
+    prices: new Float32Array(hoursInYear) // DODANA BRAKUJĄCA TABLICA CEN
   };
 
   let soc = meeMWh * 0.3; 
@@ -1245,22 +1246,19 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     if (dayOfWeek === 5) dayScale = 0.8; 
     if (dayOfWeek === 6) dayScale = 0.3; 
     
-    // Zapotrzebowanie (CSV z pliku lub suwaki)
     out.dem[h] = window.uploadedProfile8760 
       ? window.uploadedProfile8760[h] 
       : demandProfile(tryb, pp, pn, pd, dayScale)[hourOfDay];
 
-    // OZE z sezonowością
     const seasonFactor = 1 + Math.sin((dayOfYear / 365) * Math.PI * 2 - Math.PI/2) * 0.4; 
     out.pv[h] = basePv[hourOfDay] * seasonFactor;
     out.fw[h] = fwProfile(fwMW, fwW, fwV)[hourOfDay]; 
     out.oze[h] = out.pv[h] + out.fw[h];
 
-// 3. CENY ENERGII: Używamy danych z API (jeśli są) lub ze stref czasowych
+    // DODANE BRAKUJĄCE ZMIENNE CENOWE
     const isCheapHour = (hourOfDay < 6 || hourOfDay >= 21);
     out.prices[h] = window.uploadedPrices8760 ? window.uploadedPrices8760[h] : (isCheapHour ? cN : cS);
 
-    // Kiedy ładować a kiedy rozładowywać? (Oparte na suwakach taryf jako progach odniesienia)
     const currentPrice = out.prices[h];
     const isPriceCheap = window.uploadedPrices8760 ? (currentPrice <= cN) : isCheapHour;
     const isPriceExpensive = window.uploadedPrices8760 ? (currentPrice >= cS) : !isCheapHour;
@@ -1268,31 +1266,26 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     let gap = out.dem[h] - out.oze[h];
     let mee = 0;
 
-    // LOGIKA STRATEGII EMS (Maksymalna Autokonsumpcja vs Arbitraż RDN)
     if (emsMode === 'arbitrage') {
         if (isPriceCheap && soc < meeMWh) {
-            // Cena spadła poniżej taryfy nocnej (często < 0 PLN)! Ładujemy z sieci.
             const ch = Math.min(meeMW, meeMWh - soc);
             soc = Math.min(meeMWh, soc + ch * rtEff);
             mee = ch;
             gap += ch; 
         } 
         else if (isPriceExpensive && soc > 0 && gap > 0) {
-            // Cena jest w szczycie! Ratujemy zakład prądem z baterii.
             const dis = Math.min(gap, meeMW, soc);
             soc = Math.max(0, soc - dis);
             mee = -dis;
             gap -= dis * rtEff;
         } 
         else if (gap < 0 && soc < meeMWh) {
-            // Ładowanie darmowych nadwyżek z OZE niezależnie od ceny
             const ch = Math.min(-gap, meeMW, meeMWh - soc);
             soc = Math.min(meeMWh, soc + ch * rtEff);
             mee = ch;
             gap += ch;
         }
     } else {
-        // STANDARD (Autokonsumpcja): Ładuje tylko z nadwyżek, zrzuca gdy brakuje słońca
         if (gap < 0) {
             const surplusOze = -gap;
             const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
