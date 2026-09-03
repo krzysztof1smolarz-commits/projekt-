@@ -311,6 +311,13 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
         <input type="file" id="csv_upload" accept=".csv" style="color: var(--text); font-size: 12px; width: 100%;" onchange="loadCSVData(event)">
       </div>
 
+<!-- WERSJA 2.0: API PSE -->
+      <div style="margin-top: 15px; padding: 15px; background: var(--bg3); border: 1px dashed var(--amber); border-radius: var(--radius);">
+        <div style="font-size: 12px; font-weight: 600; color: var(--amber2); margin-bottom: 8px;">V2.0: Pobierz historyczne ceny z giełdy (API PSE)</div>
+        <button class="btn" onclick="fetchPSEData()" id="btn_pse_fetch" style="border-color: var(--amber); color: var(--amber2); width: 100%;">Zaciągnij ceny RDN</button>
+        <div id="pse_status" style="font-size: 11px; margin-top: 8px; color: var(--text2);">Gotowy do pobrania danych.</div>
+      </div>
+
       <hr class="sdiv">
       <div class="stitle" data-i18n="cfg-ceny">Ceny energii elektrycznej</div>
       <div class="form-row"><span class="form-label" data-i18n="cfg-cszczyt">Cena szczytowa 6–21 [PLN/MWh]</span><input type="range" id="c_szczyt" min="100" max="1000" step="10" value="600" oninput="upd()"><span class="val-display" id="c_szczyt_v">600</span></div>
@@ -1249,14 +1256,34 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     out.fw[h] = fwProfile(fwMW, fwW, fwV)[hourOfDay]; 
     out.oze[h] = out.pv[h] + out.fw[h];
 
+// 3. CENY ENERGII: Używamy danych z API (jeśli są) lub ze stref czasowych
     const isCheapHour = (hourOfDay < 6 || hourOfDay >= 21);
+    out.prices[h] = window.uploadedPrices8760 ? window.uploadedPrices8760[h] : (isCheapHour ? cN : cS);
+
+    // Kiedy ładować a kiedy rozładowywać? (Oparte na suwakach taryf jako progach odniesienia)
+    const currentPrice = out.prices[h];
+    const isPriceCheap = window.uploadedPrices8760 ? (currentPrice <= cN) : isCheapHour;
+    const isPriceExpensive = window.uploadedPrices8760 ? (currentPrice >= cS) : !isCheapHour;
 
     let gap = out.dem[h] - out.oze[h];
     let mee = 0;
 
     // LOGIKA STRATEGII EMS (Maksymalna Autokonsumpcja vs Arbitraż RDN)
     if (emsMode === 'arbitrage') {
-        if (isCheapHour && soc < meeMWh) {
+        if (isPriceCheap && soc < meeMWh) {
+            // Cena spadła poniżej taryfy nocnej (często < 0 PLN)! Ładujemy z sieci potężną ilością energii.
+            const ch = Math.min(meeMW, meeMWh - soc);
+            soc = Math.min(meeMWh, soc + ch * rtEff);
+            mee = ch;
+            gap += ch; 
+        } 
+        else if (isPriceExpensive && soc > 0 && gap > 0) {
+            // Cena jest w szczycie! Ratujemy zakład prądem z baterii.
+            const dis = Math.min(gap, meeMW, soc);
+            soc = Math.max(0, soc - dis);
+            mee = -dis;
+            gap -= dis * rtEff;
+        }
             const ch = Math.min(meeMW, meeMWh - soc);
             soc = Math.min(meeMWh, soc + ch * rtEff);
             mee = ch;
@@ -1818,6 +1845,49 @@ function loadCSVData(event) {
   };
   reader.readAsText(file);
   event.target.value = '';
+}
+
+// ============================================================
+// POBIERANIE DANYCH Z API PSE (Rynkowa Cena Energii)
+// ============================================================
+window.uploadedPrices8760 = null;
+
+async function fetchPSEData() {
+  const statusEl = document.getElementById('pse_status');
+  const btn = document.getElementById('btn_pse_fetch');
+  
+  try {
+    btn.disabled = true;
+    statusEl.textContent = "Łączenie z serwerami PSE...";
+    statusEl.style.color = "var(--blue2)";
+    
+    // Pobieramy 168 ostatnich godzin (ostatnie 7 dni) z darmowego API PSE
+    const response = await fetch('https://api.raporty.pse.pl/api/rce-pln?$top=168&$orderby=udtczas%20desc');
+    
+    if (!response.ok) throw new Error("Błąd sieci / API PSE odrzuciło zapytanie.");
+    
+    const data = await response.json();
+    const records = data.value.reverse(); // Odwracamy, by były chronologicznie
+    
+    if (records.length === 0) throw new Error("Brak danych z API.");
+    
+    // Zapisujemy pobrane ceny do tablicy 8760h (powielając tydzień na cały rok na potrzeby symulacji)
+    window.uploadedPrices8760 = new Float32Array(8760);
+    for (let i = 0; i < 8760; i++) {
+        window.uploadedPrices8760[i] = records[i % records.length].rce_pln;
+    }
+    
+    statusEl.textContent = `Sukces! Pobrano dane RDN. Magazyn (Arbitraż) poluje teraz na okazje.`;
+    statusEl.style.color = "var(--green2)";
+    
+    upd(); // Odśwież aplikację!
+    
+  } catch (error) {
+    statusEl.textContent = "Błąd: " + error.message;
+    statusEl.style.color = "var(--red2)";
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ============================================================
