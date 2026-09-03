@@ -1271,7 +1271,7 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     // LOGIKA STRATEGII EMS (Maksymalna Autokonsumpcja vs Arbitraż RDN)
     if (emsMode === 'arbitrage') {
         if (isPriceCheap && soc < meeMWh) {
-            // Cena spadła poniżej taryfy nocnej (często < 0 PLN)! Ładujemy z sieci potężną ilością energii.
+            // Cena spadła poniżej taryfy nocnej (często < 0 PLN)! Ładujemy z sieci.
             const ch = Math.min(meeMW, meeMWh - soc);
             soc = Math.min(meeMWh, soc + ch * rtEff);
             mee = ch;
@@ -1283,25 +1283,16 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
             soc = Math.max(0, soc - dis);
             mee = -dis;
             gap -= dis * rtEff;
-        }
-            const ch = Math.min(meeMW, meeMWh - soc);
-            soc = Math.min(meeMWh, soc + ch * rtEff);
-            mee = ch;
-            gap += ch; 
-        } 
-        else if (!isCheapHour && soc > 0 && gap > 0) {
-            const dis = Math.min(gap, meeMW, soc);
-            soc = Math.max(0, soc - dis);
-            mee = -dis;
-            gap -= dis * rtEff;
         } 
         else if (gap < 0 && soc < meeMWh) {
+            // Ładowanie darmowych nadwyżek z OZE niezależnie od ceny
             const ch = Math.min(-gap, meeMW, meeMWh - soc);
             soc = Math.min(meeMWh, soc + ch * rtEff);
             mee = ch;
             gap += ch;
         }
     } else {
+        // STANDARD (Autokonsumpcja): Ładuje tylko z nadwyżek, zrzuca gdy brakuje słońca
         if (gap < 0) {
             const surplusOze = -gap;
             const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
