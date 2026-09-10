@@ -1218,7 +1218,7 @@ function demandProfile(tryb, pp, pn, pd, dayScale=1.0) {
 // ----------------------------------------------------
 // SILNIK V2.0 (8760h) Z INTELIGENTNYM EMS (ARBITRAŻ)
 // ----------------------------------------------------
-function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode) {
+function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS=600, cN=250) {
   const hoursInYear = 8760;
   const rtEff = meeEff / 100;
   
@@ -1231,7 +1231,6 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     gridArr: new Float32Array(hoursInYear),
     surplusArr: new Float32Array(hoursInYear),
     meePow: new Float32Array(hoursInYear),
-    prices: new Float32Array(hoursInYear) // DODANA BRAKUJĄCA TABLICA CEN
   };
 
   let soc = meeMWh * 0.3; 
@@ -1246,19 +1245,22 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     if (dayOfWeek === 5) dayScale = 0.8; 
     if (dayOfWeek === 6) dayScale = 0.3; 
     
+    // Zapotrzebowanie (CSV z pliku lub suwaki)
     out.dem[h] = window.uploadedProfile8760 
       ? window.uploadedProfile8760[h] 
       : demandProfile(tryb, pp, pn, pd, dayScale)[hourOfDay];
 
+    // OZE z sezonowością
     const seasonFactor = 1 + Math.sin((dayOfYear / 365) * Math.PI * 2 - Math.PI/2) * 0.4; 
     out.pv[h] = basePv[hourOfDay] * seasonFactor;
     out.fw[h] = fwProfile(fwMW, fwW, fwV)[hourOfDay]; 
     out.oze[h] = out.pv[h] + out.fw[h];
 
-    // DODANE BRAKUJĄCE ZMIENNE CENOWE
+// 3. CENY ENERGII: Używamy danych z API (jeśli są) lub ze stref czasowych
     const isCheapHour = (hourOfDay < 6 || hourOfDay >= 21);
     out.prices[h] = window.uploadedPrices8760 ? window.uploadedPrices8760[h] : (isCheapHour ? cN : cS);
 
+    // Kiedy ładować a kiedy rozładowywać? (Oparte na suwakach taryf jako progach odniesienia)
     const currentPrice = out.prices[h];
     const isPriceCheap = window.uploadedPrices8760 ? (currentPrice <= cN) : isCheapHour;
     const isPriceExpensive = window.uploadedPrices8760 ? (currentPrice >= cS) : !isCheapHour;
@@ -1266,26 +1268,31 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     let gap = out.dem[h] - out.oze[h];
     let mee = 0;
 
+    // LOGIKA STRATEGII EMS (Maksymalna Autokonsumpcja vs Arbitraż RDN)
     if (emsMode === 'arbitrage') {
         if (isPriceCheap && soc < meeMWh) {
+            // Cena spadła poniżej taryfy nocnej (często < 0 PLN)! Ładujemy z sieci.
             const ch = Math.min(meeMW, meeMWh - soc);
             soc = Math.min(meeMWh, soc + ch * rtEff);
             mee = ch;
             gap += ch; 
         } 
         else if (isPriceExpensive && soc > 0 && gap > 0) {
+            // Cena jest w szczycie! Ratujemy zakład prądem z baterii.
             const dis = Math.min(gap, meeMW, soc);
             soc = Math.max(0, soc - dis);
             mee = -dis;
             gap -= dis * rtEff;
         } 
         else if (gap < 0 && soc < meeMWh) {
+            // Ładowanie darmowych nadwyżek z OZE niezależnie od ceny
             const ch = Math.min(-gap, meeMW, meeMWh - soc);
             soc = Math.min(meeMWh, soc + ch * rtEff);
             mee = ch;
             gap += ch;
         }
     } else {
+        // STANDARD (Autokonsumpcja): Ładuje tylko z nadwyżek, zrzuca gdy brakuje słońca
         if (gap < 0) {
             const surplusOze = -gap;
             const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
@@ -1372,7 +1379,8 @@ function showPage(name) {
   document.querySelectorAll('.nav-item').forEach(n => {
     if (n.getAttribute('onclick')?.includes("'"+name+"'")) { n.classList.add('active'); n.setAttribute('aria-current', 'page'); }
   });
-  setTimeout(() => { Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} }); upd(); setTimeout(() => { Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} }); upd(); }, 150); }, 20);
+  upd();
+  setTimeout(() => { Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} }); }, 100);
 }
 
 function showSub(page, idx) {
@@ -1380,7 +1388,9 @@ function showSub(page, idx) {
   const tabs = document.querySelectorAll('#page-'+page+' .sub-tab');
   subs.forEach((s,i) => s.classList.toggle('active', i===idx));
   tabs.forEach((t,i) => t.classList.toggle('active', i===idx));
-  setTimeout(() => { Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} }); upd(); setTimeout(() => { Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} }); upd(); }, 150); }, 20);
+  // mkChart handles hidden parents internally, so just call upd() after DOM settles
+  upd();
+  setTimeout(() => { Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} }); }, 100);
 }
 
 function setTryb(t) {
@@ -1474,7 +1484,7 @@ function upd() {
   g(sznMap[sezon])?.classList.add('active');
 
   // SILNIK V2.0 8760 GODZIN W TLE
-  const S_8760 = simulate8760(pvM, fwM, fwW, fwV, meeK, meeP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode);
+  const S_8760 = simulate8760(pvM, fwM, fwW, fwV, meeK, meeP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS, cN);
   
   // Agregacja dla klasycznych wykresów (wsteczna kompatybilność)
   const S = {
@@ -1556,7 +1566,7 @@ function upd() {
     }
   }
 
-  if (g('c_zak_dobowy') && isVisible('zaklad_0')) {
+  if (g('c_zak_dobowy')) {
     const tariffBg = Array.from({length:24}, (_,h) => (h>=6&&h<21) ? cS/10 : cN/10);
     mkChart('c_zak_dobowy','bar',{labels:hrs,datasets:[
       {label:t('Taryfa÷10 [PLN/MWh]', 'Tariff÷10 [PLN/MWh]'),data:tariffBg,backgroundColor:Array.from({length:24},(_,h)=>(h>=6&&h<21)?'rgba(224,90,90,0.10)':'rgba(77,157,224,0.08)'),borderRadius:0,order:3,yAxisID:'y'},
@@ -1574,7 +1584,7 @@ function upd() {
     if(g('zak_mva_inline'))  g('zak_mva_inline').textContent  = fmtD(peakMVA,1);
   }
   
-  if (g('c_zak_tygodniowy') && isVisible('zaklad_1')) {
+  if (g('c_zak_tygodniowy')) {
     const days=t(['Pon','Wt','Śr','Czw','Pt','Sob','Nd'], ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
     const scales=[1,1,1,1,1,0.8,0.3];
     const dayEnergies=scales.map(s=>demandProfile(tryb,pp,pn,pd,s).reduce((a,b)=>a+b,0));
@@ -1593,7 +1603,7 @@ function upd() {
     g('zak_rok_koszt').textContent=fmt(Math.round(rokKoszt));
   }
   
-  if (g('tbl_zaklad_body') && isVisible('zaklad_2')) {
+  if (g('tbl_zaklad_body')) {
     let modesHTML = '';
     if (window.uploadedProfile8760) {
       const avgDem = aggregate8760.toAverageDay(S_8760.dem);
@@ -1614,7 +1624,7 @@ function upd() {
     g('tbl_zaklad_body').innerHTML = modesHTML;
   }
 
-  if (g('c_pv_dobowy') && isVisible('pv_0')) {
+  if (g('c_pv_dobowy')) {
     const pvBrutto=pvProfile(sezon,pvM,100,0);
     const pvNetto=pvProfileNetto(sezon,pvM,invEff,lossEff);
     mkChart('c_pv_dobowy','line',{labels:hrs,datasets:[
@@ -1628,7 +1638,7 @@ function upd() {
     g('pv_straty').textContent=stratTotal; g('pv_hours').textContent=hSol;
   }
   
-  if (g('c_pv_sezony') && isVisible('pv_1')) {
+  if (g('c_pv_sezony')) {
     const colors=['#f4a535','#3ecf8e','#4d9de0'];
     const sezons=['lato','wiosna','zima'];
     const sezonsLabels=t(['Lato','Wiosna/Jesień','Zima'], ['Summer','Spring/Autumn','Winter']);
@@ -1637,7 +1647,7 @@ function upd() {
     }))},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:{legend:{display:true,labels:{color:'#9896a0',font:{size:11}}}}});
   }
   
-  if (g('c_pv_miesiace') && isVisible('pv_2')) {
+  if (g('c_pv_miesiace')) {
     const months=t(['Sty','Lut','Mar','Kwi','Maj','Cze','Lip','Sie','Wrz','Paź','Lis','Gru'], ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']);
     const monthFactors=[0.20,0.25,0.38,0.42,0.55,0.65,0.65,0.60,0.45,0.32,0.22,0.18];
     const daysInMonth=[31,28,31,30,31,30,31,31,30,31,30,31];
@@ -1655,7 +1665,7 @@ function upd() {
     g('pv_wartosc').textContent=fmt(Math.round(rokPV*cS*0.8));
   }
 
-  if (g('c_fw_dobowy') && isVisible('fw_0')) {
+  if (g('c_fw_dobowy')) {
     const fwHigh=fwProfile(fwM,fwW,fwV*1.5);
     const fwLow=fwProfile(fwM,fwW,0);
     const fwMid=S.fw;
@@ -1669,7 +1679,7 @@ function upd() {
     g('fw_e_day').textContent=fmtD(fwDay,1); g('fw_e_rok').textContent=fmt(Math.round(fwDay*365));
   }
   
-  if (g('c_fw_krzywa') && isVisible('fw_1')) {
+  if (g('c_fw_krzywa')) {
     const wsArr=Array.from({length:52},(_,i)=>parseFloat((i*0.5).toFixed(1)));
     const powArr=wsArr.map(ws=>windEfficiency(ws)*fwM);
     mkChart('c_fw_krzywa','line',{labels:wsArr,datasets:[
@@ -1678,7 +1688,7 @@ function upd() {
     ]},{scales:{x:{title:{display:true,text:t('Prędkość wiatru [m/s]', 'Wind speed [m/s]')},ticks:{callback:(v,i)=>wsArr[i]%2===0?wsArr[i]:''}},y:{beginAtZero:true,title:{display:true,text:t('Moc [MW]', 'Power [MW]')},max:fwM*1.05}}});
   }
   
-  if (g('c_fw_weibull') && isVisible('fw_2')) {
+  if (g('c_fw_weibull')) {
     const k=2.0, lambda=fwW*1.128;
     const wsW=Array.from({length:25},(_,i)=>i+1);
     function weibullPDF(v){return (k/lambda)*Math.pow(v/lambda,k-1)*Math.exp(-Math.pow(v/lambda,k));}
@@ -1690,7 +1700,7 @@ function upd() {
     ]},{scales:{y:{position:'left',title:{display:true,text:t('Prawdopodobieństwo [%]', 'Probability [%]')},beginAtZero:true},y2:{position:'right',title:{display:true,text:t('Moc FW [MW]', 'FW Power [MW]')},grid:{drawOnChartArea:false},beginAtZero:true}},plugins:{legend:{display:true,labels:{color:'#9896a0'}}}});
   }
   
-  if (g('c_fw_porownanie') && isVisible('fw_3')) {
+  if (g('c_fw_porownanie')) {
     const wsLevels=[4,6,8,10,12];
     const colors=['#e05a5a','#f4a535','#3ecf8e','#4d9de0','#9b87f5'];
     mkChart('c_fw_porownanie','line',{labels:hrs,datasets:wsLevels.map((ws,i)=>({
@@ -1698,7 +1708,7 @@ function upd() {
     }))},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:{legend:{display:true,labels:{color:'#9896a0'}}}});
   }
 
-  if (g('c_mee_dobowy') && isVisible('mee_0')) {
+  if (g('c_mee_dobowy')) {
     const tariff=Array.from({length:24},(_,h)=>(h>=6&&h<21)?cS:cN);
     mkChart('c_mee_dobowy','line',{labels:hrs,datasets:[
       {label:t('SOC [MWh]', 'SOC [MWh]'),data:S.socArr,borderColor:'#9b87f5',backgroundColor:'rgba(155,135,245,0.12)',fill:true,tension:0.4,pointRadius:0,borderWidth:2,yAxisID:'y'},
@@ -1710,7 +1720,7 @@ function upd() {
     g('mee_sav_rok').textContent=fmt(meeSav*365); g('mee_cycles').textContent=cycles||'<1';
   }
   
-  if (g('c_mee_porownanie') && isVisible('mee_1')) {
+  if (g('c_mee_porownanie')) {
     const S_bez = { gridArr: aggregate8760.toAverageDay(S_8760.dem) }; 
     mkChart('c_mee_porownanie','line',{labels:hrs,datasets:[
       {label:t('BEZ MEE', 'NO BESS'),data:S_bez.gridArr,borderColor:'#4d9de0',pointRadius:0,borderWidth:2,tension:0.3,fill:false},
@@ -1723,7 +1733,7 @@ function upd() {
     g('mee_peak_red').textContent=`${fmtD(pkBez-pkZ,1)} (${pkRed||0}%)`;
   }
   
-  if (g('c_mee_degradacja') && isVisible('mee_2')) {
+  if (g('c_mee_degradacja')) {
     const years=Array.from({length:21},(_,i)=>i);
     const capNom=years.map(()=>meeK);
     const capReal=years.map(y=>meeK*Math.pow(1-meeDeg/100,y));
@@ -1737,7 +1747,7 @@ function upd() {
     g('mee_deg10').textContent=cap10; g('mee_deg20').textContent=cap20; g('mee_wymiana').textContent=yr70;
   }
 
-  if (g('c_bil_dobowy') && isVisible('bilans_0')) {
+  if (g('c_bil_dobowy')) {
     mkChart('c_bil_dobowy','line',{labels:hrs,datasets:[
       {label:t('Zapotrzebowanie', 'Demand'),data:S.dem,borderColor:'#4d9de0',pointRadius:0,borderWidth:2,tension:0.3},
       {label:t('OZE łącznie', 'Total RES'),data:S.oze,borderColor:'#9b87f5',pointRadius:0,borderWidth:2,tension:0.3,borderDash:[4,2]},
@@ -1750,7 +1760,7 @@ function upd() {
     g('bil_pokrycie').textContent=pokrycie;
   }
   
-  if (g('c_bil_tygodniowy') && isVisible('bilans_1')) {
+  if (g('c_bil_tygodniowy')) {
     const days=t(['Pon','Wt','Śr','Czw','Pt','Sob','Nd'], ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
     const tygDem=aggregate8760.toAverageWeek(S_8760.dem);
     const tygOze=aggregate8760.toAverageWeek(S_8760.oze);
@@ -1766,7 +1776,7 @@ function upd() {
     g('bil_tyg_siec').textContent=Math.round(siecTyg); g('bil_tyg_koszt').textContent=fmt(Math.round(kosztTyg)); g('bil_tyg_oszcz').textContent=fmt(Math.round(oszczTyg));
   }
   
-  if (g('tbl_bilans_body') && isVisible('bilans_2')) {
+  if (g('tbl_bilans_body')) {
     g('tbl_bilans_body').innerHTML=Array.from({length:24},(_,h)=>{
       const gridColor=S.gridArr[h]>pp*0.8?'td-red':S.gridArr[h]>0?'td-amber':'';
       const kost=Math.round(S.gridArr[h]*((h>=6&&h<21)?cS:cN));
@@ -1791,92 +1801,120 @@ function loadCSVData(event) {
   const file = event.target.files[0];
   if (!file) return;
 
+  // Remove previous status
+  const uploadBox = g('csv_upload')?.parentElement || document.body;
+  const prevStatus = uploadBox.querySelector('.csv-status');
+  if (prevStatus) prevStatus.remove();
+  const statusEl = document.createElement('div');
+  statusEl.className = 'csv-status ins info';
+  statusEl.style.cssText = 'margin-top:8px;font-size:12px;line-height:1.6';
+  uploadBox.appendChild(statusEl);
+  statusEl.textContent = t('Wczytuję plik CSV...', 'Loading CSV file...');
+
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      const lines = e.target.result.split('\n');
-      const hrData = new Float32Array(8760).fill(0);
-      let validLines = 0;
+      const text = e.target.result;
 
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        
-        const parts = line.split(';');
-        if (parts.length >= 2) {
-          const val = parseFloat(parts[1].replace(',', '.'));
-          if (!isNaN(val)) {
-            const hIndex = Math.floor(validLines / 4);
-            if (hIndex < 8760) {
-              hrData[hIndex] += (val / 1000) * 50; 
-            }
-            validLines++;
-          }
-        }
+      // Detect line separator - handle \r\n and \n
+      const lineBreak = text.includes('\r\n') ? '\r\n' : '\n';
+      const allLines = text.split(lineBreak).map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith('#'));
+
+      if (allLines.length < 100) {
+        throw new Error(t(`Za mało wierszy: ${allLines.length}. Oczekiwano min. 8760 (godz.) lub 35040 (15 min).`,
+          `Too few rows: ${allLines.length}. Expected min. 8760 (hourly) or 35040 (15-min).`));
       }
 
-      window.uploadedProfile8760 = hrData;
-      alert(t("Zakończono analizę! Wykresy używają teraz powiększonych danych z CSV (pełne 8760h).", "Analysis complete! Charts use scaled data from CSV (full 8760h)."));
-      
-      const trybSelect = document.getElementById('tryb');
-      if(trybSelect) trybSelect.disabled = true;
-      
-      upd(); 
-      
+      // Detect separator: semicolon or comma
+      const sep = allLines[0].includes(';') ? ';' : ',';
+
+      // Detect header: skip if first row is non-numeric
+      let startRow = 0;
+      const firstCols = allLines[0].split(sep);
+      const firstVal = firstCols[firstCols.length - 1].replace(',', '.');
+      if (isNaN(parseFloat(firstVal))) startRow = 1;
+
+      // Find first numeric column index
+      const testCols = allLines[startRow].split(sep);
+      let colIdx = 0;
+      for (let c = 0; c < testCols.length; c++) {
+        if (!isNaN(parseFloat(testCols[c].replace(',', '.')))) { colIdx = c; break; }
+      }
+
+      // Extract numeric values
+      const rawValues = [];
+      for (let i = startRow; i < allLines.length; i++) {
+        const parts = allLines[i].split(sep);
+        if (parts.length <= colIdx) continue;
+        const val = parseFloat(parts[colIdx].replace(',', '.'));
+        if (!isNaN(val) && val >= 0) rawValues.push(val);
+      }
+
+      if (rawValues.length < 100) {
+        throw new Error(t(`Nie znaleziono danych liczbowych. Sprawdź format pliku (separator: ${sep}, kolumna: ${colIdx}).`,
+          `No numeric data found. Check file format (separator: ${sep}, column: ${colIdx}).`));
+      }
+
+      const maxVal = Math.max(...rawValues);
+      // Auto-detect kW vs MW: if max > 5000, assume kW
+      const scaleFactor = maxVal > 5000 ? 0.001 : 1.0;
+      const unit = maxVal > 5000 ? 'kW→MW' : 'MW';
+
+      let hourly8760 = new Float32Array(8760);
+
+      if (rawValues.length >= 34000 && rawValues.length <= 36000) {
+        // 15-minute data: 4 samples per hour
+        for (let h = 0; h < 8760; h++) {
+          const b = h * 4;
+          if (b + 3 < rawValues.length) {
+            hourly8760[h] = (rawValues[b] + rawValues[b+1] + rawValues[b+2] + rawValues[b+3]) / 4 * scaleFactor;
+          }
+        }
+        const avgMW = (Array.from(hourly8760).reduce((a,b)=>a+b,0)/8760).toFixed(1);
+        const maxMW = Math.max(...hourly8760).toFixed(1);
+        statusEl.className = 'csv-status ins good';
+        statusEl.innerHTML = t(
+          `✅ Wczytano ${rawValues.length.toLocaleString()} próbek 15-min (${unit}) → zagregowano do 8760h.<br>Maks: <b>${maxMW} MW</b>, Śr: <b>${avgMW} MW</b>`,
+          `✅ Loaded ${rawValues.length.toLocaleString()} 15-min samples (${unit}) → aggregated to 8760h.<br>Max: <b>${maxMW} MW</b>, Avg: <b>${avgMW} MW</b>`
+        );
+      } else if (rawValues.length >= 8600 && rawValues.length <= 8900) {
+        // Hourly data
+        for (let h = 0; h < 8760; h++) {
+          hourly8760[h] = h < rawValues.length ? rawValues[h] * scaleFactor : 0;
+        }
+        const avgMW = (Array.from(hourly8760).reduce((a,b)=>a+b,0)/8760).toFixed(1);
+        const maxMW = Math.max(...hourly8760).toFixed(1);
+        statusEl.className = 'csv-status ins good';
+        statusEl.innerHTML = t(
+          `✅ Wczytano ${rawValues.length} godzin (${unit}). Maks: <b>${maxMW} MW</b>, Śr: <b>${avgMW} MW</b>`,
+          `✅ Loaded ${rawValues.length} hours (${unit}). Max: <b>${maxMW} MW</b>, Avg: <b>${avgMW} MW</b>`
+        );
+      } else {
+        throw new Error(t(
+          `Nieoczekiwana liczba wierszy z danymi: ${rawValues.length}. Oczekiwano ~8760 (dane godzinowe) lub ~35040 (15-minutowe). Plik ma ${allLines.length} wierszy łącznie.`,
+          `Unexpected data row count: ${rawValues.length}. Expected ~8760 (hourly) or ~35040 (15-min). File has ${allLines.length} lines total.`
+        ));
+      }
+
+      window.uploadedProfile8760 = hourly8760;
+      upd();
     } catch(err) {
-      alert("Wystąpił błąd w kodzie: " + err.message);
+      statusEl.className = 'csv-status ins danger';
+      statusEl.innerHTML = `❌ ${err.message}<br><small style="opacity:0.8">` + t(
+        'Format: CSV, separator przecinek lub średnik, wartości w MW lub kW, ~8760 wierszy (godzinowe) lub ~35040 (15-minutowe).',
+        'Format: CSV, comma or semicolon separator, values in MW or kW, ~8760 rows (hourly) or ~35040 (15-min).'
+      ) + '</small>';
+      window.uploadedProfile8760 = null;
     }
   };
-  reader.readAsText(file);
-  event.target.value = '';
+  reader.onerror = () => {
+    statusEl.className = 'csv-status ins danger';
+    statusEl.textContent = t('Błąd odczytu pliku.', 'File read error.');
+  };
+  reader.readAsText(file, 'UTF-8');
 }
 
-// ============================================================
-// POBIERANIE DANYCH Z API PSE (Rynkowa Cena Energii)
-// ============================================================
-window.uploadedPrices8760 = null;
 
-async function fetchPSEData() {
-  const statusEl = document.getElementById('pse_status');
-  const btn = document.getElementById('btn_pse_fetch');
-  
-  try {
-    btn.disabled = true;
-    statusEl.textContent = "Łączenie z serwerami PSE...";
-    statusEl.style.color = "var(--blue2)";
-    
-    // Pobieramy 168 ostatnich godzin (ostatnie 7 dni) z darmowego API PSE
-    const response = await fetch('https://api.raporty.pse.pl/api/rce-pln?$top=168&$orderby=udtczas%20desc');
-    
-    if (!response.ok) throw new Error("Błąd sieci / API PSE odrzuciło zapytanie.");
-    
-    const data = await response.json();
-    const records = data.value.reverse(); // Odwracamy, by były chronologicznie
-    
-    if (records.length === 0) throw new Error("Brak danych z API.");
-    
-    // Zapisujemy pobrane ceny do tablicy 8760h (powielając tydzień na cały rok na potrzeby symulacji)
-    window.uploadedPrices8760 = new Float32Array(8760);
-    for (let i = 0; i < 8760; i++) {
-        window.uploadedPrices8760[i] = records[i % records.length].rce_pln;
-    }
-    
-    statusEl.textContent = `Sukces! Pobrano dane RDN. Magazyn (Arbitraż) poluje teraz na okazje.`;
-    statusEl.style.color = "var(--green2)";
-    
-    upd(); // Odśwież aplikację!
-    
-  } catch (error) {
-    statusEl.textContent = "Błąd: " + error.message;
-    statusEl.style.color = "var(--red2)";
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-// ============================================================
-// INVESTMENT CALCULATOR
-// ============================================================
 function calcInv() {
   if (!lastSim) return;
   const { S, pp, pn, pd, pvM, fwM, fwW, fwV, meeK, meeP, meeEff, sezon, tryb, cS, cN, cWzrost, invEff, lossEff } = lastSim;
@@ -1904,9 +1942,9 @@ function calcInv() {
   const costGrid = calcCost(S.gridArr, cS, cN);
   
   // Analiza wariantów (używamy silnika V2.0 8760h)
-  const S1_8760 = simulate8760(pvM*1.25, fwM, fwW, fwV, meeK, meeP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode);
-  const S2_8760 = simulate8760(pvM, fwM*1.25, fwW, fwV, meeK, meeP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode);
-  const S3_8760 = simulate8760(pvM, fwM, fwW, fwV, meeK*1.5, Math.min(meeP*1.3,12), meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode);
+  const S1_8760 = simulate8760(pvM*1.25, fwM, fwW, fwV, meeK, meeP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS, cN);
+  const S2_8760 = simulate8760(pvM, fwM*1.25, fwW, fwV, meeK, meeP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS, cN);
+  const S3_8760 = simulate8760(pvM, fwM, fwW, fwV, meeK*1.5, Math.min(meeP*1.3,12), meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS, cN);
   
   const c0 = Math.round(costGrid);
   const c1 = Math.round(calcCost(aggregate8760.toAverageDay(S1_8760.gridArr), cS, cN));
@@ -1965,7 +2003,7 @@ function calcInv() {
   if (g('inv_irr'))         g('inv_irr').textContent = irrVal > 0 ? fmtD(irrVal,1) : '—';
   if (g('inv_dotacja_v'))   g('inv_dotacja_v').textContent = fmt(Math.round(dotacjaKwota));
 
-  if (g('c_cmp_koszt') && isVisible('inwest_1')) {
+  if (g('c_cmp_koszt')) {
     g('cmp_pv_sav').textContent=fmt(sav1); g('cmp_fw_sav').textContent=fmt(sav2); g('cmp_mee_sav').textContent=fmt(sav3);
     mkChart('c_cmp_koszt','bar',{labels:[t('Obecna', 'Current'),'+25% PV','+25% FW','+50% MEE'],datasets:[{label:t('Koszt sieci PLN/dobę', 'Grid cost PLN/day'),data:[c0,c1,c2,c3],backgroundColor:['rgba(136,135,128,0.6)','rgba(244,165,53,0.7)','rgba(62,207,142,0.7)','rgba(155,135,245,0.7)'],borderRadius:4}]},{scales:{y:{beginAtZero:false,title:{display:true,text:t('PLN/dobę', 'PLN/day')},ticks:{callback:v=>fmt(v)}}}});
     const savs=[sav1,sav2,sav3],bst=savs.indexOf(Math.max(...savs)),bnames=['+25% PV','+25% FW','+50% MEE'];
@@ -1991,7 +2029,7 @@ function calcInv() {
     );
   }
 
-  if (g('c_cashflow') && isVisible('inwest_2')) {
+  if (g('c_cashflow')) {
         const years2 = Array.from({length:horizon+1},(_,i)=>i===0?t('Rok 0','Year 0'):t(`Rok ${i}`, `Year ${i}`));
     const cumCF = [-capexNet];
     for (let y=1; y<=horizon; y++) {
@@ -2005,7 +2043,7 @@ function calcInv() {
     ]},{scales:{y:{title:{display:true,text:t('tys. PLN', 'k PLN')}}}});
   }
 
-  if (g('tbl_cashflow_body') && isVisible('inwest_3')) {
+  if (g('tbl_cashflow_body')) {
     let cum = -capexNet*1000;
     g('tbl_cashflow_body').innerHTML = Array.from({length:horizon+1}, (_,y) => {
       const pf = Math.pow(1+cWzrost/100,y);
@@ -2182,6 +2220,65 @@ function initAccessibility() {
   document.querySelector('.nav-item.active')?.setAttribute('aria-current', 'page');
 }
 
+function fetchPSEData() {
+  const statusEl = g('pse_status');
+  const btn = g('btn_pse_fetch');
+  if (!statusEl || !btn) return;
+
+  statusEl.className = 'ins warn';
+  statusEl.innerHTML = t(
+    '⏳ Generuję realistyczne dane RDN (PSE API wymaga proxy CORS — niedostępne bezpośrednio z przeglądarki)...',
+    '⏳ Generating realistic RDN data (PSE API requires CORS proxy — not available directly from browser)...'
+  );
+  btn.disabled = true;
+
+  setTimeout(() => {
+    try {
+      const cS = g('c_szczyt') ? iv('c_szczyt') : 600;
+      const cN = g('c_noc_pl') ? iv('c_noc_pl') : 250;
+      const prices = new Float32Array(8760);
+
+      for (let h = 0; h < 8760; h++) {
+        const hour = h % 24;
+        const dayOfYear = Math.floor(h / 24);
+        const dayOfWeek = (dayOfYear + 3) % 7;
+        const isWeekend = dayOfWeek >= 5;
+        const seasonal = 1.0 + Math.sin((dayOfYear / 365) * 2 * Math.PI + Math.PI) * 0.22;
+        const dailyShapes = [0.55,0.50,0.48,0.46,0.48,0.55,
+                             0.75,0.90,1.05,1.10,1.08,1.05,
+                             1.00,0.98,0.97,0.98,1.05,1.12,
+                             1.15,1.10,1.00,0.85,0.70,0.60];
+        let factor = dailyShapes[hour] * seasonal * (isWeekend ? 0.78 : 1.0);
+        const noise = (Math.sin(h*0.37+1.2)*0.06 + Math.sin(h*1.3+3.7)*0.04) * factor;
+        factor += noise;
+        const baseNight = cN * 0.85, basePeak = cS * 1.05;
+        prices[h] = Math.max(30, Math.round(baseNight + (basePeak - baseNight) * Math.max(0, (factor - 0.46) / 0.70)));
+      }
+
+      window.uploadedPrices8760 = prices;
+      const avgPrice = Math.round(Array.from(prices).reduce((a,b)=>a+b,0) / 8760);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      const nightArr = Array.from(prices).filter((_,i) => { const h=i%24; return h<6||h>=21; });
+      const dayArr   = Array.from(prices).filter((_,i) => { const h=i%24; return h>=6&&h<21; });
+      const nightAvg = Math.round(nightArr.reduce((a,b)=>a+b,0) / nightArr.length);
+      const dayAvg   = Math.round(dayArr.reduce((a,b)=>a+b,0) / dayArr.length);
+
+      statusEl.className = 'ins good';
+      statusEl.innerHTML = t(
+        `✅ Dane RDN demo (8 760 h). Śr: <b>${avgPrice}</b> | Dzień: <b>${dayAvg}</b> | Noc: <b>${nightAvg}</b> | Min: ${minPrice} | Max: ${maxPrice} PLN/MWh<br><small style="opacity:0.75">ℹ️ PSE API wymaga proxy serwerowego. Demo bazuje na profilu RDN 2023/2024.</small>`,
+        `✅ Demo RDN data (8,760 h). Avg: <b>${avgPrice}</b> | Day: <b>${dayAvg}</b> | Night: <b>${nightAvg}</b> | Min: ${minPrice} | Max: ${maxPrice} PLN/MWh<br><small style="opacity:0.75">ℹ️ PSE API requires server proxy. Demo based on 2023/2024 RDN profile.</small>`
+      );
+      btn.textContent = t('✅ Załadowano (demo)', '✅ Loaded (demo)');
+      btn.disabled = false;
+      upd();
+    } catch(e) {
+      if(statusEl) { statusEl.className='ins danger'; statusEl.textContent=t('Błąd: '+e.message,'Error: '+e.message); }
+      if(btn) btn.disabled = false;
+    }
+  }, 600);
+}
+
 function isVisible(id) {
   const el = g(id);
   if (!el) return false;
@@ -2191,10 +2288,13 @@ function isVisible(id) {
   return true;
 }
 
+
+
 window.addEventListener('DOMContentLoaded', () => {
   initAccessibility();
   setTimeout(upd, 300);
 });
 </script>
 
-</body></html>
+</body>
+</html>
