@@ -1577,7 +1577,7 @@ function upd() {
     const peak=Math.max(...S.dem), peakH=S.dem.indexOf(peak);
     const tgPhi = 0.4;
     const peakMVA = parseFloat((peak / Math.sqrt(1/(1+tgPhi*tgPhi))).toFixed(1));
-    g('zak_peak').textContent=fmtD(peak,1); g('zak_min').textContent=fmtD(Math.min(...S.dem),1); g('zak_energy').textContent=Math.round(totalDem);
+    g('zak_peak').textContent=fmtD(peak,1); if(g('zak_min')) g('zak_min').textContent=fmtD(Math.min(...S.dem),1); g('zak_energy').textContent=Math.round(totalDem);
     if(g('zak_mva'))  g('zak_mva').textContent = fmtD(peakMVA,1);
     if(g('zak_mvar')) g('zak_mvar').textContent = fmtD(peak*tgPhi,1);
     if(g('zak_min_inline'))  g('zak_min_inline').textContent  = fmtD(peak,1);
