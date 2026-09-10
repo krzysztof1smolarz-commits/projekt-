@@ -1231,6 +1231,7 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     gridArr: new Float32Array(hoursInYear),
     surplusArr: new Float32Array(hoursInYear),
     meePow: new Float32Array(hoursInYear),
+    prices: new Float32Array(hoursInYear)
   };
 
   let soc = meeMWh * 0.3; 
