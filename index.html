@@ -294,7 +294,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   <div class="grid2">
     <div class="card">
       <div class="card-title"><span class="card-title-dot" style="background:var(--blue)"></span><span data-i18n="cfg-zaklad">Zakład produkcyjny</span></div>
-      <div class="form-row"><span class="form-label" data-i18n="cfg-moc">Moc przyłączeniowa [MW]</span><input type="range" id="p_przyl" min="1" max="500" step="1" value="30" oninput="upd()"><span class="val-display" id="p_przyl_v">30 MW</span></div>
+      <div class="form-row"><span class="form-label" data-i18n="cfg-moc">Moc przyłączeniowa [MW]</span><input type="range" id="p_przyl" min="1" max="200" step="1" value="30" onchange="upd(); document.getElementById('num_p_przyl').value=this.value"><input type="number" id="num_p_przyl" value="30" min="1" max="200" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('p_przyl').value=this.value; upd()"><span class="val-display" id="p_przyl_v">30 MW</span></div>
       <div class="form-row"><span class="form-label" data-i18n="cfg-noc">Zapotrzebowanie nocne 22–6 [%]</span><input type="range" id="p_noc" min="20" max="60" step="5" value="35" oninput="upd()"><span class="val-display" id="p_noc_v">35%</span></div>
       <div class="form-row"><span class="form-label" data-i18n="cfg-dzien">Zapotrzebowanie dzienne 6–22 [%]</span><input type="range" id="p_dzien" min="60" max="95" step="5" value="85" oninput="upd()"><span class="val-display" id="p_dzien_v">85%</span></div>
       <div class="form-row"><span class="form-label" data-i18n="cfg-tryb">Tryb pracy zakładu</span>
@@ -306,8 +306,22 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       </div>
       
       <!-- WERSJA 2.0: Wgrywanie pliku -->
-      <div style="margin-top: 15px; padding: 15px; background: var(--bg3); border: 1px dashed var(--blue); border-radius: var(--radius);">
-        <div style="font-size: 12px; font-weight: 600; color: var(--blue2); margin-bottom: 8px;">V2.0: Wgraj własny profil z licznika (CSV)</div>
+
+<!-- WERSJA 2.0: PRZEŁĄCZNIK ŹRÓDŁA DANYCH -->
+      <div style="margin-top: 15px; padding: 15px; background: var(--bg3); border: 2px solid var(--blue); border-radius: var(--radius); transition: 0.3s;" id="box_source">
+        <div class="form-row" style="margin-bottom: 10px;">
+          <span class="form-label" style="font-weight: 600; color: var(--blue2);">Źródło zapotrzebowania zakładu:</span>
+          <select id="data_source" onchange="toggleDataSource()" style="border-color: var(--blue2); font-weight: bold; width: auto; flex: 1.5;">
+            <option value="manual">Tryb ręczny (Suwaki nad listą)</option>
+            <option value="csv">Plik CSV z licznika (V2.0)</option>
+          </select>
+        </div>
+        <div id="box_csv" style="opacity: 0.4; pointer-events: none; border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 10px;">
+          <div style="font-size: 12px; margin-bottom: 8px;">Wgraj roczny profil z licznika (15-minutowy lub godzinowy):</div>
+          <input type="file" id="csv_upload" accept=".csv" style="color: var(--text); font-size: 12px; width: 100%;" onchange="loadCSVData(event)">
+        </div>
+      </div>
+      
         <input type="file" id="csv_upload" accept=".csv" style="color: var(--text); font-size: 12px; width: 100%;" onchange="loadCSVData(event)">
       </div>
 
@@ -327,7 +341,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--amber)"></span><span data-i18n="cfg-pv">Fotowoltaika (PV)</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-pvmoc">Moc zainstalowana PV [MW]</span><input type="range" id="pv_moc" min="0" max="300" step="1" value="30" oninput="upd()"><span class="val-display" id="pv_v">30 MW</span></div>
+        <div class="form-row"><span class="form-label" data-i18n="cfg-pvmoc">Moc zainstalowana PV [MW]</span><input type="range" id="pv_moc" min="0" max="300" step="1" value="30" onchange="upd(); document.getElementById('num_pv_moc').value=this.value"><input type="number" id="num_pv_moc" value="30" min="0" max="300" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('pv_moc').value=this.value; upd()"><span class="val-display" id="pv_v">30 MW</span></div>  
         <div class="form-row"><span class="form-label" data-i18n="cfg-pveff">Sprawność falownika [%]</span><input type="range" id="pv_inv" min="92" max="99" step="0.5" value="97" oninput="upd()"><span class="val-display" id="pv_inv_v">97%</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-pvloss">Straty (zacienienie, okablowanie) [%]</span><input type="range" id="pv_loss" min="0" max="15" step="1" value="5" oninput="upd()"><span class="val-display" id="pv_loss_v">5%</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-sezon">Sezon (nasłonecznienie)</span>
@@ -340,7 +354,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       </div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--green)"></span><span data-i18n="cfg-fw">Elektrownia wiatrowa (FW)</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-fwmoc">Moc zainstalowana FW [MW]</span><input type="range" id="fw_moc" min="0" max="150" step="1" value="16" oninput="upd()"><span class="val-display" id="fw_v">16 MW</span></div>
+        <div class="form-row"><span class="form-label" data-i18n="cfg-fwmoc">Moc zainstalowana FW [MW]</span><input type="range" id="fw_moc" min="0" max="150" step="1" value="16" onchange="upd(); document.getElementById('num_fw_moc').value=this.value"><input type="number" id="num_fw_moc" value="16" min="0" max="150" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('fw_moc').value=this.value; upd()"><span class="val-display" id="fw_v">16 MW</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-fwwind">Śr. prędkość wiatru [m/s]</span><input type="range" id="fw_wind" min="0" max="25" step="0.5" value="8" oninput="upd()"><span class="val-display" id="fw_wind_v">8 m/s</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-fwvar">Zmienność dobowa wiatru [%]</span><input type="range" id="fw_var" min="0" max="60" step="5" value="20" oninput="upd()"><span class="val-display" id="fw_var_v">20%</span></div>
         <div id="fw_status_cfg" class="fw-bar"></div>
@@ -354,8 +368,8 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
             <option value="arbitrage" data-i18n="opt-ems-arb">Arbitraż cenowy (RDN)</option>
           </select>
         </div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-meecap">Pojemność MEE [MWh]</span><input type="range" id="mee_kwh" min="0" max="200" step="1" value="9" oninput="upd()"><span class="val-display" id="mee_kwh_v">9 MWh</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-meepow">Moc MEE [MW]</span><input type="range" id="mee_mw" min="0" max="100" step="1" value="3" oninput="upd()"><span class="val-display" id="mee_mw_v">3 MW</span></div>
+        <div class="form-row"><span class="form-label" data-i18n="cfg-meecap">Pojemność MEE [MWh]</span><input type="range" id="mee_kwh" min="0" max="200" step="1" value="9" onchange="upd(); document.getElementById('num_mee_kwh').value=this.value"><input type="number" id="num_mee_kwh" value="9" min="0" max="200" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('mee_kwh').value=this.value; upd()"><span class="val-display" id="mee_kwh_v">9 MWh</span></div>
+        <div class="form-row"><span class="form-label" data-i18n="cfg-meepow">Moc MEE [MW]</span><input type="range" id="mee_mw" min="0" max="100" step="1" value="3" onchange="upd(); document.getElementById('num_mee_mw').value=this.value"><input type="number" id="num_mee_mw" value="3" min="0" max="100" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('mee_mw').value=this.value; upd()"><span class="val-display" id="mee_mw_v">3 MW</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-meert">Sprawność round-trip MEE [%]</span><input type="range" id="mee_eff" min="80" max="98" step="1" value="92" oninput="upd()"><span class="val-display" id="mee_eff_v">92%</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-meedeg">Degradacja pojemności [%/rok]</span><input type="range" id="mee_deg" min="1" max="4" step="0.5" value="2" oninput="upd()"><span class="val-display" id="mee_deg_v">2%</span></div>
       </div>
@@ -1246,8 +1260,10 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     if (dayOfWeek === 5) dayScale = 0.8; 
     if (dayOfWeek === 6) dayScale = 0.3; 
     
-    // Zapotrzebowanie (CSV z pliku lub suwaki)
-    out.dem[h] = window.uploadedProfile8760 
+   // Zapotrzebowanie uzależnione od wyboru użytkownika na przełączniku
+    const useCSV = document.getElementById('data_source') && document.getElementById('data_source').value === 'csv';
+    
+    out.dem[h] = (useCSV && window.uploadedProfile8760) 
       ? window.uploadedProfile8760[h] 
       : demandProfile(tryb, pp, pn, pd, dayScale)[hourOfDay];
 
@@ -2295,6 +2311,31 @@ window.addEventListener('DOMContentLoaded', () => {
   initAccessibility();
   setTimeout(upd, 300);
 });
+// ============================================================
+// LOGIKA PRZEŁĄCZNIKA: SUWAKI VS CSV
+// ============================================================
+function toggleDataSource() {
+   const isCSV = document.getElementById('data_source').value === 'csv';
+   
+   // Wizualne włączanie/wyłączanie suwaków z zapotrzebowaniem
+   document.getElementById('p_przyl').disabled = isCSV;
+   document.getElementById('num_p_przyl').disabled = isCSV;
+   document.getElementById('p_noc').disabled = isCSV;
+   document.getElementById('p_dzien').disabled = isCSV;
+   document.getElementById('tryb').disabled = isCSV;
+   
+   // Wyszarzenie całej karty zakładu, jeśli wybrano CSV
+   const zakladCard = document.getElementById('p_przyl').closest('.card');
+   zakladCard.style.opacity = isCSV ? '0.4' : '1';
+   zakladCard.style.pointerEvents = isCSV ? 'none' : 'auto';
+   
+   // Włączenie obszaru wgrywania CSV
+   const boxCsv = document.getElementById('box_csv');
+   boxCsv.style.opacity = isCSV ? '1' : '0.4';
+   boxCsv.style.pointerEvents = isCSV ? 'auto' : 'none';
+
+   upd(); // Odśwież wykresy natychmiast po przełączeniu!
+}
 </script>
 
 </body>
