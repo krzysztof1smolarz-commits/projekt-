@@ -293,6 +293,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
   <div class="grid2">
     <!-- LEWA KOLUMNA -->
+    
     <div class="card">
       <div class="card-title"><span class="card-title-dot" style="background:var(--blue)"></span><span data-i18n="cfg-zaklad">Zakład produkcyjny</span></div>
       
@@ -332,18 +333,18 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       <div class="form-row"><span class="form-label" data-i18n="cfg-wzrost">Wzrost cen energii [%/rok]</span><input type="range" id="c_wzrost" min="0" max="15" step="0.5" value="4" oninput="upd()"><span class="val-display" id="c_wzrost_v">4%</span></div>
 
       <hr class="sdiv">
-
       <!-- WERSJA 2.0: API PSE -->
       <div style="padding: 15px; background: var(--bg3); border: 1px dashed var(--amber); border-radius: var(--radius);">
         <div style="font-size: 12px; font-weight: 600; color: var(--amber2); margin-bottom: 8px;">V2.0: Pobierz historyczne ceny z giełdy (API PSE)</div>
         <button class="btn" onclick="fetchPSEData()" id="btn_pse_fetch" style="border-color: var(--amber); color: var(--amber2); width: 100%;">Zaciągnij ceny RDN</button>
         <div id="pse_status" style="font-size: 11px; margin-top: 8px; color: var(--text2);">Gotowy do pobrania danych.</div>
-        
         <!-- NOWE: Okienko na mini-wykres cen -->
         <div id="pse_chart_wrapper" style="display: none; margin-top: 15px; height: 100px; position: relative;">
           <canvas id="c_pse_prices"></canvas>
         </div>
       </div>
+    </div>
+    <!-- KONIEC LEWEJ KOLUMNY -->
       
     <!-- PRAWA KOLUMNA (OZE i MEE) -->
     <div>
@@ -1614,7 +1615,7 @@ function upd() {
     const peak=Math.max(...S.dem), peakH=S.dem.indexOf(peak);
     const tgPhi = 0.4;
     const peakMVA = parseFloat((peak / Math.sqrt(1/(1+tgPhi*tgPhi))).toFixed(1));
-    g('zak_peak').textContent=fmtD(peak,1); g('zak_min').textContent=fmtD(Math.min(...S.dem),1); g('zak_energy').textContent=Math.round(totalDem);
+    g('zak_peak').textContent=fmtD(peak,1); g('zak_peak').textContent=fmtD(peak,1); if(g('zak_min')) g('zak_min').textContent=fmtD(Math.min(...S.dem),1); g('zak_energy').textContent=Math.round(totalDem);
     if(g('zak_mva'))  g('zak_mva').textContent = fmtD(peakMVA,1);
     if(g('zak_mvar')) g('zak_mvar').textContent = fmtD(peak*tgPhi,1);
   }
