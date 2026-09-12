@@ -292,44 +292,37 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <p class="page-desc" data-i18n="cfg-desc">Ustaw wszystkie parametry zakładu, instalacji OZE i MEE.</p>
   </div>
   <div class="grid2">
+    <!-- LEWA KOLUMNA -->
     <div class="card">
       <div class="card-title"><span class="card-title-dot" style="background:var(--blue)"></span><span data-i18n="cfg-zaklad">Zakład produkcyjny</span></div>
-      <div class="form-row"><span class="form-label" data-i18n="cfg-moc">Moc przyłączeniowa [MW]</span><input type="range" id="p_przyl" min="1" max="200" step="1" value="30" onchange="upd(); document.getElementById('num_p_przyl').value=this.value"><input type="number" id="num_p_przyl" value="30" min="1" max="200" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('p_przyl').value=this.value; upd()"><span class="val-display" id="p_przyl_v">30 MW</span></div>
-      <div class="form-row"><span class="form-label" data-i18n="cfg-noc">Zapotrzebowanie nocne 22–6 [%]</span><input type="range" id="p_noc" min="20" max="60" step="5" value="35" oninput="upd()"><span class="val-display" id="p_noc_v">35%</span></div>
-      <div class="form-row"><span class="form-label" data-i18n="cfg-dzien">Zapotrzebowanie dzienne 6–22 [%]</span><input type="range" id="p_dzien" min="60" max="95" step="5" value="85" oninput="upd()"><span class="val-display" id="p_dzien_v">85%</span></div>
-      <div class="form-row"><span class="form-label" data-i18n="cfg-tryb">Tryb pracy zakładu</span>
-        <select id="tryb" onchange="upd()">
-          <option value="3" data-i18n="opt-3">3-zmianowy (równomierne 24h)</option>
-          <option value="2" data-i18n="opt-2">2-zmianowy (aktywny 6–22)</option>
-          <option value="ramp" data-i18n="opt-ramp">Nierównomierne (przerwy produkcyjne)</option>
+      
+      <!-- PRZEŁĄCZNIK ŹRÓDŁA -->
+      <div class="form-row" style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
+        <span class="form-label" style="font-weight: 600; color: var(--blue2);">Źródło danych:</span>
+        <select id="data_source" onchange="toggleDataSource()" style="border-color: var(--blue2); font-weight: bold; width: 100%;">
+          <option value="manual">Tryb ręczny (Suwaki)</option>
+          <option value="csv">Własny plik CSV (V2.0)</option>
         </select>
       </div>
-      
-      <!-- WERSJA 2.0: Wgrywanie pliku -->
 
-<!-- WERSJA 2.0: PRZEŁĄCZNIK ŹRÓDŁA DANYCH -->
-      <div style="margin-top: 15px; padding: 15px; background: var(--bg3); border: 2px solid var(--blue); border-radius: var(--radius); transition: 0.3s;" id="box_source">
-        <div class="form-row" style="margin-bottom: 10px;">
-          <span class="form-label" style="font-weight: 600; color: var(--blue2);">Źródło zapotrzebowania zakładu:</span>
-          <select id="data_source" onchange="toggleDataSource()" style="border-color: var(--blue2); font-weight: bold; width: auto; flex: 1.5;">
-            <option value="manual">Tryb ręczny (Suwaki nad listą)</option>
-            <option value="csv">Plik CSV z licznika (V2.0)</option>
+      <!-- BLOK RĘCZNY (SUWAKI) -->
+      <div id="box_manual">
+        <div class="form-row"><span class="form-label" data-i18n="cfg-moc">Moc przyłączeniowa [MW]</span><input type="range" id="p_przyl" min="1" max="200" step="1" value="30" onchange="upd(); document.getElementById('num_p_przyl').value=this.value"><input type="number" id="num_p_przyl" value="30" min="1" max="200" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('p_przyl').value=this.value; upd()"><span class="val-display" id="p_przyl_v">30 MW</span></div>
+        <div class="form-row"><span class="form-label" data-i18n="cfg-noc">Zapotrzebowanie nocne 22–6 [%]</span><input type="range" id="p_noc" min="20" max="60" step="5" value="35" oninput="upd()"><span class="val-display" id="p_noc_v">35%</span></div>
+        <div class="form-row"><span class="form-label" data-i18n="cfg-dzien">Zapotrzebowanie dzienne 6–22 [%]</span><input type="range" id="p_dzien" min="60" max="95" step="5" value="85" oninput="upd()"><span class="val-display" id="p_dzien_v">85%</span></div>
+        <div class="form-row"><span class="form-label" data-i18n="cfg-tryb">Tryb pracy zakładu</span>
+          <select id="tryb" onchange="upd()">
+            <option value="3" data-i18n="opt-3">3-zmianowy (równomierne 24h)</option>
+            <option value="2" data-i18n="opt-2">2-zmianowy (aktywny 6–22)</option>
+            <option value="ramp" data-i18n="opt-ramp">Nierównomierne (przerwy produkcyjne)</option>
           </select>
         </div>
-        <div id="box_csv" style="opacity: 0.4; pointer-events: none; border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 10px;">
-          <div style="font-size: 12px; margin-bottom: 8px;">Wgraj roczny profil z licznika (15-minutowy lub godzinowy):</div>
-          <input type="file" id="csv_upload" accept=".csv" style="color: var(--text); font-size: 12px; width: 100%;" onchange="loadCSVData(event)">
-        </div>
-      </div>
-      
-        <input type="file" id="csv_upload" accept=".csv" style="color: var(--text); font-size: 12px; width: 100%;" onchange="loadCSVData(event)">
       </div>
 
-<!-- WERSJA 2.0: API PSE -->
-      <div style="margin-top: 15px; padding: 15px; background: var(--bg3); border: 1px dashed var(--amber); border-radius: var(--radius);">
-        <div style="font-size: 12px; font-weight: 600; color: var(--amber2); margin-bottom: 8px;">V2.0: Pobierz historyczne ceny z giełdy (API PSE)</div>
-        <button class="btn" onclick="fetchPSEData()" id="btn_pse_fetch" style="border-color: var(--amber); color: var(--amber2); width: 100%;">Zaciągnij ceny RDN</button>
-        <div id="pse_status" style="font-size: 11px; margin-top: 8px; color: var(--text2);">Gotowy do pobrania danych.</div>
+      <!-- BLOK CSV -->
+      <div id="box_csv" style="display: none; margin-top: 10px; padding: 15px; background: var(--bg3); border: 1px dashed var(--blue); border-radius: var(--radius);">
+        <div style="font-size: 12px; margin-bottom: 8px;">Wgraj roczny profil z licznika (15-minutowy lub godzinowy):</div>
+        <input type="file" id="csv_upload" accept=".csv" style="color: var(--text); font-size: 12px; width: 100%;" onchange="loadCSVData(event)">
       </div>
 
       <hr class="sdiv">
@@ -337,13 +330,23 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       <div class="form-row"><span class="form-label" data-i18n="cfg-cszczyt">Cena szczytowa 6–21 [PLN/MWh]</span><input type="range" id="c_szczyt" min="100" max="1000" step="10" value="600" oninput="upd()"><span class="val-display" id="c_szczyt_v">600</span></div>
       <div class="form-row"><span class="form-label" data-i18n="cfg-cnoc">Cena nocna 21–6 [PLN/MWh]</span><input type="range" id="c_noc_pl" min="100" max="1000" step="10" value="250" oninput="upd()"><span class="val-display" id="c_noc_v">250</span></div>
       <div class="form-row"><span class="form-label" data-i18n="cfg-wzrost">Wzrost cen energii [%/rok]</span><input type="range" id="c_wzrost" min="0" max="15" step="0.5" value="4" oninput="upd()"><span class="val-display" id="c_wzrost_v">4%</span></div>
+
+      <hr class="sdiv">
+      <!-- WERSJA 2.0: API PSE -->
+      <div style="padding: 15px; background: var(--bg3); border: 1px dashed var(--amber); border-radius: var(--radius);">
+        <div style="font-size: 12px; font-weight: 600; color: var(--amber2); margin-bottom: 8px;">V2.0: Pobierz historyczne ceny z giełdy (API PSE)</div>
+        <button class="btn" onclick="fetchPSEData()" id="btn_pse_fetch" style="border-color: var(--amber); color: var(--amber2); width: 100%;">Zaciągnij ceny RDN</button>
+        <div id="pse_status" style="font-size: 11px; margin-top: 8px; color: var(--text2);">Gotowy do pobrania danych.</div>
+      </div>
     </div>
+
+    <!-- PRAWA KOLUMNA (OZE i MEE) -->
     <div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--amber)"></span><span data-i18n="cfg-pv">Fotowoltaika (PV)</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-pvmoc">Moc zainstalowana PV [MW]</span><input type="range" id="pv_moc" min="0" max="300" step="1" value="30" onchange="upd(); document.getElementById('num_pv_moc').value=this.value"><input type="number" id="num_pv_moc" value="30" min="0" max="300" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('pv_moc').value=this.value; upd()"><span class="val-display" id="pv_v">30 MW</span></div>  
+        <div class="form-row"><span class="form-label" data-i18n="cfg-pvmoc">Moc zainstalowana PV [MW]</span><input type="range" id="pv_moc" min="0" max="300" step="1" value="30" onchange="upd(); document.getElementById('num_pv_moc').value=this.value"><input type="number" id="num_pv_moc" value="30" min="0" max="300" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('pv_moc').value=this.value; upd()"><span class="val-display" id="pv_v">30 MW</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-pveff">Sprawność falownika [%]</span><input type="range" id="pv_inv" min="92" max="99" step="0.5" value="97" oninput="upd()"><span class="val-display" id="pv_inv_v">97%</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-pvloss">Straty (zacienienie, okablowanie) [%]</span><input type="range" id="pv_loss" min="0" max="15" step="1" value="5" oninput="upd()"><span class="val-display" id="pv_loss_v">5%</span></div>
+        <div class="form-row"><span class="form-label" data-i18n="cfg-pvloss">Straty (zacienienie) [%]</span><input type="range" id="pv_loss" min="0" max="15" step="1" value="5" oninput="upd()"><span class="val-display" id="pv_loss_v">5%</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-sezon">Sezon (nasłonecznienie)</span>
           <select id="sezon" onchange="upd()">
             <option value="lato" data-i18n="opt-lato">Lato — szczyt 65% mocy</option>
@@ -361,16 +364,15 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       </div>
       <div class="card">
         <div class="card-title"><span class="card-title-dot" style="background:var(--purple)"></span><span data-i18n="cfg-mee">Magazyn energii (MEE)</span></div>
-        <!-- WERSJA 2.0: Wybór strategii EMS -->
         <div class="form-row"><span class="form-label" data-i18n="cfg-ems">Strategia MEE (EMS)</span>
           <select id="ems_mode" onchange="upd()" style="border-color: var(--purple);">
-            <option value="auto" data-i18n="opt-ems-auto">Maksymalna Autokonsumpcja (Standard)</option>
+            <option value="auto" data-i18n="opt-ems-auto">Maksymalna Autokonsumpcja</option>
             <option value="arbitrage" data-i18n="opt-ems-arb">Arbitraż cenowy (RDN)</option>
           </select>
         </div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-meecap">Pojemność MEE [MWh]</span><input type="range" id="mee_kwh" min="0" max="200" step="1" value="9" onchange="upd(); document.getElementById('num_mee_kwh').value=this.value"><input type="number" id="num_mee_kwh" value="9" min="0" max="200" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('mee_kwh').value=this.value; upd()"><span class="val-display" id="mee_kwh_v">9 MWh</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-meepow">Moc MEE [MW]</span><input type="range" id="mee_mw" min="0" max="100" step="1" value="3" onchange="upd(); document.getElementById('num_mee_mw').value=this.value"><input type="number" id="num_mee_mw" value="3" min="0" max="100" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('mee_mw').value=this.value; upd()"><span class="val-display" id="mee_mw_v">3 MW</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-meert">Sprawność round-trip MEE [%]</span><input type="range" id="mee_eff" min="80" max="98" step="1" value="92" oninput="upd()"><span class="val-display" id="mee_eff_v">92%</span></div>
+        <div class="form-row"><span class="form-label" data-i18n="cfg-meert">Sprawność round-trip [%]</span><input type="range" id="mee_eff" min="80" max="98" step="1" value="92" oninput="upd()"><span class="val-display" id="mee_eff_v">92%</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-meedeg">Degradacja pojemności [%/rok]</span><input type="range" id="mee_deg" min="1" max="4" step="0.5" value="2" oninput="upd()"><span class="val-display" id="mee_deg_v">2%</span></div>
       </div>
     </div>
@@ -2311,31 +2313,36 @@ window.addEventListener('DOMContentLoaded', () => {
   initAccessibility();
   setTimeout(upd, 300);
 });
+
 // ============================================================
 // LOGIKA PRZEŁĄCZNIKA: SUWAKI VS CSV
 // ============================================================
 function toggleDataSource() {
    const isCSV = document.getElementById('data_source').value === 'csv';
    
-   // Wizualne włączanie/wyłączanie suwaków z zapotrzebowaniem
-   document.getElementById('p_przyl').disabled = isCSV;
-   document.getElementById('num_p_przyl').disabled = isCSV;
-   document.getElementById('p_noc').disabled = isCSV;
-   document.getElementById('p_dzien').disabled = isCSV;
-   document.getElementById('tryb').disabled = isCSV;
+   // Wyszarzamy TYLKO blok z suwakami zapotrzebowania
+   const boxManual = document.getElementById('box_manual');
+   if(boxManual) {
+       boxManual.style.opacity = isCSV ? '0.4' : '1';
+       boxManual.style.pointerEvents = isCSV ? 'none' : 'auto';
+   }
    
-   // Wyszarzenie całej karty zakładu, jeśli wybrano CSV
-   const zakladCard = document.getElementById('p_przyl').closest('.card');
-   zakladCard.style.opacity = isCSV ? '0.4' : '1';
-   zakladCard.style.pointerEvents = isCSV ? 'none' : 'auto';
-   
-   // Włączenie obszaru wgrywania CSV
+   // Pokazujemy/ukrywamy blok CSV
    const boxCsv = document.getElementById('box_csv');
-   boxCsv.style.opacity = isCSV ? '1' : '0.4';
-   boxCsv.style.pointerEvents = isCSV ? 'auto' : 'none';
+   if(boxCsv) {
+       boxCsv.style.display = isCSV ? 'block' : 'none';
+   }
 
-   upd(); // Odśwież wykresy natychmiast po przełączeniu!
+   // Jeśli wracamy na manual, czyścimy dane CSV, żeby wrócić do starych wykresów
+   if (!isCSV) {
+       window.uploadedProfile8760 = null;
+       const uploadInput = document.getElementById('csv_upload');
+       if(uploadInput) uploadInput.value = '';
+   }
+
+   upd(); // Odśwież wykresy
 }
+
 </script>
 
 </body>
