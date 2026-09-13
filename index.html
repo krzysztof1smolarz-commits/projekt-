@@ -2087,7 +2087,7 @@ function calcInv() {
     ]},{scales:{y:{title:{display:true,text:t('tys. PLN', 'k PLN')}}}});
   }
 
-  if (g('tbl_cashflow_body')) {
+  if (g('tbl_cashflow_body') && isVisible('inwest_3')) {
     let cum = -capexNet*1000;
     g('tbl_cashflow_body').innerHTML = Array.from({length:horizon+1}, (_,y) => {
       const pf = Math.pow(1+cWzrost/100,y);
@@ -2098,16 +2098,63 @@ function calcInv() {
       return `<tr><td class="td-mono">${y}</td><td class="td-mono">${cena}</td><td class="td-mono">${y===0?'—':fmt(Math.round(savRok*pf))}</td><td class="td-mono ${cf<0?'td-red':'td-green'}">${fmt(Math.round(cf))}</td><td class="td-mono ${cum<0?'td-amber':'td-green'}">${fmt(Math.round(cum))}</td><td>${status}</td></tr>`;
     }).join('');
   }
-} // <--- tu się kończy generowanie tabeli cashflow
-
+  
   // Wywołanie Doradcy AI na samym końcu kalkulacji
   generateAIAdvice();
 }
-}
 
 // ============================================================
-// REPORT BUILDER
+// WIRTUALNY DORADCA AI (SYSTEM EKSPERCKI)
 // ============================================================
+function generateAIAdvice() {
+  if (!lastSim) return;
+  const { S_8760, pp, pn, pvM, fwM, meeK, cS, cN } = lastSim;
+  const emsMode = g('ems_mode') ? g('ems_mode').value : 'auto';
+  
+  const totalDem = S_8760.dem.reduce((a,b)=>a+b,0);
+  const totalSurp = S_8760.surplusArr.reduce((a,b)=>a+b,0);
+  const coverage = totalDem > 0 ? (totalDem - S_8760.gridArr.reduce((a,b)=>a+b,0)) / totalDem : 0;
+  
+  let advicePL = "Na podstawie analizy profilu zakładu, <b>system rekomenduje:</b><br><br>";
+  let adviceEN = "Based on the plant profile analysis, <b>the system recommends:</b><br><br>";
+  let hasAdvice = false;
+
+  // REGUŁA 1: Zmarnowana nadwyżka z OZE
+  if (totalSurp > totalDem * 0.05) {
+     const lostMWh = Math.round(totalSurp);
+     const recMWh = Math.round((totalSurp / 365) * 0.6); // Orientacyjna propozycja dobowego magazynu
+     advicePL += `🔹 <b>Utrata darmowej energii:</b> Fabryka traci rocznie ok. <b>${fmt(lostMWh)} MWh</b> z OZE. Zdecydowanie zalecam <b>rozbudowę pojemności MEE o ok. ${recMWh} MWh</b>, aby przechwycić tę energię i zbić koszty szczytowe.<br><br>`;
+     adviceEN += `🔹 <b>Free energy loss:</b> The plant loses approx. <b>${fmt(lostMWh)} MWh</b> of RES yearly. I highly recommend <b>expanding BESS capacity by ~${recMWh} MWh</b> to capture this energy.<br><br>`;
+     hasAdvice = true;
+  }
+
+  // REGUŁA 2: Niewykorzystany Arbitraż (gdy spread cenowy jest duży, a magazyn mały)
+  if (emsMode === 'auto' && (cS - cN) >= 250 && meeK > 0) {
+     advicePL += `🔹 <b>Potencjał Rynku Dnia Następnego:</b> Różnica cenowa między szczytem a doliną to aż ${cS - cN} PLN/MWh. Przełącz <b>Strategię MEE na Arbitraż cenowy</b> w zakładce Konfiguracja, aby magazyn zaczął agresywnie zarabiać na tanim nocnym prądzie.<br><br>`;
+     adviceEN += `🔹 <b>Day-Ahead Market Potential:</b> The price spread is ${cS - cN} PLN/MWh. Switch the <b>BESS Strategy to Price Arbitrage</b> to let the battery profit aggressively from cheap night electricity.<br><br>`;
+     hasAdvice = true;
+  }
+
+  // REGUŁA 3: Duże zużycie w nocy, brak wiatru (Zakład 3-zmianowy)
+  if (pn > 20 && fwM < (pvM * 0.4)) {
+     advicePL += `🔹 <b>Optymalizacja profilu nocnego:</b> Zakład pracujący na 3 zmiany zużywa dużo prądu w nocy (zapotrzebowanie nocne ${pn}%), gdy fotowoltaika nie działa. Inwestycja w <b>turbiny wiatrowe (FW)</b> znacznie lepiej zbilansuje Twój profil niż samo PV.<br><br>`;
+     adviceEN += `🔹 <b>Night profile optimization:</b> The 3-shift plant consumes heavily at night (${pn}% demand) when PV is off. Investing in <b>wind turbines (FW)</b> will balance your profile much better than just PV.<br><br>`;
+     hasAdvice = true;
+  }
+  
+  // REGUŁA 4: Jeśli system jest bliski ideału
+  if (!hasAdvice && coverage > 0.6) {
+     advicePL += `🔹 <b>Status optymalny:</b> System jest doskonale zbilansowany (ponad 60% niezależności energetycznej). Rozbudowa infrastruktury przyniesie już tylko marginalne zyski (prawo malejących przychodów).`;
+     adviceEN += `🔹 <b>Optimal status:</b> The system is perfectly balanced (>60% energy independence). Further expansion will yield diminishing returns.`;
+  }
+
+  const advisorEl = g('ai_advisor_text');
+  if (advisorEl) {
+     advisorEl.innerHTML = currentLang === 'pl' ? advicePL : adviceEN;
+  }
+}
+
+
 function buildReport() {
   if (!lastSim) return;
   if (!g('rep_params')) return;
