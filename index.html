@@ -2016,22 +2016,49 @@ function calcInv() {
 
   const spbt = savRok > 0 ? +(capexNet*1000 / savRok).toFixed(1) : 99;
 
+  // --- NOWY MODEL Z DEGRADACJĄ I WYMIANĄ MEE (Wzorcowy B2B) ---
   let npv = -capexNet*1000;
-  let cfArr = [-capexNet*1000];
+  let cfArr = [-capexNet*1000]; // Skumulowane przepływy
+  let yearlyData = []; // Zapis dla każdego roku
+  
+  const meeDeg = lastSim.meeDeg; // Pobranie wartości degradacji z konfiguracji
+  const baseCap = meeK + addMEE;
+  const basePow = meeP + addMEEP;
+
   for (let y = 1; y <= horizon; y++) {
-    const price_factor = Math.pow(1 + cWzrost/100, y);
-    const cf = savRok * price_factor - opexPVGrunt*1000;
+    const pf = Math.pow(1 + cWzrost/100, y);
+    let cap_y = baseCap * Math.pow(1 - meeDeg/100, y);
+    let repCost = 0;
+
+    // Kosztowna wymiana/augmentacja baterii w 10. roku
+    if (y === 10 && baseCap > 0) {
+        cap_y = baseCap; // Pojemność wraca do 100% po inwestycji
+        repCost = baseCap * 900 * 1000; // Szacunek: 900 tys. PLN za 1 MWh pojemności (wymiana modułów)
+    } else if (y > 10) {
+        cap_y = baseCap * Math.pow(1 - meeDeg/100, y - 10);
+    }
+
+    // BŁYSKAWICZNA SYMULACJA DLA DANEGO ROKU
+    const S_y = simulate8760(pvM + addPV, fwM + addFW, fwW, fwV, cap_y, basePow, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS, cN);
+    const c_y = Math.round(calcCost(aggregate8760.toAverageDay(S_y.gridArr), cS, cN));
+    
+    // Prawdziwa oszczędność w roku Y z uwzględnieniem spalonej pojemności baterii
+    const savRok_y = Math.max(0, costGrid - c_y) * 365;
+    const cf = savRok_y * pf - opexPVGrunt*1000 - repCost;
+    
     npv += cf / Math.pow(1 + discount/100, y);
-    cfArr.push((cfArr[cfArr.length-1] || 0) + cf);
+    cfArr.push(+(cfArr[cfArr.length-1] + cf).toFixed(1));
+    yearlyData.push({ y, cf, savRok_y, pf, repCost, cap_y });
   }
 
+  // Precyzyjne IRR uwzględniające degradację i CAPEX wymiany
   let irrVal = 0;
   if (savRok > 0 && capexNet > 0) {
     let lo = 0, hi = 200;
     for (let iter = 0; iter < 50; iter++) {
       const mid = (lo+hi)/2;
       let v = -capexNet*1000;
-      for (let y=1; y<=horizon; y++) v += savRok*Math.pow(1+cWzrost/100,y)/Math.pow(1+mid/100,y);
+      yearlyData.forEach(d => { v += d.cf / Math.pow(1+mid/100, d.y); });
       if (v > 0) lo = mid; else hi = mid;
     }
     irrVal = (lo+hi)/2;
@@ -2086,30 +2113,28 @@ function calcInv() {
   }
 
   if (g('c_cashflow')) {
-        const years2 = Array.from({length:horizon+1},(_,i)=>i===0?t('Rok 0','Year 0'):t(`Rok ${i}`, `Year ${i}`));
-    const cumCF = [-capexNet];
-    for (let y=1; y<=horizon; y++) {
-      const price_factor = Math.pow(1+cWzrost/100,y);
-      const cf = savRok*price_factor/1000 - opexPVGrunt;
-      cumCF.push(+(cumCF[cumCF.length-1]+cf).toFixed(1));
-    }
-    mkChart('c_cashflow','line',{labels:years2,datasets:[
-      {label:t('Skumulowane przepływy', 'Cumulative cash flows'),data:cumCF,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.08)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:cumCF.map(v=>v>=0?'#3ecf8e':'#e05a5a'),borderWidth:2},
+    const yearsLbl = Array.from({length:horizon+1},(_,i)=>i===0?t('Rok 0','Year 0'):t(`Rok ${i}`, `Year ${i}`));
+    mkChart('c_cashflow','line',{labels:yearsLbl,datasets:[
+      {label:t('Skumulowane przepływy', 'Cumulative cash flows'),data:cfArr,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.08)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:cfArr.map(v=>v>=0?'#3ecf8e':'#e05a5a'),borderWidth:2},
       {label:t('Próg rentowności', 'Break-even point'),data:Array(horizon+1).fill(0),borderColor:'rgba(77,157,224,0.3)',borderDash:[6,3],borderWidth:1,pointRadius:0,fill:false}
     ]},{scales:{y:{title:{display:true,text:t('tys. PLN', 'k PLN')}}}});
   }
 
   if (g('tbl_cashflow_body') && isVisible('inwest_3')) {
-    let cum = -capexNet*1000;
-    g('tbl_cashflow_body').innerHTML = Array.from({length:horizon+1}, (_,y) => {
-      const pf = Math.pow(1+cWzrost/100,y);
-      const cf = y===0 ? -capexNet*1000 : savRok*pf - opexPVGrunt*1000;
-      if (y>0) cum += cf;
-      const status = cum >= 0 ? t('<span class="pill green">✓ Zwrot</span>', '<span class="pill green">✓ Payback</span>') : t('<span class="pill red">Inwestycja</span>', '<span class="pill red">Investment</span>');
-      const cena = Math.round(cS*pf);
-      return `<tr><td class="td-mono">${y}</td><td class="td-mono">${cena}</td><td class="td-mono">${y===0?'—':fmt(Math.round(savRok*pf))}</td><td class="td-mono ${cf<0?'td-red':'td-green'}">${fmt(Math.round(cf))}</td><td class="td-mono ${cum<0?'td-amber':'td-green'}">${fmt(Math.round(cum))}</td><td>${status}</td></tr>`;
+    g('tbl_cashflow_body').innerHTML = `<tr><td class="td-mono">0 <small style="color:var(--text3)">(100%)</small></td><td class="td-mono">${cS}</td><td class="td-mono">—</td><td class="td-mono td-red">${fmt(Math.round(-capexNet*1000))}</td><td class="td-mono td-red">${fmt(Math.round(-capexNet*1000))}</td><td><span class="pill red">Inwestycja</span></td></tr>` + 
+    yearlyData.map(d => {
+      const status = cfArr[d.y] >= 0 ? t('<span class="pill green">✓ Zwrot</span>', '<span class="pill green">✓ Payback</span>') : t('<span class="pill red">Inwestycja</span>', '<span class="pill red">Investment</span>');
+      const cena = Math.round(cS * d.pf);
+      const wymianaHTML = d.repCost > 0 ? `<br><small style="color:var(--red); font-weight:bold; font-size:11px;">- Wymiana MEE</small>` : '';
+      const savRoz = fmt(Math.round(d.savRok_y * d.pf));
+      
+      // Obliczanie realnego procentu pojemności
+      const procCap = baseCap > 0 ? fmtD(d.cap_y/baseCap*100,1) : 100;
+      
+      return `<tr><td class="td-mono">${d.y} <small style="color:var(--text3)">(${procCap}%)</small></td><td class="td-mono">${cena}</td><td class="td-mono">${savRoz}</td><td class="td-mono ${d.cf<0?'td-red':'td-green'}">${fmt(Math.round(d.cf))}${wymianaHTML}</td><td class="td-mono ${cfArr[d.y]<0?'td-amber':'td-green'}">${fmt(Math.round(cfArr[d.y]))}</td><td>${status}</td></tr>`;
     }).join('');
   }
+  
   
   // Wywołanie Doradcy AI na samym końcu kalkulacji
   generateAIAdvice();
