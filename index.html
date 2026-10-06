@@ -353,13 +353,38 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
         <div class="form-row"><span class="form-label" data-i18n="cfg-pvmoc">Moc zainstalowana PV [MW]</span><input type="range" id="pv_moc" min="0" max="300" step="1" value="30" onchange="upd(); document.getElementById('num_pv_moc').value=this.value"><input type="number" id="num_pv_moc" value="30" min="0" max="300" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('pv_moc').value=this.value; upd()"><span class="val-display" id="pv_v">30 MW</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-pveff">Sprawność falownika [%]</span><input type="range" id="pv_inv" min="92" max="99" step="0.5" value="97" oninput="upd()"><span class="val-display" id="pv_inv_v">97%</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-pvloss">Straty (zacienienie) [%]</span><input type="range" id="pv_loss" min="0" max="15" step="1" value="5" oninput="upd()"><span class="val-display" id="pv_loss_v">5%</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-sezon">Sezon (nasłonecznienie)</span>
-          <select id="sezon" onchange="upd()">
-            <option value="lato" data-i18n="opt-lato">Lato — szczyt 65% mocy</option>
-            <option value="wiosna" selected data-i18n="opt-wiosna">Wiosna / Jesień — szczyt 40%</option>
-            <option value="zima" data-i18n="opt-zima">Zima — szczyt 20%</option>
+        
+        <!-- NOWE: PRZEŁĄCZNIK ŹRÓDŁA PV -->
+        <div class="form-row" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);">
+          <span class="form-label" style="font-weight: 600; color: var(--amber2);">Źródło nasłonecznienia:</span>
+          <select id="pv_data_source" onchange="togglePVSource()" style="border-color: var(--amber2); font-weight: bold; width: 100%;">
+            <option value="manual">Model astronomiczny (Standard)</option>
+            <option value="api">API Pogodowe (Open-Meteo)</option>
           </select>
         </div>
+
+        <!-- BLOK RĘCZNY PV -->
+        <div id="pv_box_manual">
+          <div class="form-row"><span class="form-label" data-i18n="cfg-sezon">Sezon (wykres 24h)</span>
+            <select id="sezon" onchange="upd()">
+              <option value="lato" data-i18n="opt-lato">Lato — szczyt 65% mocy</option>
+              <option value="wiosna" selected data-i18n="opt-wiosna">Wiosna / Jesień — szczyt 40%</option>
+              <option value="zima" data-i18n="opt-zima">Zima — szczyt 20%</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- BLOK API PV -->
+        <div id="pv_box_api" style="display: none; padding: 15px; background: var(--bg3); border: 1px dashed var(--amber); border-radius: var(--radius); margin-top: 5px;">
+           <div style="font-size: 11px; margin-bottom: 8px;">Współrzędne (Domyślnie Piła / PL):</div>
+           <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+             <input type="number" id="api_lat" value="53.15" step="0.01" style="flex:1" placeholder="Lat">
+             <input type="number" id="api_lon" value="16.73" step="0.01" style="flex:1" placeholder="Lon">
+           </div>
+           <button class="btn" onclick="fetchWeatherData()" id="btn_weather_fetch" style="border-color: var(--amber); color: var(--amber2); width: 100%;">Pobierz 8760h radiacji</button>
+           <div id="weather_status" style="font-size: 11px; margin-top: 8px; color: var(--text2);">Gotowy do połączenia z API.</div>
+        </div>
+      </div>
       </div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--green)"></span><span data-i18n="cfg-fw">Elektrownia wiatrowa (FW)</span></div>
@@ -1287,11 +1312,19 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
       ? window.uploadedProfile8760[h] 
       : demandProfile(tryb, pp, pn, pd, dayScale)[hourOfDay];
 
-    // 2. NOWY MODEL PV: Astronomiczny kąt padania słońca
-    const decl = 23.45 * Math.sin((284 + day) / 365 * 2 * Math.PI) * (Math.PI / 180);
-    const hrAngle = (hourOfDay - 12) * 15 * (Math.PI / 180);
-    const sinAlt = Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(hrAngle);
-    out.pv[h] = sinAlt > 0 ? maxPv * Math.pow(sinAlt, 1.1) : 0;
+    // 2. NOWY MODEL PV: Astronomiczny kąt padania słońca vs API Pogodowe
+    const usePVAPI = document.getElementById('pv_data_source') && document.getElementById('pv_data_source').value === 'api' && window.uploadedPV8760;
+
+    if (usePVAPI) {
+        // Mnożymy ułamek z API (radiacja / 1000) przez maxPv (uwzględnia sprawność inwertera i straty sieci)
+        out.pv[h] = window.uploadedPV8760[h] * maxPv;
+    } else {
+        // Tryb ręczny: matematyczny wzór pozycji Słońca (bezchmurne niebo)
+        const decl = 23.45 * Math.sin((284 + day) / 365 * 2 * Math.PI) * (Math.PI / 180);
+        const hrAngle = (hourOfDay - 12) * 15 * (Math.PI / 180);
+        const sinAlt = Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(hrAngle);
+        out.pv[h] = sinAlt > 0 ? maxPv * Math.pow(sinAlt, 1.1) : 0;
+    }
 
     // 3. Wiatr i całkowite OZE
     out.fw[h] = fwDaily[hourOfDay];
@@ -2528,6 +2561,66 @@ function toggleDataSource() {
 
    upd(); // Odśwież wykresy
 }
+
+// ============================================================
+// LOGIKA API POGODOWEGO (OPEN-METEO)
+// ============================================================
+window.uploadedPV8760 = null;
+
+function togglePVSource() {
+   const isAPI = document.getElementById('pv_data_source').value === 'api';
+   document.getElementById('pv_box_manual').style.display = isAPI ? 'none' : 'block';
+   document.getElementById('pv_box_api').style.display = isAPI ? 'block' : 'none';
+   if (!isAPI) {
+       window.uploadedPV8760 = null;
+   }
+   upd(); // Odśwież wykresy
+}
+
+async function fetchWeatherData() {
+    const statusEl = document.getElementById('weather_status');
+    const btn = document.getElementById('btn_weather_fetch');
+    const lat = document.getElementById('api_lat').value || 53.15;
+    const lon = document.getElementById('api_lon').value || 16.73;
+
+    statusEl.className = 'ins warn';
+    statusEl.innerHTML = '⏳ Łączenie z darmowym API Open-Meteo (pobieranie 8760h zeszłego roku)...';
+    btn.disabled = true;
+
+    try {
+        // Pobieramy dane dla ostatniego pełnego roku nieprzestępnego (np. 2023), aby mieć równe 8760 godzin
+        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=2023-01-01&end_date=2023-12-31&hourly=shortwave_radiation`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Błąd połączenia z serwerem pogodowym');
+        const data = await res.json();
+        
+        if (!data || !data.hourly || !data.hourly.shortwave_radiation) {
+            throw new Error('Otrzymano pusty profil radiacji z API.');
+        }
+
+        // Open-Meteo zwraca dane w Watach na metr kwadratowy (W/m²). 
+        // 1000 W/m² to standard STC (100% mocy panelu). Tworzymy tablicę mnożników (0.0 do ~1.1)
+        const rad = data.hourly.shortwave_radiation;
+        const arr = new Float32Array(8760);
+        for(let i=0; i<8760; i++) {
+            let w = rad[i];
+            if (w === null || isNaN(w) || w < 0) w = 0;
+            arr[i] = w / 1000.0;
+        }
+
+        window.uploadedPV8760 = arr;
+        statusEl.className = 'ins good';
+        statusEl.innerHTML = `✅ Sukces. Załadowano profil solarny dla wsp. [${lat}, ${lon}].`;
+        btn.textContent = '✅ Pobrano (Zmień wsp. by ponowić)';
+        upd();
+    } catch (err) {
+        statusEl.className = 'ins red';
+        statusEl.innerHTML = `❌ Błąd API: ${err.message}`;
+    } finally {
+        btn.disabled = false;
+    }
+}
+
 
 </script>
 
