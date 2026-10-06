@@ -385,7 +385,6 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
            <div id="weather_status" style="font-size: 11px; margin-top: 8px; color: var(--text2);">Gotowy do połączenia z API.</div>
         </div>
       </div>
-      </div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--green)"></span><span data-i18n="cfg-fw">Elektrownia wiatrowa (FW)</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-fwmoc">Moc zainstalowana FW [MW]</span><input type="range" id="fw_moc" min="0" max="150" step="1" value="16" onchange="upd(); document.getElementById('num_fw_moc').value=this.value"><input type="number" id="num_fw_moc" value="16" min="0" max="150" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('fw_moc').value=this.value; upd()"><span class="val-display" id="fw_v">16 MW</span></div>
