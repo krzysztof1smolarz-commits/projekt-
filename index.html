@@ -1266,29 +1266,24 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
   };
 
   let soc = meeMWh * 0.3; 
-  const basePv = pvProfileNetto('wiosna', pvMW, invEff, lossEff);
+  // Prawdziwy model astronomiczny (Polska ~52° N)
+  const lat = 52.0 * (Math.PI / 180); 
+  const maxPv = pvM * (invEff / 100) * (1 - lossEff / 100);
   
-  for (let h = 0; h < hoursInYear; h++) {
-    const dayOfYear = Math.floor(h / 24);
+  const day = Math.floor(h / 24);
     const hourOfDay = h % 24;
-    const dayOfWeek = (dayOfYear + 3) % 7;
 
-    let dayScale = 1.0;
-    if (dayOfWeek === 5) dayScale = 0.8; 
-    if (dayOfWeek === 6) dayScale = 0.3; 
+    // --- NOWY MODEL PV: Astronomiczny kąt padania słońca ---
+    // 1. Deklinacja słoneczna dla danego dnia w roku (-23.45° do +23.45°)
+    const decl = 23.45 * Math.sin((284 + day) / 365 * 2 * Math.PI) * (Math.PI / 180);
+    // 2. Kąt godzinny (przesunięcie względem słonecznego południa ok. 12:00)
+    const hrAngle = (hourOfDay - 12) * 15 * (Math.PI / 180);
+    // 3. Wysokość słońca na niebie (elewacja)
+    const sinAlt = Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(hrAngle);
     
-   // Zapotrzebowanie uzależnione od wyboru użytkownika na przełączniku
-    const useCSV = document.getElementById('data_source') && document.getElementById('data_source').value === 'csv';
-    
-    out.dem[h] = (useCSV && window.uploadedProfile8760) 
-      ? window.uploadedProfile8760[h] 
-      : demandProfile(tryb, pp, pn, pd, dayScale)[hourOfDay];
-
-    // OZE z sezonowością
-    const seasonFactor = 1 + Math.sin((dayOfYear / 365) * Math.PI * 2 - Math.PI/2) * 0.4; 
-    out.pv[h] = basePv[hourOfDay] * seasonFactor;
-    out.fw[h] = fwProfile(fwMW, fwW, fwV)[hourOfDay]; 
-    out.oze[h] = out.pv[h] + out.fw[h];
+    // Jeśli słońce nad horyzontem, obliczamy moc. 
+    // Potęgujemy (1.1) by urealnić spadek wydajności paneli przy niskim słońcu (kąt padania)
+    out.pv[h] = sinAlt > 0 ? maxPv * Math.pow(sinAlt, 1.1) : 0;
 
 // 3. CENY ENERGII: Używamy danych z API (jeśli są) lub ze stref czasowych
     const isCheapHour = (hourOfDay < 6 || hourOfDay >= 21);
