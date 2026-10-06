@@ -1268,28 +1268,39 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
   let soc = meeMWh * 0.3; 
   // Prawdziwy model astronomiczny (Polska ~52° N)
   const lat = 52.0 * (Math.PI / 180); 
-  const maxPv = pvM * (invEff / 100) * (1 - lossEff / 100);
-  
-  const day = Math.floor(h / 24);
+  const maxPv = pvMW * (invEff / 100) * (1 - lossEff / 100);
+  const fwDaily = fwProfile(fwMW, fwW, fwV);
+
+  // GŁÓWNA PĘTLA
+  for (let h = 0; h < hoursInYear; h++) {
+    const day = Math.floor(h / 24);
     const hourOfDay = h % 24;
 
-    // --- NOWY MODEL PV: Astronomiczny kąt padania słońca ---
-    // 1. Deklinacja słoneczna dla danego dnia w roku (-23.45° do +23.45°)
-    const decl = 23.45 * Math.sin((284 + day) / 365 * 2 * Math.PI) * (Math.PI / 180);
-    // 2. Kąt godzinny (przesunięcie względem słonecznego południa ok. 12:00)
-    const hrAngle = (hourOfDay - 12) * 15 * (Math.PI / 180);
-    // 3. Wysokość słońca na niebie (elewacja)
-    const sinAlt = Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(hrAngle);
+    // 1. Zapotrzebowanie
+    const useCSV = document.getElementById('data_source') && document.getElementById('data_source').value === 'csv';
+    let dayScale = 1.0;
+    const dayOfWeek = (day + 3) % 7; 
+    if (dayOfWeek === 5) dayScale = 0.8; 
+    else if (dayOfWeek === 6) dayScale = 0.3;
     
-    // Jeśli słońce nad horyzontem, obliczamy moc. 
-    // Potęgujemy (1.1) by urealnić spadek wydajności paneli przy niskim słońcu (kąt padania)
+    out.dem[h] = (useCSV && window.uploadedProfile8760) 
+      ? window.uploadedProfile8760[h] 
+      : demandProfile(tryb, pp, pn, pd, dayScale)[hourOfDay];
+
+    // 2. NOWY MODEL PV: Astronomiczny kąt padania słońca
+    const decl = 23.45 * Math.sin((284 + day) / 365 * 2 * Math.PI) * (Math.PI / 180);
+    const hrAngle = (hourOfDay - 12) * 15 * (Math.PI / 180);
+    const sinAlt = Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(hrAngle);
     out.pv[h] = sinAlt > 0 ? maxPv * Math.pow(sinAlt, 1.1) : 0;
 
-// 3. CENY ENERGII: Używamy danych z API (jeśli są) lub ze stref czasowych
+    // 3. Wiatr i całkowite OZE
+    out.fw[h] = fwDaily[hourOfDay];
+    out.oze[h] = out.pv[h] + out.fw[h];
+
+    // 4. CENY ENERGII
     const isCheapHour = (hourOfDay < 6 || hourOfDay >= 21);
     out.prices[h] = window.uploadedPrices8760 ? window.uploadedPrices8760[h] : (isCheapHour ? cN : cS);
 
-    // Kiedy ładować a kiedy rozładowywać? (Oparte na suwakach taryf jako progach odniesienia)
     const currentPrice = out.prices[h];
     const isPriceCheap = window.uploadedPrices8760 ? (currentPrice <= cN) : isCheapHour;
     const isPriceExpensive = window.uploadedPrices8760 ? (currentPrice >= cS) : !isCheapHour;
@@ -1297,31 +1308,27 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     let gap = out.dem[h] - out.oze[h];
     let mee = 0;
 
-    // LOGIKA STRATEGII EMS (Maksymalna Autokonsumpcja vs Arbitraż RDN)
+    // LOGIKA STRATEGII EMS
     if (emsMode === 'arbitrage') {
         if (isPriceCheap && soc < meeMWh) {
-            // Cena spadła poniżej taryfy nocnej (często < 0 PLN)! Ładujemy z sieci.
             const ch = Math.min(meeMW, meeMWh - soc);
             soc = Math.min(meeMWh, soc + ch * rtEff);
             mee = ch;
             gap += ch; 
         } 
         else if (isPriceExpensive && soc > 0 && gap > 0) {
-            // Cena jest w szczycie! Ratujemy zakład prądem z baterii.
             const dis = Math.min(gap, meeMW, soc);
             soc = Math.max(0, soc - dis);
             mee = -dis;
             gap -= dis * rtEff;
         } 
         else if (gap < 0 && soc < meeMWh) {
-            // Ładowanie darmowych nadwyżek z OZE niezależnie od ceny
             const ch = Math.min(-gap, meeMW, meeMWh - soc);
             soc = Math.min(meeMWh, soc + ch * rtEff);
             mee = ch;
             gap += ch;
         }
     } else {
-        // STANDARD (Autokonsumpcja): Ładuje tylko z nadwyżek, zrzuca gdy brakuje słońca
         if (gap < 0) {
             const surplusOze = -gap;
             const ch = Math.min(surplusOze, meeMW, meeMWh - soc);
@@ -2313,30 +2320,26 @@ function generateAIAdvice() {
   let adviceEN = "Based on the plant profile analysis, <b>the system recommends:</b><br><br>";
   let hasAdvice = false;
 
-  // REGUŁA 1: Zmarnowana nadwyżka z OZE
   if (totalSurp > totalDem * 0.05) {
      const lostMWh = Math.round(totalSurp);
-     const recMWh = Math.round((totalSurp / 365) * 0.6); // Orientacyjna propozycja dobowego magazynu
+     const recMWh = Math.round((totalSurp / 365) * 0.6); 
      advicePL += `🔹 <b>Utrata darmowej energii:</b> Fabryka traci rocznie ok. <b>${fmt(lostMWh)} MWh</b> z OZE. Zdecydowanie zalecam <b>rozbudowę pojemności MEE o ok. ${recMWh} MWh</b>, aby przechwycić tę energię i zbić koszty szczytowe.<br><br>`;
      adviceEN += `🔹 <b>Free energy loss:</b> The plant loses approx. <b>${fmt(lostMWh)} MWh</b> of RES yearly. I highly recommend <b>expanding BESS capacity by ~${recMWh} MWh</b> to capture this energy.<br><br>`;
      hasAdvice = true;
   }
 
-  // REGUŁA 2: Niewykorzystany Arbitraż (gdy spread cenowy jest duży, a magazyn mały)
   if (emsMode === 'auto' && (cS - cN) >= 250 && meeK > 0) {
      advicePL += `🔹 <b>Potencjał Rynku Dnia Następnego:</b> Różnica cenowa między szczytem a doliną to aż ${cS - cN} PLN/MWh. Przełącz <b>Strategię MEE na Arbitraż cenowy</b> w zakładce Konfiguracja, aby magazyn zaczął agresywnie zarabiać na tanim nocnym prądzie.<br><br>`;
      adviceEN += `🔹 <b>Day-Ahead Market Potential:</b> The price spread is ${cS - cN} PLN/MWh. Switch the <b>BESS Strategy to Price Arbitrage</b> to let the battery profit aggressively from cheap night electricity.<br><br>`;
      hasAdvice = true;
   }
 
-  // REGUŁA 3: Duże zużycie w nocy, brak wiatru (Zakład 3-zmianowy)
   if (pn > 20 && fwM < (pvM * 0.4)) {
      advicePL += `🔹 <b>Optymalizacja profilu nocnego:</b> Zakład pracujący na 3 zmiany zużywa dużo prądu w nocy (zapotrzebowanie nocne ${pn}%), gdy fotowoltaika nie działa. Inwestycja w <b>turbiny wiatrowe (FW)</b> znacznie lepiej zbilansuje Twój profil niż samo PV.<br><br>`;
      adviceEN += `🔹 <b>Night profile optimization:</b> The 3-shift plant consumes heavily at night (${pn}% demand) when PV is off. Investing in <b>wind turbines (FW)</b> will balance your profile much better than just PV.<br><br>`;
      hasAdvice = true;
   }
   
-  // REGUŁA 4: Jeśli system jest bliski ideału
   if (!hasAdvice && coverage > 0.6) {
      advicePL += `🔹 <b>Status optymalny:</b> System jest doskonale zbilansowany (ponad 60% niezależności energetycznej). Rozbudowa infrastruktury przyniesie już tylko marginalne zyski (prawo malejących przychodów).`;
      adviceEN += `🔹 <b>Optimal status:</b> The system is perfectly balanced (>60% energy independence). Further expansion will yield diminishing returns.`;
@@ -2345,6 +2348,21 @@ function generateAIAdvice() {
   const advisorEl = g('ai_advisor_text');
   if (advisorEl) {
      advisorEl.innerHTML = currentLang === 'pl' ? advicePL : adviceEN;
+  }
+}
+
+function copyReport() {
+  const el = g('report-content');
+  if (!el) return;
+  let text = el.innerText;
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopyStatus(t('Skopiowano!','Copied!'));
+    }).catch(() => {
+      copyReportFallback(text);
+    });
+  } else {
+    copyReportFallback(text);
   }
 }
   
