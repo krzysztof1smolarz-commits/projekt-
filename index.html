@@ -1270,6 +1270,63 @@ function demandProfile(tryb, pp, pn, pd, dayScale=1.0) {
   });
 }
 
+// ============================================================
+// INTEGRACJA ROZKŁADU WEIBULLA DLA AEP (ZGODNIE ZE SCHEMATEM)
+// ============================================================
+function generateWindPower8760(fwMW, avgWind, variability) {
+  const k = 2.0;
+  const lambda = avgWind * 1.128; // Skala dla rozkładu Rayleigha (k=2)
+  const vFrac = variability / 100;
+  const arr = new Float32Array(8760);
+  
+  // 1. Zbuduj teoretyczną sumę AEP z rozkładu Weibulla (metoda koszykowa z obrazka)
+  let theoreticalAEP = 0;
+  for (let v = 1; v <= 25; v++) { // Zakres 1-25 m/s (powyżej 25m/s turbina ma cut-out = 0 MW)
+      // Obliczamy prawdopodobieństwo wystąpienia prędkości (np. od 2.5 m/s do 3.5 m/s dla koszyka 3 m/s)
+      const cdfUpper = 1 - Math.exp(-Math.pow((v + 0.5) / lambda, k));
+      const cdfLower = 1 - Math.exp(-Math.pow(Math.max(0, v - 0.5) / lambda, k));
+      const prob = cdfUpper - cdfLower; 
+      
+      // Mnożymy: prawdopodobieństwo * moc w danym punkcie * 8760 godzin
+      theoreticalAEP += prob * windEfficiency(v) * fwMW * 8760;
+  }
+  
+  if (theoreticalAEP === 0) return arr;
+  
+  // 2. Generuj bazowy profil 8760h (dla dynamiki pracy magazynu MEE)
+  let simulatedAEP = 0;
+  const hourlyMod = [0.82,0.78,0.74,0.70,0.72,0.76,0.80,0.88,0.95,1.0,1.03,1.05,1.02,0.98,0.94,0.90,0.93,0.97,1.02,1.05,1.01,0.96,0.90,0.85];
+  
+  for(let h = 0; h < 8760; h++) {
+      const d = Math.floor(h / 24);
+      const hr = h % 24;
+      
+      const seasonFactor = 1.0 + Math.cos((d - 15) / 365 * 2 * Math.PI) * 0.20 * vFrac; // Zimą wieje mocniej
+      const noise1 = Math.sin(h * 0.05 + 0.8) * 0.4;
+      const noise2 = Math.sin(h * 0.2 + 2.3) * 0.2;
+      const totalNoise = (noise1 + noise2) * vFrac;
+      
+      let currentWind = avgWind * hourlyMod[hr] * seasonFactor * (1 + totalNoise);
+      if (currentWind < 0) currentWind = 0;
+      
+      const power = windEfficiency(currentWind) * fwMW;
+      arr[h] = power;
+      simulatedAEP += power;
+  }
+  
+  // 3. Kalibracja krzywej - upewniamy się, że wynik profilu w 100% zgadza się z czystym modelem matematycznym
+  if (simulatedAEP > 0) {
+      const correction = theoreticalAEP / simulatedAEP;
+      for(let h = 0; h < 8760; h++) {
+          let calibrated = arr[h] * correction;
+          if (calibrated > fwMW) calibrated = fwMW; // ogranicz do mocy maksymalnej
+          arr[h] = parseFloat(calibrated.toFixed(3));
+      }
+  }
+  
+  return arr;
+}
+
 // ----------------------------------------------------
 // SILNIK V2.0 (8760h) Z INTELIGENTNYM EMS (ARBITRAŻ)
 // ----------------------------------------------------
@@ -1293,7 +1350,9 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
   // Prawdziwy model astronomiczny (Polska ~52° N)
   const lat = 52.0 * (Math.PI / 180); 
   const maxPv = pvMW * (invEff / 100) * (1 - lossEff / 100);
-  const fwDaily = fwProfile(fwMW, fwW, fwV);
+  
+  // --- NOWY SYSTEM WIATROWY OPARTY O WEIBULLA ---
+  const fw8760 = generateWindPower8760(fwMW, fwW, fwV);
 
   // GŁÓWNA PĘTLA
   for (let h = 0; h < hoursInYear; h++) {
@@ -1326,7 +1385,7 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     }
 
     // 3. Wiatr i całkowite OZE
-    out.fw[h] = fwDaily[hourOfDay];
+    out.fw[h] = fw8760[h];
     out.oze[h] = out.pv[h] + out.fw[h];
 
     // 4. CENY ENERGII
@@ -1585,8 +1644,11 @@ function upd() {
   const costNoOze = calcCost(S.dem, cS, cN);
   const savings   = Math.max(0, costNoOze - costGrid);
   const meeSav    = Math.max(0, Math.round(meeE * (cS-cN) * 0.85));
-  const eff       = windEfficiency(fwW);
-  const avgFW     = parseFloat((eff*fwM).toFixed(1));
+  
+  // Obliczanie realnej sprawności z całorocznej krzywej Weibulla
+  const fwDayAvg  = S_8760.fw.reduce((a,b)=>a+b,0) / 365;
+  const avgFW     = parseFloat((fwDayAvg / 24).toFixed(2));
+  const eff       = fwM > 0 ? (avgFW / fwM) : 0;
 
   const pillEl = g('hdr_pokrycie');
   if(pillEl){
