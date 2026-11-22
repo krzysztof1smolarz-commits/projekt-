@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="pl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EnergoSym — etap 5: analiza inwestycji</title>
+<title>EnergoSym — etap 6: scenariusze i wygodna obsługa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com/">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>
 [hidden] {display:none !important;}
 #box_csv select {max-width:100%;min-width:0;}
@@ -242,13 +242,66 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   .report-section { page-break-inside: avoid; margin-bottom: 1.5rem; }
   .btn-primary, .btn { display: none !important; }
 }
+/* Etap 6: czytelność, klawiatura i raport. */
+:root {--text3:#b1afbc;}
+body.light-theme {--text3:#525866;--blue:#1768aa;--blue2:#145b98;--green:#126e45;--green2:#126e45;--amber:#985400;--amber2:#854800;--red:#b42332;--red2:#b42332;--purple:#6540b5;}
+:focus-visible {outline:3px solid var(--amber);outline-offset:3px;}
+button,select,summary {min-height:34px;}
+input[type=range] {height:24px;background:transparent;min-width:110px;}
+input[type=range]::-webkit-slider-runnable-track {height:5px;background:var(--surface2);border-radius:3px;}
+input[type=range]::-webkit-slider-thumb {margin-top:-5px;}
+.btn-primary {background:#1768aa;color:#fff;}
+button:disabled {opacity:.6;cursor:default;}
+.field-error {display:block;flex-basis:100%;color:var(--red2);font-size:12px;}
+[aria-invalid=true] {border:2px solid var(--red)!important;}
+.form-row {flex-wrap:wrap;}
+.form-row .form-label {min-width:190px;flex:1;}
+.form-row input[type=range] {flex:2;}
+.sr-only {position:absolute!important;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.skip-link {position:fixed;left:8px;top:-100px;z-index:10000;padding:10px;background:var(--bg2);color:var(--text);}
+.skip-link:focus {top:8px;}
+#ai_advisor_text {white-space:pre-line;font-style:normal;}
+.scenario-actions {display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;align-items:center;}
+.scenario-meta {font-size:12px;color:var(--text2);margin:8px 0;}
+.scenario-label {display:block;margin:10px 0 5px;color:var(--text2);}
+textarea,input[type=date] {background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:var(--radius);padding:7px;max-width:100%;font:inherit;}
+textarea {width:100%;min-height:75px;}
+.tbl-wrap:focus-visible {outline-offset:-3px;}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;}}
+@media(max-width:1100px){.form-row .form-label{min-width:0;flex-basis:100%;}.grid2>.card{min-width:0;}.form-row input[type=range]{flex:1;}}
+@media(max-width:600px){.main{padding:12px;}.form-row input[type=range]{width:100%;}.form-row input[type=number]{max-width:100%;}.scenario-actions>.btn{flex:1 1 auto;}}
+@media print {
+  @page {size:A4 portrait;margin:14mm;}
+  html,body {height:auto!important;min-height:0!important;overflow:visible!important;background:white!important;color:#111!important;}
+  body {font-size:10pt!important;}
+  .header,.sidebar,.skip-link,.scenario-actions,button,input,select,.chart-fallback {display:none!important;}
+  .layout,.main {display:block!important;width:100%!important;height:auto!important;overflow:visible!important;padding:0!important;}
+  .page {display:none!important;}#page-raport {display:block!important;}
+  #page-raport p,#page-raport small,#page-raport div {color:#111!important;}
+  #report-content {padding:0!important;border:0!important;}
+  .report-section {break-inside:auto!important;page-break-inside:auto!important;}
+  h3,h4 {break-after:avoid;page-break-after:avoid;}
+  table {font-size:8.5pt;table-layout:auto;}
+  thead {display:table-header-group;}tr {break-inside:avoid;page-break-inside:avoid;}
+  th,td {padding:5px;overflow-wrap:anywhere;}
+  .tbl-wrap {overflow:visible!important;max-width:100%;border-color:#bbb!important;}
+  .report-chart-wrap {break-inside:avoid;page-break-inside:avoid;}
+  .report-chart-wrap>div {height:65mm!important;}
+  .no-charts .report-chart-wrap>div {height:auto!important;}
+  .no-charts .report-chart-wrap canvas {display:none!important;}
+  .no-charts .report-chart-wrap .chart-fallback {display:block!important;}
+  a {color:#111;text-decoration:underline;}
+  .ins {border:1px solid #777!important;border-left-width:3px!important;background:white!important;color:#111!important;}
+}
+
 </style>
 </head>
 <body>
+<a href="#main_content" class="skip-link"><span data-s6-pl="Przejdź do wyników" data-s6-en="Skip to results">Przejdź do wyników</span></a>
 
 <header class="header">
   <div class="header-logo">EnergoSym<span>.pl</span></div>
-  <div class="header-sub" data-i18n="header-sub">Symulator energetyczny zakładu produkcyjnego — etap 4</div>
+  <div class="header-sub" data-i18n="header-sub">Symulator energetyczny zakładu produkcyjnego — etap 6</div>
   <div class="header-metrics">
     <span id="hdr_pokrycie" class="pill amber">Pokrycie 20%</span>
     <span id="hdr_koszt" style="font-family:var(--mono);font-size:12px;color:var(--text3)">Koszt sieci: — PLN/dobę</span>
@@ -284,11 +337,12 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
   <div class="nav-group">
     <div class="nav-group-label" data-i18n="group-doc">Dokumentacja</div>
+    <button class="nav-item" onclick="showPage('scenarios')"><span data-s6-pl="Zapisane scenariusze" data-s6-en="Saved scenarios">Zapisane scenariusze</span></button>
     <button class="nav-item" onclick="showPage('raport')" data-i18n="nav-raport">Raport / sprawozdanie</button>
   </div>
 </nav>
 
-<main class="main">
+<main class="main" id="main_content" tabindex="-1">
 
 <div class="page active" id="page-cfg">
   <div class="page-header">
@@ -298,17 +352,17 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   <div class="card" style="margin-bottom:14px">
     <div class="card-title">Wspólny rok i czas analizy</div>
     <div class="grid2">
-      <div class="form-row"><label for="analysis_year" class="form-label">Rok analizy</label><input type="number" id="analysis_year" min="2000" max="2099" step="1" value="2025" onchange="changeAnalysisTime()"></div>
-      <div class="form-row"><label for="analysis_zone" class="form-label">Strefa czasu analizy i dat CSV bez przesunięcia</label><select id="analysis_zone" onchange="changeAnalysisTime()"><option value="Europe/Warsaw">Europe/Warsaw — czas letni i zimowy</option><option value="UTC">UTC — bez zmiany czasu</option><option value="CET">Stałe UTC+01:00 — bez zmiany czasu</option></select></div>
+      <div class="form-row"><label for="analysis_year" class="form-label" data-s6-pl="Rok analizy" data-s6-en="Analysis year">Rok analizy</label><input type="number" id="analysis_year" min="2000" max="2099" step="1" value="2025" onchange="changeAnalysisTime()"></div>
+      <div class="form-row"><label for="analysis_zone" class="form-label" data-s6-pl="Strefa czasu analizy i dat CSV bez przesunięcia" data-s6-en="Analysis time zone and CSV dates without an offset">Strefa czasu analizy i dat CSV bez przesunięcia</label><select id="analysis_zone" onchange="changeAnalysisTime()"><option value="Europe/Warsaw">Europe/Warsaw — czas letni i zimowy</option><option value="UTC">UTC — bez zmiany czasu</option><option value="CET">Stałe UTC+01:00 — bez zmiany czasu</option></select></div>
     </div>
     <div id="time_axis_info" class="ins info"></div>
     <p style="font-size:12px;color:var(--text2)">Zmiana roku lub strefy wymaga ponownego zatwierdzenia CSV i pobrania pogody. Rok przestępny obejmuje pełne 8784 godziny. Daty z Z lub przesunięciem UTC są jednoznaczne i przeliczane na wybraną strefę.</p>
   </div>
 <div class="card" style="margin-bottom:14px">
-  <div class="card-title">Jednostki parametrów</div><div class="grid3">
-  <div><label for="power_unit">Moc przyłącza, PV, FW i MEE</label><select id="power_unit" onchange="changeDisplayUnits()"><option value="MW">MW</option><option value="kW">kW</option></select></div>
-  <div><label for="energy_unit">Pojemność magazynu</label><select id="energy_unit" onchange="changeDisplayUnits()"><option value="MWh">MWh</option><option value="kWh">kWh</option></select></div>
-  <div><label for="price_unit">Ceny zakupu i sprzedaży</label><select id="price_unit" onchange="changeDisplayUnits()"><option value="PLN/MWh">zł/MWh</option><option value="PLN/kWh">zł/kWh</option></select></div>
+  <div class="card-title" data-s6-pl="Jednostki parametrów" data-s6-en="Parameter units">Jednostki parametrów</div><div class="grid3">
+  <div><label for="power_unit" data-s6-pl="Moc przyłącza, PV, FW i MEE" data-s6-en="Connection, PV, wind and BESS power">Moc przyłącza, PV, FW i MEE</label><select id="power_unit" onchange="changeDisplayUnits()"><option value="MW">MW</option><option value="kW">kW</option></select></div>
+  <div><label for="energy_unit" data-s6-pl="Pojemność magazynu" data-s6-en="Storage capacity">Pojemność magazynu</label><select id="energy_unit" onchange="changeDisplayUnits()"><option value="MWh">MWh</option><option value="kWh">kWh</option></select></div>
+  <div><label for="price_unit" data-s6-pl="Ceny zakupu i sprzedaży" data-s6-en="Purchase and selling prices">Ceny zakupu i sprzedaży</label><select id="price_unit" onchange="changeDisplayUnits()"><option value="PLN/MWh">zł/MWh</option><option value="PLN/kWh">zł/kWh</option></select></div>
   </div><p style="font-size:12px;color:var(--text2);margin-top:8px">Zmiana jednostki przelicza zapis tej samej wartości: 1 MW = 1000 kW, 1 MWh = 1000 kWh, 600 zł/MWh = 0,60 zł/kWh. Dotyczy pól w Parametrach ogólnych. Wykresy i raport podają własne jednostki MW/MWh; kwoty rachunku są w zł.</p>
 </div>
   <div id="app_data_status" class="ins info" role="status">Oczekiwanie na obliczenia…</div>
@@ -329,10 +383,10 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 
       <!-- BLOK RĘCZNY (SUWAKI) -->
       <div id="box_manual">
-        <div class="form-row"><label class="form-label" id="label_p_przyl" for="num_p_przyl">p_przyl</label><input type="hidden" id="p_przyl" value="30"><input type="range" id="slider_p_przyl" min="0" max="200" step="0.000001" value="30" onchange="UnitInputs.commit('p_przyl',true)"><input type="number" id="num_p_przyl" value="30" step="any" min="0" max="200" style="width:110px;padding:4px" onchange="UnitInputs.commit('p_przyl')"><span class="val-display" id="p_przyl_v">—</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-noc">Zapotrzebowanie nocne 22–6 [%]</span><input type="range" id="p_noc" min="20" max="60" step="5" value="35" oninput="upd()"><span class="val-display" id="p_noc_v">35%</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-dzien">Zapotrzebowanie dzienne 6–22 [%]</span><input type="range" id="p_dzien" min="60" max="95" step="5" value="85" oninput="upd()"><span class="val-display" id="p_dzien_v">85%</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-tryb">Tryb pracy zakładu</span>
+        <div class="form-row"><label class="form-label" id="label_p_przyl" for="num_p_przyl">p_przyl</label><input type="hidden" id="p_przyl" value="30"><input type="range" id="slider_p_przyl" min="0" max="200" step="0.000001" value="30" oninput="UnitInputs.commit('p_przyl',true,true)" onchange="flushEnergy()"><input type="number" id="num_p_przyl" value="30" step="any" min="0" max="200" style="width:110px;padding:4px" oninput="UnitInputs.commit('p_przyl',false,true)" onchange="flushEnergy()"><span class="val-display" id="p_przyl_v">—</span></div>
+        <div class="form-row"><label class="form-label" for="p_noc" data-i18n="cfg-noc">Zapotrzebowanie nocne 22–6 [%]</label><input type="range" id="p_noc" min="0" max="100" step="5" value="35" oninput="scheduleUpdate(this.id)" onchange="flushEnergy()"><span class="val-display" id="p_noc_v">35%</span></div>
+        <div class="form-row"><label class="form-label" for="p_dzien" data-i18n="cfg-dzien">Zapotrzebowanie dzienne 6–22 [%]</label><input type="range" id="p_dzien" min="0" max="100" step="5" value="85" oninput="scheduleUpdate(this.id)" onchange="flushEnergy()"><span class="val-display" id="p_dzien_v">85%</span></div>
+        <div class="form-row"><label class="form-label" for="tryb" data-i18n="cfg-tryb">Tryb pracy zakładu</label>
           <select id="tryb" onchange="upd()">
             <option value="3" data-i18n="opt-3">3-zmianowy (równomierne 24h)</option>
             <option value="2" data-i18n="opt-2">2-zmianowy (aktywny 6–22)</option>
@@ -344,17 +398,17 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       <!-- BLOK CSV -->
       <div id="box_csv" style="display:none;margin-top:10px;padding:15px;background:var(--bg3);border:1px dashed var(--blue);border-radius:var(--radius)">
         <p style="margin-bottom:10px">1. Wczytaj CSV w UTF-8. 2. Wybierz kolumny i jednostki. 3. Sprawdź i zastosuj pełny rok.</p>
-        <div class="form-row"><label for="csv_separator" class="form-label">Separator kolumn</label><select id="csv_separator" onchange="csvOptionChanged(true)"><option value=";">Średnik (;)</option><option value=",">Przecinek (,)</option><option value="tab">Tabulator</option></select></div>
+        <div class="form-row"><label for="csv_separator" class="form-label" data-s6-pl="Separator kolumn" data-s6-en="Column separator">Separator kolumn</label><select id="csv_separator" onchange="csvOptionChanged(true)"><option value=";" data-s6-pl="Średnik (;)" data-s6-en="Semicolon (;)">Średnik (;)</option><option value="," data-s6-pl="Przecinek (,)" data-s6-en="Comma (,)">Przecinek (,)</option><option value="tab" data-s6-pl="Tabulator" data-s6-en="Tab">Tabulator</option></select></div>
         <div class="form-row"><label for="csv_header"><input type="checkbox" id="csv_header" checked onchange="csvOptionChanged(true)"> Pierwszy wiersz zawiera nazwy kolumn</label></div>
         <label for="csv_upload">Plik CSV (maks. 20 MB)</label>
         <input type="file" id="csv_upload" accept=".csv,text/csv" style="color:var(--text);font-size:12px;width:100%;margin:8px 0" onchange="loadCSVData(event)">
         <div id="csv_mapping" hidden>
-          <div class="form-row"><label for="csv_date_col" class="form-label">Kolumna daty i godziny</label><select id="csv_date_col" onchange="csvOptionChanged()"></select></div>
-          <div class="form-row"><label for="csv_value_col" class="form-label">Kolumna pomiaru</label><select id="csv_value_col" onchange="csvOptionChanged()"></select></div>
-          <div class="form-row"><label for="csv_unit" class="form-label">Jednostka pomiaru</label><select id="csv_unit" onchange="csvOptionChanged()"><option value="">— wybierz jednostkę —</option><option value="kW">kW — średnia moc w interwale</option><option value="MW">MW — średnia moc w interwale</option><option value="kWh">kWh — energia w interwale</option><option value="MWh">MWh — energia w interwale</option></select></div>
-          <div class="form-row"><label for="csv_interval" class="form-label">Interwał pomiarów</label><select id="csv_interval" onchange="csvOptionChanged()"><option value="">— wybierz interwał —</option><option value="60">Godzinowy (60 min)</option><option value="15">15-minutowy</option></select></div>
-          <div class="form-row"><label for="csv_decimal" class="form-label">Separator dziesiętny</label><select id="csv_decimal" onchange="csvOptionChanged()"><option value="dot">Kropka (12.5)</option><option value="comma">Przecinek (12,5)</option></select></div>
-          <div class="form-row"><label for="csv_stamp" class="form-label">Data oznacza</label><select id="csv_stamp" onchange="csvOptionChanged()"><option value="start">Początek interwału</option><option value="end">Koniec interwału</option></select></div>
+          <div class="form-row"><label for="csv_date_col" class="form-label" data-s6-pl="Kolumna daty i godziny" data-s6-en="Date and time column">Kolumna daty i godziny</label><select id="csv_date_col" onchange="csvOptionChanged()"></select></div>
+          <div class="form-row"><label for="csv_value_col" class="form-label" data-s6-pl="Kolumna pomiaru" data-s6-en="Measurement column">Kolumna pomiaru</label><select id="csv_value_col" onchange="csvOptionChanged()"></select></div>
+          <div class="form-row"><label for="csv_unit" class="form-label" data-s6-pl="Jednostka pomiaru" data-s6-en="Measurement unit">Jednostka pomiaru</label><select id="csv_unit" onchange="csvOptionChanged()"><option value="" data-s6-pl="— wybierz jednostkę —" data-s6-en="— select unit —">— wybierz jednostkę —</option><option value="kW">kW — średnia moc w interwale</option><option value="MW">MW — średnia moc w interwale</option><option value="kWh">kWh — energia w interwale</option><option value="MWh">MWh — energia w interwale</option></select></div>
+          <div class="form-row"><label for="csv_interval" class="form-label" data-s6-pl="Interwał pomiarów" data-s6-en="Measurement interval">Interwał pomiarów</label><select id="csv_interval" onchange="csvOptionChanged()"><option value="" data-s6-pl="— wybierz interwał —" data-s6-en="— select interval —">— wybierz interwał —</option><option value="60" data-s6-pl="Godzinowy (60 min)" data-s6-en="Hourly (60 min)">Godzinowy (60 min)</option><option value="15" data-s6-pl="15-minutowy" data-s6-en="15-minute">15-minutowy</option></select></div>
+          <div class="form-row"><label for="csv_decimal" class="form-label" data-s6-pl="Separator dziesiętny" data-s6-en="Decimal separator">Separator dziesiętny</label><select id="csv_decimal" onchange="csvOptionChanged()"><option value="dot" data-s6-pl="Kropka (12.5)" data-s6-en="Dot (12.5)">Kropka (12.5)</option><option value="comma" data-s6-pl="Przecinek (12,5)" data-s6-en="Comma (12,5)">Przecinek (12,5)</option></select></div>
+          <div class="form-row"><label for="csv_stamp" class="form-label" data-s6-pl="Data oznacza" data-s6-en="Timestamp refers to">Data oznacza</label><select id="csv_stamp" onchange="csvOptionChanged()"><option value="start" data-s6-pl="Początek interwału" data-s6-en="Interval start">Początek interwału</option><option value="end" data-s6-pl="Koniec interwału" data-s6-en="Interval end">Koniec interwału</option></select></div>
           <div class="ins info" style="font-size:12px">Daty: RRRR-MM-DD GG:mm lub DD.MM.RRRR GG:mm. Dopuszczalne sekundy :00 oraz przesunięcie Z, +01:00 lub +02:00. Daty bez przesunięcia odczytywane są w wybranej strefie analizy. Powtórzona jesienią godzina w Europe/Warsaw wymaga jawnego przesunięcia. Energia kWh/MWh oznacza zużycie w interwale, nie narastający stan licznika. Dane 15-minutowe są agregowane do godzin — bez utraty sumy energii.</div>
           <div id="csv_preview" class="tbl-wrap" style="margin:10px 0;max-height:220px;overflow:auto"></div>
         </div>
@@ -367,19 +421,19 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 
       <hr class="sdiv">
       <div class="stitle" data-i18n="cfg-ceny">Ceny energii elektrycznej</div>
-      <div class="form-row"><label for="price_source" class="form-label">Źródło cen zakupu</label><select id="price_source" onchange="changePriceSource()"><option value="tariff">Taryfa dwustrefowa — wpisane ceny</option><option value="demo">DEMO — syntetyczne ceny godzinowe</option></select></div>
+      <div class="form-row"><label for="price_source" class="form-label" data-s6-pl="Źródło cen zakupu" data-s6-en="Purchase-price source">Źródło cen zakupu</label><select id="price_source" onchange="changePriceSource()"><option value="tariff" data-s6-pl="Taryfa dwustrefowa — wpisane ceny" data-s6-en="Two-rate tariff — entered prices">Taryfa dwustrefowa — wpisane ceny</option><option value="demo" data-s6-pl="DEMO — syntetyczne ceny godzinowe" data-s6-en="DEMO — synthetic hourly prices">DEMO — syntetyczne ceny godzinowe</option></select></div>
       <div id="price_source_status" class="ins info" role="status"></div>
-      <div class="form-row"><label class="form-label" id="label_c_szczyt" for="num_c_szczyt">c_szczyt</label><input type="hidden" id="c_szczyt" value="600"><input type="number" id="num_c_szczyt" value="600" step="any"  style="width:110px;padding:4px" onchange="UnitInputs.commit('c_szczyt')"><span class="val-display" id="c_szczyt_v">—</span></div>
-      <div class="form-row"><label class="form-label" id="label_c_noc_pl" for="num_c_noc_pl">c_noc_pl</label><input type="hidden" id="c_noc_pl" value="250"><input type="number" id="num_c_noc_pl" value="250" step="any"  style="width:110px;padding:4px" onchange="UnitInputs.commit('c_noc_pl')"><span class="val-display" id="c_noc_v">—</span></div>
-      <div class="form-row"><span class="form-label" data-i18n="cfg-wzrost">Wzrost cen energii [%/rok]</span><input type="range" id="c_wzrost" min="0" max="15" step="0.5" value="4" oninput="upd()"><span class="val-display" id="c_wzrost_v">4%</span></div>
+      <div class="form-row"><label class="form-label" id="label_c_szczyt" for="num_c_szczyt">c_szczyt</label><input type="hidden" id="c_szczyt" value="600"><input type="number" id="num_c_szczyt" value="600" step="any"  style="width:110px;padding:4px" oninput="UnitInputs.commit('c_szczyt',false,true)" onchange="flushEnergy()"><span class="val-display" id="c_szczyt_v">—</span></div>
+      <div class="form-row"><label class="form-label" id="label_c_noc_pl" for="num_c_noc_pl">c_noc_pl</label><input type="hidden" id="c_noc_pl" value="250"><input type="number" id="num_c_noc_pl" value="250" step="any"  style="width:110px;padding:4px" oninput="UnitInputs.commit('c_noc_pl',false,true)" onchange="flushEnergy()"><span class="val-display" id="c_noc_v">—</span></div>
+      <div class="form-row"><label class="form-label" for="c_wzrost" data-i18n="cfg-wzrost">Wzrost cen energii [%/rok]</label><input type="range" id="c_wzrost" min="-50" max="100" step="0.5" value="4" oninput="scheduleUpdate(this.id)" onchange="flushEnergy()"><span class="val-display" id="c_wzrost_v">4%</span></div>
 
       <hr class="sdiv">
-<hr class="sdiv"><div class="stitle">Co dzieje się z nadwyżką po magazynie?</div>
-  <div class="form-row"><label for="surplus_mode" class="form-label">Sposób rozliczenia</label><select id="surplus_mode" onchange="changeSurplusPolicy()"><option value="free">Oddawanie do sieci bez zapłaty</option><option value="curtail">Ograniczanie niewykorzystanej produkcji</option><option value="sell">Sprzedaż nadwyżek</option></select></div>
-  <div class="form-row"><label class="form-label" id="label_export_limit_mw" for="num_export_limit_mw">export_limit_mw</label><input type="hidden" id="export_limit_mw" value="30"><input type="number" id="num_export_limit_mw" value="30" step="any" min="0" max="1000" style="width:110px;padding:4px" onchange="UnitInputs.commit('export_limit_mw')"></div>
+<hr class="sdiv"><div class="stitle" data-s6-pl="Co dzieje się z nadwyżką po magazynie?" data-s6-en="How is surplus after storage handled?">Co dzieje się z nadwyżką po magazynie?</div>
+  <div class="form-row"><label for="surplus_mode" class="form-label" data-s6-pl="Sposób rozliczenia" data-s6-en="Settlement method">Sposób rozliczenia</label><select id="surplus_mode" onchange="changeSurplusPolicy()"><option value="free" data-s6-pl="Oddawanie do sieci bez zapłaty" data-s6-en="Unpaid grid export">Oddawanie do sieci bez zapłaty</option><option value="curtail" data-s6-pl="Ograniczanie niewykorzystanej produkcji" data-s6-en="Curtail unused production">Ograniczanie niewykorzystanej produkcji</option><option value="sell" data-s6-pl="Sprzedaż nadwyżek" data-s6-en="Sell surplus">Sprzedaż nadwyżek</option></select></div>
+  <div class="form-row"><label class="form-label" id="label_export_limit_mw" for="num_export_limit_mw">export_limit_mw</label><input type="hidden" id="export_limit_mw" value="30"><input type="number" id="num_export_limit_mw" value="30" step="any" min="0" max="1000" style="width:110px;padding:4px" oninput="UnitInputs.commit('export_limit_mw',false,true)" onchange="flushEnergy()"></div>
   <div id="surplus_sell_options" hidden>
-  <div class="form-row"><label for="export_price_source" class="form-label">Cena sprzedaży</label><select id="export_price_source" onchange="changeSurplusPolicy()"><option value="fixed">Stała — wpisana poniżej</option><option value="indexed">Godzinowa taka jak zakup — założenie</option></select></div>
-  <div class="form-row"><label class="form-label" id="label_export_sell_price" for="num_export_sell_price">export_sell_price</label><input type="hidden" id="export_sell_price" value="250"><input type="number" id="num_export_sell_price" value="250" step="any"  style="width:110px;padding:4px" onchange="UnitInputs.commit('export_sell_price')"></div>
+  <div class="form-row"><label for="export_price_source" class="form-label" data-s6-pl="Cena sprzedaży" data-s6-en="Selling price">Cena sprzedaży</label><select id="export_price_source" onchange="changeSurplusPolicy()"><option value="fixed" data-s6-pl="Stała — wpisana poniżej" data-s6-en="Fixed — entered below">Stała — wpisana poniżej</option><option value="indexed" data-s6-pl="Godzinowa taka jak zakup — założenie" data-s6-en="Hourly same as purchase — assumption">Godzinowa taka jak zakup — założenie</option></select></div>
+  <div class="form-row"><label class="form-label" id="label_export_sell_price" for="num_export_sell_price">export_sell_price</label><input type="hidden" id="export_sell_price" value="250"><input type="number" id="num_export_sell_price" value="250" step="any"  style="width:110px;padding:4px" oninput="UnitInputs.commit('export_sell_price',false,true)" onchange="flushEnergy()"></div>
   <label><input type="checkbox" id="export_allow_negative" onchange="changeSurplusPolicy()"> Pozwól na sprzedaż przy cenie ujemnej (zwiększa koszty)</label>
   </div><div class="ins info" style="font-size:12px">Oddawanie bez zapłaty daje zerowy przychód. Sprzedaż daje przychód według wybranej ceny. Część niewyeksportowana, w tym ponad limit oddawania, jest ograniczana. Podany limit eksportu jest założeniem użytkownika, niezależnym od limitu poboru.</div>
       <!-- Generator DEMO — bez API PSE -->
@@ -399,9 +453,9 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--amber)"></span><span data-i18n="cfg-pv">Fotowoltaika (PV)</span></div>
-        <div class="form-row"><label class="form-label" id="label_pv_moc" for="num_pv_moc">pv_moc</label><input type="hidden" id="pv_moc" value="30"><input type="range" id="slider_pv_moc" min="0" max="300" step="0.000001" value="30" onchange="UnitInputs.commit('pv_moc',true)"><input type="number" id="num_pv_moc" value="30" step="any" min="0" max="300" style="width:110px;padding:4px" onchange="UnitInputs.commit('pv_moc')"><span class="val-display" id="pv_v">—</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-pveff">Sprawność falownika [%]</span><input type="range" id="pv_inv" min="92" max="99" step="0.5" value="97" oninput="upd()"><span class="val-display" id="pv_inv_v">97%</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-pvloss">Straty (zacienienie) [%]</span><input type="range" id="pv_loss" min="0" max="15" step="1" value="5" oninput="upd()"><span class="val-display" id="pv_loss_v">5%</span></div>
+        <div class="form-row"><label class="form-label" id="label_pv_moc" for="num_pv_moc">pv_moc</label><input type="hidden" id="pv_moc" value="30"><input type="range" id="slider_pv_moc" min="0" max="300" step="0.000001" value="30" oninput="UnitInputs.commit('pv_moc',true,true)" onchange="flushEnergy()"><input type="number" id="num_pv_moc" value="30" step="any" min="0" max="300" style="width:110px;padding:4px" oninput="UnitInputs.commit('pv_moc',false,true)" onchange="flushEnergy()"><span class="val-display" id="pv_v">—</span></div>
+        <div class="form-row"><label class="form-label" for="pv_inv" data-i18n="cfg-pveff">Sprawność falownika [%]</label><input type="range" id="pv_inv" min="0" max="100" step="0.5" value="97" oninput="scheduleUpdate(this.id)" onchange="flushEnergy()"><span class="val-display" id="pv_inv_v">97%</span></div>
+        <div class="form-row"><label class="form-label" for="pv_loss" data-i18n="cfg-pvloss">Straty (zacienienie) [%]</label><input type="range" id="pv_loss" min="0" max="100" step="1" value="5" oninput="scheduleUpdate(this.id)" onchange="flushEnergy()"><span class="val-display" id="pv_loss_v">5%</span></div>
         
         <!-- NOWE: PRZEŁĄCZNIK ŹRÓDŁA PV -->
         <div class="form-row" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);">
@@ -414,7 +468,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 
         <!-- BLOK RĘCZNY PV -->
         <div id="pv_box_manual">
-          <div class="form-row"><span class="form-label" data-i18n="cfg-sezon">Widok dobowy PV — filtr miesięcy</span>
+          <div class="form-row"><label class="form-label" for="sezon" data-i18n="cfg-sezon">Widok dobowy PV — filtr miesięcy</label>
             <select id="sezon" onchange="setPvSezon(this.value)">
               <option value="rok" selected data-i18n="opt-rok">Cały rok</option>
               <option value="lato" data-i18n="opt-lato">Lato (VI–VIII)</option>
@@ -437,23 +491,23 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       </div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--green)"></span><span data-i18n="cfg-fw">Elektrownia wiatrowa (FW)</span></div>
-        <div class="form-row"><label class="form-label" id="label_fw_moc" for="num_fw_moc">fw_moc</label><input type="hidden" id="fw_moc" value="16"><input type="range" id="slider_fw_moc" min="0" max="150" step="0.000001" value="16" onchange="UnitInputs.commit('fw_moc',true)"><input type="number" id="num_fw_moc" value="16" step="any" min="0" max="150" style="width:110px;padding:4px" onchange="UnitInputs.commit('fw_moc')"><span class="val-display" id="fw_v">—</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-fwwind">Śr. prędkość wiatru [m/s]</span><input type="range" id="fw_wind" min="0" max="25" step="0.5" value="8" oninput="upd()"><span class="val-display" id="fw_wind_v">8 m/s</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-fwvar">Zmienność dobowa wiatru [%]</span><input type="range" id="fw_var" min="0" max="60" step="5" value="20" oninput="upd()"><span class="val-display" id="fw_var_v">20%</span></div>
+        <div class="form-row"><label class="form-label" id="label_fw_moc" for="num_fw_moc">fw_moc</label><input type="hidden" id="fw_moc" value="16"><input type="range" id="slider_fw_moc" min="0" max="150" step="0.000001" value="16" oninput="UnitInputs.commit('fw_moc',true,true)" onchange="flushEnergy()"><input type="number" id="num_fw_moc" value="16" step="any" min="0" max="150" style="width:110px;padding:4px" oninput="UnitInputs.commit('fw_moc',false,true)" onchange="flushEnergy()"><span class="val-display" id="fw_v">—</span></div>
+        <div class="form-row"><label class="form-label" for="fw_wind" data-i18n="cfg-fwwind">Śr. prędkość wiatru [m/s]</label><input type="range" id="fw_wind" min="0" max="25" step="0.5" value="8" oninput="scheduleUpdate(this.id)" onchange="flushEnergy()"><span class="val-display" id="fw_wind_v">8 m/s</span></div>
+        <div class="form-row"><label class="form-label" for="fw_var" data-i18n="cfg-fwvar">Zmienność dobowa wiatru [%]</label><input type="range" id="fw_var" min="0" max="100" step="5" value="20" oninput="scheduleUpdate(this.id)" onchange="flushEnergy()"><span class="val-display" id="fw_var_v">20%</span></div>
         <div id="fw_status_cfg" class="fw-bar"></div>
       </div>
       <div class="card">
         <div class="card-title"><span class="card-title-dot" style="background:var(--purple)"></span><span data-i18n="cfg-mee">Magazyn energii (MEE)</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-ems">Strategia MEE (EMS)</span>
+        <div class="form-row"><label class="form-label" for="ems_mode" data-i18n="cfg-ems">Strategia MEE (EMS)</label>
           <select id="ems_mode" onchange="upd()" style="border-color: var(--purple);">
             <option value="auto" data-i18n="opt-ems-auto">Maksymalna Autokonsumpcja</option>
             <option value="arbitrage" data-i18n="opt-ems-arb">Arbitraż cenowy (RDN)</option>
           </select>
         </div>
-        <div class="form-row"><label class="form-label" id="label_mee_kwh" for="num_mee_kwh">mee_kwh</label><input type="hidden" id="mee_kwh" value="9"><input type="range" id="slider_mee_kwh" min="0" max="200" step="0.000001" value="9" onchange="UnitInputs.commit('mee_kwh',true)"><input type="number" id="num_mee_kwh" value="9" step="any" min="0" max="200" style="width:110px;padding:4px" onchange="UnitInputs.commit('mee_kwh')"><span class="val-display" id="mee_kwh_v">—</span></div>
-        <div class="form-row"><label class="form-label" id="label_mee_mw" for="num_mee_mw">mee_mw</label><input type="hidden" id="mee_mw" value="3"><input type="range" id="slider_mee_mw" min="0" max="100" step="0.000001" value="3" onchange="UnitInputs.commit('mee_mw',true)"><input type="number" id="num_mee_mw" value="3" step="any" min="0" max="100" style="width:110px;padding:4px" onchange="UnitInputs.commit('mee_mw')"><span class="val-display" id="mee_mw_v">—</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-meert">Sprawność round-trip [%]</span><input type="range" id="mee_eff" min="80" max="98" step="1" value="92" oninput="upd()"><span class="val-display" id="mee_eff_v">92%</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-meedeg">Degradacja pojemności [%/rok]</span><input type="range" id="mee_deg" min="0" max="4" step="0.5" value="2" oninput="upd()"><span class="val-display" id="mee_deg_v">2%</span></div>
+        <div class="form-row"><label class="form-label" id="label_mee_kwh" for="num_mee_kwh">mee_kwh</label><input type="hidden" id="mee_kwh" value="9"><input type="range" id="slider_mee_kwh" min="0" max="200" step="0.000001" value="9" oninput="UnitInputs.commit('mee_kwh',true,true)" onchange="flushEnergy()"><input type="number" id="num_mee_kwh" value="9" step="any" min="0" max="200" style="width:110px;padding:4px" oninput="UnitInputs.commit('mee_kwh',false,true)" onchange="flushEnergy()"><span class="val-display" id="mee_kwh_v">—</span></div>
+        <div class="form-row"><label class="form-label" id="label_mee_mw" for="num_mee_mw">mee_mw</label><input type="hidden" id="mee_mw" value="3"><input type="range" id="slider_mee_mw" min="0" max="100" step="0.000001" value="3" oninput="UnitInputs.commit('mee_mw',true,true)" onchange="flushEnergy()"><input type="number" id="num_mee_mw" value="3" step="any" min="0" max="100" style="width:110px;padding:4px" oninput="UnitInputs.commit('mee_mw',false,true)" onchange="flushEnergy()"><span class="val-display" id="mee_mw_v">—</span></div>
+        <div class="form-row"><label class="form-label" for="mee_eff" data-i18n="cfg-meert">Sprawność całego cyklu [%]</label><input type="range" id="mee_eff" min="1" max="100" step="1" value="92" oninput="scheduleUpdate(this.id)" onchange="flushEnergy()"><span class="val-display" id="mee_eff_v">92%</span></div>
+        <div class="form-row"><label class="form-label" for="mee_deg" data-i18n="cfg-meedeg">Degradacja pojemności [%/rok]</label><input type="range" id="mee_deg" min="0" max="30" step="0.5" value="2" oninput="scheduleUpdate(this.id)" onchange="flushEnergy()"><span class="val-display" id="mee_deg_v">2%</span></div>
       </div>
     </div>
   </div>
@@ -471,11 +525,11 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div class="mc blue"><div class="mc-label" data-i18n="mc-fw">Śr. prod. FW</div><div class="mc-value blue" id="cfg_fw_avg">—</div><div class="mc-unit">MW (średnia roczna)</div></div>
   </div>
   <div id="ins_cfg" class="ins warn"></div>
-<div class="stitle">Roczne rozliczenie energii</div>
+<div class="stitle" data-s6-pl="Roczne rozliczenie energii" data-s6-en="Annual energy settlement">Roczne rozliczenie energii</div>
  <div class="grid4">
- <div class="mc"><div class="mc-label">Koszt zakupu</div><div class="mc-value" id="cost_purchase_year">—</div><div class="mc-unit">zł/rok</div></div><div class="mc"><div class="mc-label">Przychód ze sprzedaży</div><div class="mc-value" id="cost_revenue_year">—</div><div class="mc-unit">zł/rok</div></div><div class="mc"><div class="mc-label">Koszt netto</div><div class="mc-value" id="cost_net_year">—</div><div class="mc-unit">zł/rok</div></div><div class="mc"><div class="mc-label">Oszczędność magazynu</div><div class="mc-value" id="cost_storage_year">—</div><div class="mc-unit">zł/rok</div></div>
+ <div class="mc"><div class="mc-label" data-s6-pl="Koszt zakupu" data-s6-en="Purchase cost">Koszt zakupu</div><div class="mc-value" id="cost_purchase_year">—</div><div class="mc-unit">zł/rok</div></div><div class="mc"><div class="mc-label" data-s6-pl="Przychód ze sprzedaży" data-s6-en="Sales revenue">Przychód ze sprzedaży</div><div class="mc-value" id="cost_revenue_year">—</div><div class="mc-unit">zł/rok</div></div><div class="mc"><div class="mc-label" data-s6-pl="Koszt netto" data-s6-en="Net cost">Koszt netto</div><div class="mc-value" id="cost_net_year">—</div><div class="mc-unit">zł/rok</div></div><div class="mc"><div class="mc-label" data-s6-pl="Oszczędność magazynu" data-s6-en="Storage savings">Oszczędność magazynu</div><div class="mc-value" id="cost_storage_year">—</div><div class="mc-unit">zł/rok</div></div>
  </div><div id="cost_source_summary" class="ins info"></div>
- <div class="grid3"><div class="mc"><div class="mc-label">Eksport</div><div class="mc-value" id="energy_export_year">—</div><div class="mc-unit">MWh/rok</div></div><div class="mc"><div class="mc-label">Ograniczona produkcja</div><div class="mc-value" id="energy_curtail_year">—</div><div class="mc-unit">MWh/rok</div></div><div class="mc"><div class="mc-label">Faktyczna produkcja OZE</div><div class="mc-value" id="energy_actual_year">—</div><div class="mc-unit">MWh/rok</div></div></div>
+ <div class="grid3"><div class="mc"><div class="mc-label" data-s6-pl="Eksport" data-s6-en="Export">Eksport</div><div class="mc-value" id="energy_export_year">—</div><div class="mc-unit">MWh/rok</div></div><div class="mc"><div class="mc-label" data-s6-pl="Ograniczona produkcja" data-s6-en="Curtailed production">Ograniczona produkcja</div><div class="mc-value" id="energy_curtail_year">—</div><div class="mc-unit">MWh/rok</div></div><div class="mc"><div class="mc-label" data-s6-pl="Faktyczna produkcja OZE" data-s6-en="Actual RES generation">Faktyczna produkcja OZE</div><div class="mc-value" id="energy_actual_year">—</div><div class="mc-unit">MWh/rok</div></div></div>
  <div id="surplus_summary" class="ins info"></div>
  <div class="card"><div class="cwm"><canvas id="c_settlement_monthly"></canvas></div></div>
 </div>
@@ -758,7 +812,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 
   <div class="sub-section" id="bilans_2">
-  <button class="btn" id="btn_hourly_settlement" onclick="downloadHourlySettlement()">Pobierz pełne rozliczenie godzinowe CSV</button>
+  <button class="btn" id="btn_hourly_settlement" onclick="downloadHourlySettlement()" data-s6-pl="Pobierz pełne rozliczenie godzinowe CSV" data-s6-en="Download full hourly settlement CSV">Pobierz pełne rozliczenie godzinowe CSV</button>
     <div class="stitle" data-i18n="zest-godz">Bilans energetyczny godzinowy (24h)</div>
     <div class="tbl-wrap" style="margin-bottom:1rem">
       <table>
@@ -783,41 +837,47 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 
 <div class="page" id="page-inwest">
   <div class="page-header"><h1 class="page-title"><span data-inv-pl="Analiza inwestycji — etap 5" data-inv-en="Investment analysis — stage 5">Analiza inwestycji — etap 5</span></h1><p class="page-desc"><span data-inv-pl="Porównanie kosztów bez rozbudowy i po rozbudowie przez ten sam okres." data-inv-en="Compare costs without and after expansion over the same period.">Porównanie kosztów bez rozbudowy i po rozbudowie przez ten sam okres.</span></p></div>
+<div class="card" style="margin-bottom:14px"><div class="card-title"><span data-s6-pl="Twój kosztorys — źródło założeń" data-s6-en="Your estimate — source of assumptions">Twój kosztorys — źródło założeń</span></div>
+<p class="scenario-meta"><span data-s6-pl="Ceny zależą od urządzeń, wykonawcy i lokalizacji. Stawki w aplikacji są roboczymi założeniami. Wpisz dane z własnej oferty; każdą ofertę możesz zapisać jako osobny scenariusz." data-s6-en="Prices depend on equipment, contractor and location. App rates are working assumptions. Enter your quotation and save each quotation as a separate scenario.">Ceny zależą od urządzeń, wykonawcy i lokalizacji. Stawki w aplikacji są roboczymi założeniami. Wpisz dane z własnej oferty; każdą ofertę możesz zapisać jako osobny scenariusz.</span></p>
+<div class="grid2"><div><label class="scenario-label" for="cost_basis"><span data-s6-pl="Podstawa cen" data-s6-en="Cost basis">Podstawa cen</span></label><select id="cost_basis" onchange="buildReport()"><option value="example" data-s6-pl="Robocze stawki — do weryfikacji" data-s6-en="Working rates — verify">Robocze stawki — do weryfikacji</option><option value="estimate" data-s6-pl="Własny szacunek" data-s6-en="Own estimate">Własny szacunek</option><option value="quote" data-s6-pl="Oferta / kosztorys wykonawcy" data-s6-en="Contractor quotation / estimate">Oferta / kosztorys wykonawcy</option></select></div>
+<div><label for="quote_source" class="scenario-label"><span data-s6-pl="Wykonawca lub źródło wyceny" data-s6-en="Contractor or estimate source">Wykonawca lub źródło wyceny</span></label><input type="text" id="quote_source" maxlength="200" onchange="buildReport()"></div><div><label for="quote_location" class="scenario-label"><span data-s6-pl="Lokalizacja inwestycji" data-s6-en="Investment location">Lokalizacja inwestycji</span></label><input type="text" id="quote_location" maxlength="200" onchange="buildReport()"></div><div><label for="quote_date" class="scenario-label"><span data-s6-pl="Data wyceny" data-s6-en="Estimate date">Data wyceny</span></label><input type="date" id="quote_date" maxlength="10" onchange="buildReport()"></div></div>
+<label class="scenario-label" for="quote_note"><span data-s6-pl="Zakres oferty i uwagi (np. VAT, montaż, przyłącze)" data-s6-en="Estimate scope and notes (e.g. VAT, installation, connection)">Zakres oferty i uwagi (np. VAT, montaż, przyłącze)</span></label><textarea id="quote_note" maxlength="1000" onchange="buildReport()"></textarea>
+</div>
   <div id="investment_status" class="ins info" role="status" aria-live="polite"></div>
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="showSub('inwest',0)"><span data-inv-pl="Parametry i wyniki" data-inv-en="Parameters and results">Parametry i wyniki</span></button><button class="sub-tab" onclick="showSub('inwest',1)"><span data-inv-pl="Porównanie wariantów" data-inv-en="Compare options">Porównanie wariantów</span></button><button class="sub-tab" onclick="showSub('inwest',2)"><span data-inv-pl="Przepływy gotówkowe" data-inv-en="Cash flows">Przepływy gotówkowe</span></button><button class="sub-tab" onclick="showSub('inwest',3)"><span data-inv-pl="Tabela szczegółowa" data-inv-en="Detailed table">Tabela szczegółowa</span></button>
   </div>
   <div class="sub-section active" id="inwest_0"><div class="grid2">
-    <div class="card"><div class="card-title"><span data-inv-pl="Parametry rozbudowy" data-inv-en="Expansion parameters">Parametry rozbudowy</span></div><div class="form-row"><label for="inv_pv_mw" class="form-label"><span data-inv-pl="Dodatkowa moc PV" data-inv-en="Added PV capacity">Dodatkowa moc PV</span></label><input type="number" id="inv_pv_mw" min="0" max="300" step="any" value="5" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">MW</span></div>
-<div class="form-row"><label for="inv_fw_mw" class="form-label"><span data-inv-pl="Dodatkowa moc wiatru" data-inv-en="Added wind capacity">Dodatkowa moc wiatru</span></label><input type="number" id="inv_fw_mw" min="0" max="150" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">MW</span></div>
-<div class="form-row"><label for="inv_mee_kwh" class="form-label"><span data-inv-pl="Dodatkowa pojemność MEE" data-inv-en="Added BESS capacity">Dodatkowa pojemność MEE</span></label><input type="number" id="inv_mee_kwh" min="0" max="200" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">MWh</span></div>
-<div class="form-row"><label for="inv_mee_mw" class="form-label"><span data-inv-pl="Dodatkowa moc MEE po stronie AC" data-inv-en="Added BESS AC power">Dodatkowa moc MEE po stronie AC</span></label><input type="number" id="inv_mee_mw" min="0" max="100" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">MW</span></div>
-      <div class="form-row"><label for="inv_pv_grunt" class="form-label"><span data-inv-pl="Grunt pod dodatkowe PV" data-inv-en="Land for added PV">Grunt pod dodatkowe PV</span></label><select id="inv_pv_grunt" onchange="calcInv()"><option value="zakup" data-inv-pl="Zakup" data-inv-en="Purchase">Zakup</option><option value="dzierzawa" data-inv-pl="Dzierżawa" data-inv-en="Lease">Dzierżawa</option><option value="wlasny" data-inv-pl="Własny grunt" data-inv-en="Owned land">Własny grunt</option></select></div>
-      <hr class="sdiv"><div class="stitle"><span data-inv-pl="Wspólne założenia finansowe" data-inv-en="Common financial assumptions">Wspólne założenia finansowe</span></div><div class="form-row"><label for="inv_horizon" class="form-label"><span data-inv-pl="Wspólny okres porównania" data-inv-en="Common comparison horizon">Wspólny okres porównania</span></label><input type="number" id="inv_horizon" min="1" max="40" step="1" value="20" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">lat / years</span></div>
-<div class="form-row"><label for="inv_discount" class="form-label"><span data-inv-pl="Stopa dyskontowa nominalna" data-inv-en="Nominal discount rate">Stopa dyskontowa nominalna</span></label><input type="number" id="inv_discount" min="0" max="100" step="any" value="6" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">%/rok</span></div>
-<div class="form-row"><label for="inv_dotacja" class="form-label"><span data-inv-pl="Dotacja do dodatkowych urządzeń (bez gruntu)" data-inv-en="Grant on added equipment (excluding land)">Dotacja do dodatkowych urządzeń (bez gruntu)</span></label><input type="number" id="inv_dotacja" min="0" max="100" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">%</span></div>
-      <details style="margin:12px 0"><summary style="cursor:pointer;padding:8px 0"><span data-inv-pl="Wiek, degradacja i wymiany baterii" data-inv-en="Battery age, degradation and replacements">Wiek, degradacja i wymiany baterii</span></summary><p style="font-size:12px"><span data-inv-pl="Degradacja roczna MEE i wzrost ceny zakupu pochodzą z Parametrów ogólnych. Wiek dotyczy pojemności nominalnej istniejących modułów." data-inv-en="Annual BESS degradation and purchase-price growth come from General parameters. Age applies to the nominal existing modules.">Degradacja roczna MEE i wzrost ceny zakupu pochodzą z Parametrów ogólnych. Wiek dotyczy pojemności nominalnej istniejących modułów.</span></p><div class="form-row"><label for="inv_existing_age" class="form-label"><span data-inv-pl="Wiek istniejącej baterii od ostatniej wymiany" data-inv-en="Existing battery age since last replacement">Wiek istniejącej baterii od ostatniej wymiany</span></label><input type="number" id="inv_existing_age" min="0" max="39" step="1" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">lat / years</span></div>
-<div class="form-row"><label for="inv_existing_life" class="form-label"><span data-inv-pl="Wymiana istniejącej baterii po" data-inv-en="Replace existing battery after">Wymiana istniejącej baterii po</span></label><input type="number" id="inv_existing_life" min="1" max="40" step="1" value="10" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">lat / years</span></div>
-<div class="form-row"><label for="inv_added_life" class="form-label"><span data-inv-pl="Wymiana dodanej baterii po" data-inv-en="Replace added battery after">Wymiana dodanej baterii po</span></label><input type="number" id="inv_added_life" min="1" max="40" step="1" value="10" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">lat / years</span></div>
-<div class="form-row"><label for="inv_replacement_cost" class="form-label"><span data-inv-pl="Wymiana modułów baterii (bez falownika/PCS)" data-inv-en="Battery module replacement (excluding PCS)">Wymiana modułów baterii (bez falownika/PCS)</span></label><input type="number" id="inv_replacement_cost" min="0" max="100000" step="any" value="900" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/kWh</span></div></details>
-      <details style="margin:12px 0"><summary style="cursor:pointer;padding:8px 0"><span data-inv-pl="Nakłady na urządzenia i grunt" data-inv-en="Equipment and land capital costs">Nakłady na urządzenia i grunt</span></summary><div class="form-row"><label for="inv_pv_cost" class="form-label"><span data-inv-pl="Zakup i instalacja PV" data-inv-en="PV purchase and installation">Zakup i instalacja PV</span></label><input type="number" id="inv_pv_cost" min="0" max="1000000" step="any" value="3500" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/kW</span></div>
-<div class="form-row"><label for="inv_wind_cost" class="form-label"><span data-inv-pl="Zakup i instalacja wiatru" data-inv-en="Wind purchase and installation">Zakup i instalacja wiatru</span></label><input type="number" id="inv_wind_cost" min="0" max="1000000" step="any" value="5000" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/kW</span></div>
-<div class="form-row"><label for="inv_battery_cost" class="form-label"><span data-inv-pl="Nowe moduły magazynu" data-inv-en="New battery modules">Nowe moduły magazynu</span></label><input type="number" id="inv_battery_cost" min="0" max="100000" step="any" value="900" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/kWh</span></div>
-<div class="form-row"><label for="inv_pcs_cost" class="form-label"><span data-inv-pl="Nowy falownik / PCS magazynu" data-inv-en="New BESS inverter / PCS">Nowy falownik / PCS magazynu</span></label><input type="number" id="inv_pcs_cost" min="0" max="1000000" step="any" value="200" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/kW</span></div>
-<div class="form-row"><label for="inv_land_area" class="form-label"><span data-inv-pl="Powierzchnia gruntu dla dodanego PV" data-inv-en="Land required for added PV">Powierzchnia gruntu dla dodanego PV</span></label><input type="number" id="inv_land_area" min="0" max="1000" step="any" value="1.3" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">ha/MW</span></div>
-<div class="form-row"><label for="inv_land_buy" class="form-label"><span data-inv-pl="Cena zakupu gruntu" data-inv-en="Land purchase price">Cena zakupu gruntu</span></label><input type="number" id="inv_land_buy" min="0" max="100000000" step="any" value="57000" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/ha</span></div></details>
-      <details style="margin:12px 0"><summary style="cursor:pointer;padding:8px 0"><span data-inv-pl="Serwis, dzierżawa i pozostałe koszty" data-inv-en="Maintenance, leases and other costs">Serwis, dzierżawa i pozostałe koszty</span></summary><p class="ins warn"><span data-inv-pl="Uzupełnij stawki serwisu: 0 oznacza brak uwzględnionego kosztu. To pola do uzgodnionych danych, a nie potwierdzone ceny rynkowe." data-inv-en="Enter maintenance rates: 0 means no cost included. These fields are for agreed inputs, not verified market rates.">Uzupełnij stawki serwisu: 0 oznacza brak uwzględnionego kosztu. To pola do uzgodnionych danych, a nie potwierdzone ceny rynkowe.</span></p><div class="form-row"><label for="inv_land_rent" class="form-label"><span data-inv-pl="Dzierżawa gruntu dla dodanego PV" data-inv-en="Land lease for added PV">Dzierżawa gruntu dla dodanego PV</span></label><input type="number" id="inv_land_rent" min="0" max="10000000" step="any" value="2000" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/ha/rok</span></div>
-<div class="form-row"><label for="inv_pv_opex" class="form-label"><span data-inv-pl="Serwis PV (cała moc nominalna)" data-inv-en="PV maintenance (total nominal capacity)">Serwis PV (cała moc nominalna)</span></label><input type="number" id="inv_pv_opex" min="0" max="100000" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/kW/rok</span></div>
-<div class="form-row"><label for="inv_wind_opex" class="form-label"><span data-inv-pl="Serwis wiatru (cała moc nominalna)" data-inv-en="Wind maintenance (total nominal capacity)">Serwis wiatru (cała moc nominalna)</span></label><input type="number" id="inv_wind_opex" min="0" max="100000" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/kW/rok</span></div>
-<div class="form-row"><label for="inv_battery_opex" class="form-label"><span data-inv-pl="Serwis MEE (cała pojemność nominalna)" data-inv-en="BESS maintenance (total nominal capacity)">Serwis MEE (cała pojemność nominalna)</span></label><input type="number" id="inv_battery_opex" min="0" max="100000" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/kWh/rok</span></div>
-<div class="form-row"><label for="inv_existing_fixed" class="form-label"><span data-inv-pl="Pozostałe koszty eksploatacji istniejącego układu" data-inv-en="Other existing system operating costs">Pozostałe koszty eksploatacji istniejącego układu</span></label><input type="number" id="inv_existing_fixed" min="0" max="1000000000" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/rok</span></div>
-<div class="form-row"><label for="inv_added_fixed" class="form-label"><span data-inv-pl="Dodatkowe koszty eksploatacji każdej rozbudowy" data-inv-en="Additional operating costs of each expansion">Dodatkowe koszty eksploatacji każdej rozbudowy</span></label><input type="number" id="inv_added_fixed" min="0" max="1000000000" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/rok</span></div>
-<div class="form-row"><label for="inv_existing_rent" class="form-label"><span data-inv-pl="Obecna dzierżawa (w obu wariantach)" data-inv-en="Existing lease (in both scenarios)">Obecna dzierżawa (w obu wariantach)</span></label><input type="number" id="inv_existing_rent" min="0" max="1000000000" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">PLN/rok</span></div></details>
-      <details style="margin:12px 0"><summary style="cursor:pointer;padding:8px 0"><span data-inv-pl="Zmiany cen i wartość końcowa" data-inv-en="Price changes and terminal value">Zmiany cen i wartość końcowa</span></summary><div class="form-row"><label for="inv_sell_growth" class="form-label"><span data-inv-pl="Zmiana stałej ceny sprzedaży" data-inv-en="Change in fixed selling price">Zmiana stałej ceny sprzedaży</span></label><input type="number" id="inv_sell_growth" min="-50" max="100" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">%/rok</span></div>
-<div class="form-row"><label for="inv_opex_growth" class="form-label"><span data-inv-pl="Wzrost serwisu, kosztów stałych i dzierżawy" data-inv-en="Growth of maintenance, fixed costs and leases">Wzrost serwisu, kosztów stałych i dzierżawy</span></label><input type="number" id="inv_opex_growth" min="-50" max="100" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">%/rok</span></div>
-<div class="form-row"><label for="inv_replacement_growth" class="form-label"><span data-inv-pl="Zmiana cen wymiany baterii" data-inv-en="Change in battery replacement prices">Zmiana cen wymiany baterii</span></label><input type="number" id="inv_replacement_growth" min="-50" max="100" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">%/rok</span></div>
-<div class="form-row"><label for="inv_residual_pct" class="form-label"><span data-inv-pl="Wartość końcowa dodanych aktywów (% nakładów brutto)" data-inv-en="Terminal added-asset value (% gross capital)">Wartość końcowa dodanych aktywów (% nakładów brutto)</span></label><input type="number" id="inv_residual_pct" min="0" max="100" step="any" value="0" oninput="scheduleInv()" onchange="calcInv()" style="width:110px"><span class="inv-unit">%</span></div></details>
-      <button class="btn-primary" onclick="calcInv()"><span data-inv-pl="Przelicz analizę teraz" data-inv-en="Recalculate now">Przelicz analizę teraz</span></button>
+    <div class="card"><div class="card-title"><span data-inv-pl="Parametry rozbudowy" data-inv-en="Expansion parameters">Parametry rozbudowy</span></div><div class="form-row"><label for="inv_pv_mw" class="form-label"><span data-inv-pl="Dodatkowa moc PV" data-inv-en="Added PV capacity">Dodatkowa moc PV</span></label><input type="number" id="inv_pv_mw" min="0" max="300" step="any" value="5" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">MW</span></div>
+<div class="form-row"><label for="inv_fw_mw" class="form-label"><span data-inv-pl="Dodatkowa moc wiatru" data-inv-en="Added wind capacity">Dodatkowa moc wiatru</span></label><input type="number" id="inv_fw_mw" min="0" max="150" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">MW</span></div>
+<div class="form-row"><label for="inv_mee_kwh" class="form-label"><span data-inv-pl="Dodatkowa pojemność MEE" data-inv-en="Added BESS capacity">Dodatkowa pojemność MEE</span></label><input type="number" id="inv_mee_kwh" min="0" max="200" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">MWh</span></div>
+<div class="form-row"><label for="inv_mee_mw" class="form-label"><span data-inv-pl="Dodatkowa moc MEE po stronie AC" data-inv-en="Added BESS AC power">Dodatkowa moc MEE po stronie AC</span></label><input type="number" id="inv_mee_mw" min="0" max="100" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">MW</span></div>
+      <div class="form-row"><label for="inv_pv_grunt" class="form-label"><span data-inv-pl="Grunt pod dodatkowe PV" data-inv-en="Land for added PV">Grunt pod dodatkowe PV</span></label><select id="inv_pv_grunt" onchange="requestInvestment()"><option value="zakup" data-inv-pl="Zakup" data-inv-en="Purchase">Zakup</option><option value="dzierzawa" data-inv-pl="Dzierżawa" data-inv-en="Lease">Dzierżawa</option><option value="wlasny" data-inv-pl="Własny grunt" data-inv-en="Owned land">Własny grunt</option></select></div>
+      <hr class="sdiv"><div class="stitle"><span data-inv-pl="Wspólne założenia finansowe" data-inv-en="Common financial assumptions">Wspólne założenia finansowe</span></div><div class="form-row"><label for="inv_horizon" class="form-label"><span data-inv-pl="Wspólny okres porównania" data-inv-en="Common comparison horizon">Wspólny okres porównania</span></label><input type="number" id="inv_horizon" min="1" max="40" step="1" value="20" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">lat / years</span></div>
+<div class="form-row"><label for="inv_discount" class="form-label"><span data-inv-pl="Stopa dyskontowa nominalna" data-inv-en="Nominal discount rate">Stopa dyskontowa nominalna</span></label><input type="number" id="inv_discount" min="0" max="100" step="any" value="6" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">%/rok</span></div>
+<div class="form-row"><label for="inv_dotacja" class="form-label"><span data-inv-pl="Dotacja do dodatkowych urządzeń (bez gruntu)" data-inv-en="Grant on added equipment (excluding land)">Dotacja do dodatkowych urządzeń (bez gruntu)</span></label><input type="number" id="inv_dotacja" min="0" max="100" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">%</span></div>
+      <details style="margin:12px 0"><summary style="cursor:pointer;padding:8px 0"><span data-inv-pl="Wiek, degradacja i wymiany baterii" data-inv-en="Battery age, degradation and replacements">Wiek, degradacja i wymiany baterii</span></summary><p style="font-size:12px"><span data-inv-pl="Degradacja roczna MEE i wzrost ceny zakupu pochodzą z Parametrów ogólnych. Wiek dotyczy pojemności nominalnej istniejących modułów." data-inv-en="Annual BESS degradation and purchase-price growth come from General parameters. Age applies to the nominal existing modules.">Degradacja roczna MEE i wzrost ceny zakupu pochodzą z Parametrów ogólnych. Wiek dotyczy pojemności nominalnej istniejących modułów.</span></p><div class="form-row"><label for="inv_existing_age" class="form-label"><span data-inv-pl="Wiek istniejącej baterii od ostatniej wymiany" data-inv-en="Existing battery age since last replacement">Wiek istniejącej baterii od ostatniej wymiany</span></label><input type="number" id="inv_existing_age" min="0" max="39" step="1" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">lat / years</span></div>
+<div class="form-row"><label for="inv_existing_life" class="form-label"><span data-inv-pl="Wymiana istniejącej baterii po" data-inv-en="Replace existing battery after">Wymiana istniejącej baterii po</span></label><input type="number" id="inv_existing_life" min="1" max="40" step="1" value="10" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">lat / years</span></div>
+<div class="form-row"><label for="inv_added_life" class="form-label"><span data-inv-pl="Wymiana dodanej baterii po" data-inv-en="Replace added battery after">Wymiana dodanej baterii po</span></label><input type="number" id="inv_added_life" min="1" max="40" step="1" value="10" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">lat / years</span></div>
+<div class="form-row"><label for="inv_replacement_cost" class="form-label"><span data-inv-pl="Wymiana modułów baterii (bez falownika/PCS)" data-inv-en="Battery module replacement (excluding PCS)">Wymiana modułów baterii (bez falownika/PCS)</span></label><input type="number" id="inv_replacement_cost" min="0" max="100000" step="any" value="900" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/kWh</span></div></details>
+      <details style="margin:12px 0"><summary style="cursor:pointer;padding:8px 0"><span data-inv-pl="Nakłady na urządzenia i grunt" data-inv-en="Equipment and land capital costs">Nakłady na urządzenia i grunt</span></summary><div class="form-row"><label for="inv_pv_cost" class="form-label"><span data-inv-pl="Zakup i instalacja PV" data-inv-en="PV purchase and installation">Zakup i instalacja PV</span></label><input type="number" id="inv_pv_cost" min="0" max="1000000" step="any" value="3500" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/kW</span></div>
+<div class="form-row"><label for="inv_wind_cost" class="form-label"><span data-inv-pl="Zakup i instalacja wiatru" data-inv-en="Wind purchase and installation">Zakup i instalacja wiatru</span></label><input type="number" id="inv_wind_cost" min="0" max="1000000" step="any" value="5000" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/kW</span></div>
+<div class="form-row"><label for="inv_battery_cost" class="form-label"><span data-inv-pl="Nowe moduły magazynu" data-inv-en="New battery modules">Nowe moduły magazynu</span></label><input type="number" id="inv_battery_cost" min="0" max="100000" step="any" value="900" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/kWh</span></div>
+<div class="form-row"><label for="inv_pcs_cost" class="form-label"><span data-inv-pl="Nowy falownik / PCS magazynu" data-inv-en="New BESS inverter / PCS">Nowy falownik / PCS magazynu</span></label><input type="number" id="inv_pcs_cost" min="0" max="1000000" step="any" value="200" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/kW</span></div>
+<div class="form-row"><label for="inv_land_area" class="form-label"><span data-inv-pl="Powierzchnia gruntu dla dodanego PV" data-inv-en="Land required for added PV">Powierzchnia gruntu dla dodanego PV</span></label><input type="number" id="inv_land_area" min="0" max="1000" step="any" value="1.3" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">ha/MW</span></div>
+<div class="form-row"><label for="inv_land_buy" class="form-label"><span data-inv-pl="Cena zakupu gruntu" data-inv-en="Land purchase price">Cena zakupu gruntu</span></label><input type="number" id="inv_land_buy" min="0" max="100000000" step="any" value="57000" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/ha</span></div></details>
+      <details style="margin:12px 0"><summary style="cursor:pointer;padding:8px 0"><span data-inv-pl="Serwis, dzierżawa i pozostałe koszty" data-inv-en="Maintenance, leases and other costs">Serwis, dzierżawa i pozostałe koszty</span></summary><p class="ins warn"><span data-inv-pl="Uzupełnij stawki serwisu: 0 oznacza brak uwzględnionego kosztu. To pola do uzgodnionych danych, a nie potwierdzone ceny rynkowe." data-inv-en="Enter maintenance rates: 0 means no cost included. These fields are for agreed inputs, not verified market rates.">Uzupełnij stawki serwisu: 0 oznacza brak uwzględnionego kosztu. To pola do uzgodnionych danych, a nie potwierdzone ceny rynkowe.</span></p><div class="form-row"><label for="inv_land_rent" class="form-label"><span data-inv-pl="Dzierżawa gruntu dla dodanego PV" data-inv-en="Land lease for added PV">Dzierżawa gruntu dla dodanego PV</span></label><input type="number" id="inv_land_rent" min="0" max="10000000" step="any" value="2000" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/ha/rok</span></div>
+<div class="form-row"><label for="inv_pv_opex" class="form-label"><span data-inv-pl="Serwis PV (cała moc nominalna)" data-inv-en="PV maintenance (total nominal capacity)">Serwis PV (cała moc nominalna)</span></label><input type="number" id="inv_pv_opex" min="0" max="100000" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/kW/rok</span></div>
+<div class="form-row"><label for="inv_wind_opex" class="form-label"><span data-inv-pl="Serwis wiatru (cała moc nominalna)" data-inv-en="Wind maintenance (total nominal capacity)">Serwis wiatru (cała moc nominalna)</span></label><input type="number" id="inv_wind_opex" min="0" max="100000" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/kW/rok</span></div>
+<div class="form-row"><label for="inv_battery_opex" class="form-label"><span data-inv-pl="Serwis MEE (cała pojemność nominalna)" data-inv-en="BESS maintenance (total nominal capacity)">Serwis MEE (cała pojemność nominalna)</span></label><input type="number" id="inv_battery_opex" min="0" max="100000" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/kWh/rok</span></div>
+<div class="form-row"><label for="inv_existing_fixed" class="form-label"><span data-inv-pl="Pozostałe koszty eksploatacji istniejącego układu" data-inv-en="Other existing system operating costs">Pozostałe koszty eksploatacji istniejącego układu</span></label><input type="number" id="inv_existing_fixed" min="0" max="1000000000" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/rok</span></div>
+<div class="form-row"><label for="inv_added_fixed" class="form-label"><span data-inv-pl="Dodatkowe koszty eksploatacji każdej rozbudowy" data-inv-en="Additional operating costs of each expansion">Dodatkowe koszty eksploatacji każdej rozbudowy</span></label><input type="number" id="inv_added_fixed" min="0" max="1000000000" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/rok</span></div>
+<div class="form-row"><label for="inv_existing_rent" class="form-label"><span data-inv-pl="Obecna dzierżawa (w obu wariantach)" data-inv-en="Existing lease (in both scenarios)">Obecna dzierżawa (w obu wariantach)</span></label><input type="number" id="inv_existing_rent" min="0" max="1000000000" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">PLN/rok</span></div></details>
+      <details style="margin:12px 0"><summary style="cursor:pointer;padding:8px 0"><span data-inv-pl="Zmiany cen i wartość końcowa" data-inv-en="Price changes and terminal value">Zmiany cen i wartość końcowa</span></summary><div class="form-row"><label for="inv_sell_growth" class="form-label"><span data-inv-pl="Zmiana stałej ceny sprzedaży" data-inv-en="Change in fixed selling price">Zmiana stałej ceny sprzedaży</span></label><input type="number" id="inv_sell_growth" min="-50" max="100" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">%/rok</span></div>
+<div class="form-row"><label for="inv_opex_growth" class="form-label"><span data-inv-pl="Wzrost serwisu, kosztów stałych i dzierżawy" data-inv-en="Growth of maintenance, fixed costs and leases">Wzrost serwisu, kosztów stałych i dzierżawy</span></label><input type="number" id="inv_opex_growth" min="-50" max="100" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">%/rok</span></div>
+<div class="form-row"><label for="inv_replacement_growth" class="form-label"><span data-inv-pl="Zmiana cen wymiany baterii" data-inv-en="Change in battery replacement prices">Zmiana cen wymiany baterii</span></label><input type="number" id="inv_replacement_growth" min="-50" max="100" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">%/rok</span></div>
+<div class="form-row"><label for="inv_residual_pct" class="form-label"><span data-inv-pl="Wartość końcowa dodanych aktywów (% nakładów brutto)" data-inv-en="Terminal added-asset value (% gross capital)">Wartość końcowa dodanych aktywów (% nakładów brutto)</span></label><input type="number" id="inv_residual_pct" min="0" max="100" step="any" value="0" oninput="scheduleInv()" onchange="requestInvestment()" style="width:110px"><span class="inv-unit">%</span></div></details>
+      <button class="btn-primary" onclick="requestInvestment()"><span data-inv-pl="Przelicz analizę teraz" data-inv-en="Recalculate now">Przelicz analizę teraz</span></button>
     </div>
     <div class="card"><div class="card-title"><span data-inv-pl="Wynik wpisanej rozbudowy" data-inv-en="Entered expansion results">Wynik wpisanej rozbudowy</span></div>
       <div class="tbl-wrap"><table><thead><tr><th><span data-inv-pl="Nakłady — rok 0" data-inv-en="Capital — year 0">Nakłady — rok 0</span></th><th>tys. PLN / k PLN</th></tr></thead><tbody id="tbl_capex_body"></tbody></table></div>
@@ -852,17 +912,24 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 </div>
 
+<div class="page" id="page-scenarios"><div class="page-header"><h1 class="page-title"><span data-s6-pl="Zapisane scenariusze" data-s6-en="Saved scenarios">Zapisane scenariusze</span></h1><p class="page-desc"><span data-s6-pl="Zapisuj ustawienia, kosztorysy oraz aktywne dane godzinowe. Porównuj od 2 do 4 wariantów." data-s6-en="Save settings, estimates and active hourly data. Compare 2 to 4 options.">Zapisuj ustawienia, kosztorysy oraz aktywne dane godzinowe. Porównuj od 2 do 4 wariantów.</span></p></div>
+<div class="card"><label for="scenario_name"><span data-s6-pl="Nazwa nowego scenariusza" data-s6-en="New scenario name">Nazwa nowego scenariusza</span></label><input type="text" id="scenario_name" maxlength="100" style="margin-top:7px" placeholder="">
+<div class="scenario-actions"><button class="btn-primary" onclick="Scenarios.save()"><span data-s6-pl="Zapisz bieżący scenariusz" data-s6-en="Save current scenario">Zapisz bieżący scenariusz</span></button><button class="btn" onclick="Scenarios.compare()"><span data-s6-pl="Porównaj zaznaczone" data-s6-en="Compare selected">Porównaj zaznaczone</span></button><button class="btn" onclick="Scenarios.exportAll()"><span data-s6-pl="Pobierz kopię JSON" data-s6-en="Download JSON backup">Pobierz kopię JSON</span></button><label for="scenario_import" class="btn"><span data-s6-pl="Importuj kopię JSON" data-s6-en="Import JSON backup">Importuj kopię JSON</span></label><input type="file" id="scenario_import" accept="application/json,.json" onchange="Scenarios.importFile(event)"><button id="scenario_undo" class="btn" onclick="Scenarios.undo()" hidden><span data-s6-pl="Cofnij usunięcie" data-s6-en="Undo deletion">Cofnij usunięcie</span></button><span id="scenario_count"></span></div>
+<p class="scenario-meta"><span data-s6-pl="Zapis działa w tej przeglądarce, dla tego pliku. Pobierz JSON, aby przenieść scenariusze lub zachować kopię. Przy braku miejsca aplikacja wyraźnie oznaczy zapis tylko w pamięci sesji. Zapis scenariuszy nie wysyła ich na serwer. Kopia zawiera aktywne profile zużycia i pogody oraz ceny DEMO." data-s6-en="Saving is local to this browser and this file. Download JSON to transfer scenarios or keep a backup. If storage is unavailable, the app labels session-only saves. Data is not sent to a server. Backups include active consumption and weather profiles and DEMO prices.">Zapis działa w tej przeglądarce, dla tego pliku. Pobierz JSON, aby przenieść scenariusze lub zachować kopię. Przy braku miejsca aplikacja wyraźnie oznaczy zapis tylko w pamięci sesji. Zapis scenariuszy nie wysyła ich na serwer. Kopia zawiera aktywne profile zużycia i pogody oraz ceny DEMO.</span></p>
+<div id="scenario_status" class="ins info" role="status" aria-live="polite"></div>
+<div class="tbl-wrap" tabindex="0"><table><thead><tr><th scope="col"><span data-s6-pl="Porównaj" data-s6-en="Compare">Porównaj</span></th><th scope="col"><span data-s6-pl="Nazwa" data-s6-en="Name">Nazwa</span></th><th scope="col"><span data-s6-pl="Źródło kosztorysu" data-s6-en="Estimate source">Źródło kosztorysu</span></th><th scope="col"><span data-s6-pl="Lokalizacja" data-s6-en="Location">Lokalizacja</span></th><th scope="col"><span data-s6-pl="Data wyceny" data-s6-en="Estimate date">Data wyceny</span></th><th scope="col"><span data-s6-pl="Działania" data-s6-en="Actions">Działania</span></th></tr></thead><tbody id="scenario_list"></tbody></table></div></div>
+<div id="scenario_comparison_note" class="ins info"></div><div id="scenario_comparison" class="tbl-wrap" tabindex="0"></div></div>
 <div class="page" id="page-raport">
   <div class="page-header">
     <h1 class="page-title" data-i18n="rap-title">Raport — Sprawozdanie</h1>
     <p class="page-desc" data-i18n="rap-desc">Zbiorcze zestawienie wyników do sprawozdania.</p>
   </div>
   <div style="margin-bottom:1.25rem;display:flex;gap:10px;flex-wrap:wrap">
-    <button class="btn-primary" onclick="window.print()" data-i18n="btn-drukuj">Drukuj / Zapisz PDF</button>
+    <button class="btn-primary" onclick="printReport()" data-i18n="btn-drukuj">Drukuj / Zapisz PDF</button>
     <button class="btn" id="btn_copy_report" onclick="copyReport()" data-i18n="btn-kopiuj">Kopiuj tekst raportu</button>
   </div>
 
-  <div class="card" id="report-content">
+  <div class="card" id="report-content"><div id="rep_stage6" class="report-section" style="white-space:pre-line"></div>
     <div class="report-section">
       <h3 data-i18n="rap-h1">1. Parametry analizowanego układu</h3>
       <div id="rep_params"></div>
@@ -922,7 +989,7 @@ const translations = {
   'stage1-loss': { pl: 'Straty magazynu rocznie', en: 'Annual storage losses' },
   'stage1-final': { pl: 'Zapas na koniec roku', en: 'End-of-year stored energy' },
   'stage1-economics': { pl: 'Etap 5: analiza inwestycji porównuje przepływy bez rozbudowy i po rozbudowie, wraz z eksploatacją i wymianami.', en: 'Stage 5: investment analysis compares cash flows without and after expansion, including operating costs and replacements.' },
-  'header-sub': { pl: 'Symulator energetyczny zakładu produkcyjnego — etap 4', en: 'Manufacturing Plant Energy Simulator — stage 4' },
+  'header-sub': { pl: 'Symulator energetyczny zakładu produkcyjnego — etap 6', en: 'Manufacturing Plant Energy Simulator — stage 6' },
   'nav-cfg': { pl: 'Parametry ogólne', en: 'General Parameters' },
   'nav-zaklad': { pl: 'Profil produkcyjny', en: 'Production Profile' },
   'nav-pv': { pl: 'Fotowoltaika (PV)', en: 'Photovoltaics (PV)' },
@@ -973,7 +1040,7 @@ const translations = {
   'opt-ems-arb': { pl: 'Arbitraż cenowy (RDN)', en: 'Price Arbitrage (Day-Ahead Market)' },
   'cfg-meecap': { pl: 'Pojemność MEE [MWh]', en: 'BESS capacity [MWh]' },
   'cfg-meepow': { pl: 'Moc MEE AC [MW]', en: 'BESS AC power [MW]' },
-  'cfg-meert': { pl: 'Sprawność round-trip MEE [%]', en: 'BESS round-trip efficiency [%]' },
+  'cfg-meert': { pl: 'Sprawność całego cyklu MEE [%]', en: 'BESS round-trip efficiency [%]' },
   'cfg-meedeg': { pl: 'Degradacja pojemności [%/rok]', en: 'Capacity degradation [%/year]' },
   
   'cfg-sum': { pl: 'Podsumowanie bieżącej konfiguracji', en: 'Current configuration summary' },
@@ -1179,7 +1246,7 @@ function toggleLanguage() {
   if (g('btn_theme')) {
     g('btn_theme').textContent = isLight ? (currentLang === 'pl' ? '🌙 Ciemny' : '🌙 Dark') : (currentLang === 'pl' ? '☀️ Jasny' : '☀️ Light');
   }
-  upd();
+  stage6Language();upd();Scenarios.render();if(g('scenario_comparison').children.length)Scenarios.compare();
 }
 
 let isLight = false;
@@ -1199,6 +1266,7 @@ function toggleTheme() {
     Chart.defaults.borderColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.06)';
     upd(); 
   }
+  if(!chartAvailable){stage6Language();buildReport();}
 }
 
 // ------------------------------------------------------------
@@ -1420,6 +1488,7 @@ function refreshTimeDescription() {
   setText('btn_weather_fetch',t('Pobierz pogodę dla roku ','Fetch weather for ')+a.year);
 }
 function simulationBlocker() {
+  const validationError=InputValidation.blocker();if(validationError)return validationError;
   const unitError=UnitInputs.blocker();if(unitError)return unitError;
   const a=getTimeAxis();
   if(EnergySettlement.usesDynamicPrices() && (!window.uploadedPrices8760 || window.uploadedPrices8760.length!==a.length || (g('price_source')&&window.pricesMeta?.key!==a.key)))
@@ -1433,7 +1502,8 @@ function simulationBlocker() {
   return '';
 }
 function clearSimulationResults(message) {
-  lastSim=null;
+  cancelWork();ChartViews.clear();
+  lastSim=null;setText('rep_stage6',message);
   clearInvestment(message);investmentCache=null;
   if(g('btn_hourly_settlement'))g('btn_hourly_settlement').disabled=true;
   Object.values(charts).forEach(ch=>{try{ch.destroy();}catch(e){}});
@@ -1457,6 +1527,7 @@ function csvOptionChanged(reparse=false) {
   if(reparse && csvState.text!==null)previewCSV();
 }
 function changeAnalysisTime() {
+  const validationError=InputValidation.check(g('analysis_year'));if(validationError){clearSimulationResults(validationError);return;}
   try {
     refreshTimeDescription();weatherRevision++;priceRevision++;
     if(weatherController)weatherController.abort();
@@ -1559,6 +1630,7 @@ function togglePVSource() {
   g('pv_box_manual').style.display=api?'none':'block';g('pv_box_api').style.display=api?'block':'none';upd();
 }
 async function fetchWeatherData() {
+  for(const id of ['api_lat','api_lon']){const message=InputValidation.check(g(id));if(message){setText('weather_status',message);return;}}
   const a=getTimeAxis(), revision=++weatherRevision;
   if(weatherController)weatherController.abort();
   weatherController=new AbortController();const controller=weatherController;
@@ -1714,20 +1786,20 @@ const UnitInputs = (() => {
       if(displays[id])setText(displays[id],invalid.has(id)?'—':fmtD(v,f.kind==='price'?(unit('price')==='PLN/kWh'?6:2):3)+' '+label(f.kind));
     }
   }
-  function commit(id,fromSlider=false) {
+  function commit(id,fromSlider=false,defer=false) {
     const f=fields[id],input=g((fromSlider?'slider_':'num_')+id);
     const value=Number(input.value),canonical=value*factor(f.kind);
     if(input.value.trim()===''||!Number.isFinite(canonical)||(f.kind!=='price'&&(canonical<0||canonical>f.max))) {
-      invalid.add(id);clearSimulationResults(t('Popraw wartość pola: ','Correct this field: ')+t(...f.label));return;
+      invalid.add(id);InputValidation.mark(input,t('Wpisz poprawną liczbę w dozwolonym zakresie.','Enter a valid number within the allowed range.'));clearSimulationResults(t('Popraw wartość pola: ','Correct this field: ')+t(...f.label));return;
     }
-    invalid.delete(id);g(id).value=String(canonical);refresh();upd();
+    invalid.delete(id);InputValidation.mark(input);g(id).value=String(canonical);refresh();if(defer)scheduleUpdate();else upd();
   }
   function blocker(){
     const id=Array.from(invalid).find(id=>!(id==='export_sell_price'&&(g('surplus_mode')?.value!=='sell'||g('export_price_source')?.value!=='fixed'))&&!(id==='export_limit_mw'&&g('surplus_mode')?.value==='curtail'));
     return id?t('Popraw nieprawidłowe pole: ','Correct the invalid field: ')+t(...fields[id].label):'';
   }
   function priceForDisplay(value){return value/factor('price');}
-  return {fields,refresh,commit,blocker,unit,label,priceForDisplay};
+  return {fields,refresh,commit,blocker,unit,label,priceForDisplay,resetValidation(){invalid.clear();refresh();}};
 })();
 
 function changeDisplayUnits(){UnitInputs.refresh();upd();}
@@ -1820,8 +1892,8 @@ const SimulationResults = (() => {
   return {sum,daily,peak,summarize,withoutStorage};
 })();
 
-function generateWindProduction(fwMW,avgWind,variability) {
-  const a=getTimeAxis(), n=a.length,k=2,lambda=avgWind*1.128,vFrac=variability/100;
+function generateWindProduction(fwMW,avgWind,variability,timeAxis=getTimeAxis()) {
+  const a=timeAxis, n=a.length,k=2,lambda=avgWind*1.128,vFrac=variability/100;
   const power=new Float64Array(n),probability=[],binPower=[],binLabels=[];
   const cdf=v=>lambda>0?1-Math.exp(-Math.pow(v/lambda,k)):(v>0?1:0);
   let theoreticalAEP=0,simulatedAEP=0,cutoutHours=0,clippedHours=0,correction=0;
@@ -1932,12 +2004,12 @@ function batteryHour(soc, capacity, powerAC, roundTripPct, demand, generation, c
 }
 
 function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS=600, cN=250, options={}) {
-  const timeAxis=getTimeAxis(), hoursInYear=timeAxis.length, profiles=options.profiles;
+  const timeAxis=options.timeAxis||getTimeAxis(), hoursInYear=timeAxis.length, profiles=options.profiles, sources=options.sources;
   if(profiles&&(profiles.key!==timeAxis.key||['dem','pvUnit','windUnit','prices'].some(k=>profiles[k]?.length!==hoursInYear)))throw new Error('Niezgodne profile projekcji.');
-  const blocker=simulationBlocker();if(blocker)throw new Error(blocker);
-  const useCSV=g('data_source').value==='csv';
-  const usePVAPI=profiles?profiles.pvSource==='api':g('pv_data_source').value==='api';
-  const useDynamicPrices=profiles?profiles.dynamic:EnergySettlement.usesDynamicPrices();
+  const blocker=options.timeAxis?'':simulationBlocker();if(blocker)throw new Error(blocker);
+  const useCSV=sources?sources.csv:g('data_source').value==='csv';
+  const usePVAPI=profiles?profiles.pvSource==='api':sources?sources.api:g('pv_data_source').value==='api';
+  const useDynamicPrices=profiles?profiles.dynamic:sources?sources.dynamic:EnergySettlement.usesDynamicPrices();
   const demandDays=[1,0.8,0.3].map(scale=>demandProfile(tryb,pp,pn,pd,scale));
   const etaCharge = Math.sqrt(meeEff / 100);
   const etaDischarge = etaCharge;
@@ -1993,7 +2065,7 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
   const pvFactor = (invEff / 100) * (1 - lossEff / 100);
   
   // --- NOWY SYSTEM WIATROWY OPARTY O WEIBULLA ---
-  const windRun=profiles?{power:Float64Array.from(profiles.windUnit,v=>v*fwMW),meta:{kind:'same-hourly-profile'}}:generateWindProduction(fwMW,fwW,fwV);
+  const windRun=profiles?{power:Float64Array.from(profiles.windUnit,v=>v*fwMW),meta:{kind:'same-hourly-profile'}}:generateWindProduction(fwMW,fwW,fwV,timeAxis);
   const fw8760=windRun.power;out.windModel=windRun.meta;
 
   // GŁÓWNA PĘTLA
@@ -2008,8 +2080,8 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     if (dayOfWeek === 5) dayScale = 0.8; 
     else if (dayOfWeek === 6) dayScale = 0.3;
     
-    out.dem[h] = profiles ? profiles.dem[h] : (useCSV && window.uploadedProfile8760) 
-      ? window.uploadedProfile8760[h] 
+    out.dem[h] = profiles ? profiles.dem[h] : (useCSV && (sources?sources.demand:window.uploadedProfile8760)) 
+      ? (sources?sources.demand:window.uploadedProfile8760)[h] 
       : demandDays[dayScale===0.8?1:dayScale===0.3?2:0][hourOfDay];
 
     // 2. NOWY MODEL PV: Astronomiczny kąt padania słońca vs API Pogodowe
@@ -2019,7 +2091,7 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
         out.pvUnit[h]=profiles.pvUnit[h];
     } else if (usePVAPI) {
         // Profil API × moc nominalna daje serię przed stratami; sprawności są stosowane niżej
-        out.pvUnit[h] = window.uploadedPV8760[h];
+        out.pvUnit[h] = (sources?sources.pv:window.uploadedPV8760)[h];
     } else {
         // Tryb ręczny: matematyczny wzór pozycji Słońca (bezchmurne niebo)
         const decl = 23.45 * Math.sin((284 + day) / timeAxis.days * 2 * Math.PI) * (Math.PI / 180);
@@ -2037,7 +2109,7 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
 
     // 4. CENY ENERGII
     const isCheapHour = (hourOfDay < 6 || hourOfDay >= 21);
-    out.prices[h] = profiles ? profiles.prices[h] : useDynamicPrices ? window.uploadedPrices8760[h] : (isCheapHour ? cN : cS);
+    out.prices[h] = profiles ? profiles.prices[h] : useDynamicPrices ? (sources?sources.prices:window.uploadedPrices8760)[h] : (isCheapHour ? cN : cS);
 
     const currentPrice = out.prices[h];
     const isPriceCheap = useDynamicPrices ? (currentPrice <= cN) : isCheapHour;
@@ -2190,7 +2262,7 @@ const InvestmentModel = (() => {
     const r=state.S_8760;
     return {state,axis:r.timeAxis,config:{...r.config},
       profiles:{key:r.timeAxis.key,dem:r.dem,pvUnit:r.pvUnit,
-        windUnit:generateWindProduction(1,state.fwW,state.fwV).power,prices:r.prices,
+        windUnit:generateWindProduction(1,state.fwW,state.fwV,r.timeAxis).power,prices:r.prices,
         pvSource:r.config.pvSource,dynamic:r.config.priceKind==='synthetic-demo'},
       settlement:{...r.config.settlement}};
   }
@@ -2203,7 +2275,7 @@ const InvestmentModel = (() => {
     return {equipment,equipmentTotal,land,gross,grant,net:gross-grant};
   }
   function hasAddition(a){return a.pv>0||a.wind>0||a.cap>0||a.power>0;}
-  function trajectory(snap,p,a) {
+  function* trajectorySteps(snap,p,a) {
     const state=snap.state,c=snap.config,rows=[],base=capital(a,p),expanded=hasAddition(a);
     const cohorts=[{name:'existing',nominal:state.meeK,age:p.existingAge,life:p.existingLife},
       {name:'added',nominal:a.cap,age:0,life:p.addedLife}];
@@ -2221,7 +2293,7 @@ const InvestmentModel = (() => {
       const run=simulate8760(state.pvM+a.pv,state.fwM+a.wind,state.fwW,state.fwV,
         capacity,state.meeP+a.power,state.meeEff,state.pp,state.pn,state.pd,
         state.invEff,state.lossEff,state.tryb,c.emsMode,state.cS*energyFactor,state.cN*energyFactor,
-        {profiles,initialState:stock,settlement,projection:true});
+        {profiles,timeAxis:snap.axis,initialState:stock,settlement,projection:true});
       if(!run.balance.passed||Math.abs(run.balance.annualRESResidual)>1e-6||Math.abs(run.balance.annualGridResidual)>1e-6)
         throw new Error('Błąd zachowania energii w projekcji roku '+y+'.');
       maxHourlyResidual=Math.max(maxHourlyResidual,run.balance.maxHourlyResidual);
@@ -2258,6 +2330,7 @@ const InvestmentModel = (() => {
         maxConnectionExcess:run.balance.maxConnectionExcess,connectionExcessHours:run.balance.connectionExcessHours};
       if(![energy,opex,rent,replacement,terminal,annual.totalCost].every(Number.isFinite))throw new Error('Koszt przekracza zakres liczbowy.');
       rows.push(annual);
+      yield {year:y,horizon:p.horizon};
     }
     const finalStock=rows[rows.length-1]?.finalSOC||0;
     // Kontrola całego horyzontu: oba rodzaje utraty zapasu są jawne.
@@ -2266,9 +2339,22 @@ const InvestmentModel = (() => {
     const discountedCost=base.net+total(rows.map(r=>r.totalCost/Math.pow(1+p.discount/100,r.y)));
     return {rows,capital:base,discountedCost,finalStock,boundaryLoss,horizonResidual,annualEnergyResidual,maxHourlyResidual};
   }
+  function trajectory(snap,p,a) {const iterator=trajectorySteps(snap,p,a);let step;do{step=iterator.next();}while(!step.done);return step.value;}
+  async function trajectoryAsync(snap,p,a,options={}) {
+    const iterator=trajectorySteps(snap,p,a);
+    for(;;){await new Promise(resolve=>setTimeout(resolve,0));if(options.cancelled?.()){const e=new Error('Obliczenia anulowane.');e.name='AbortError';throw e;}const step=iterator.next();if(step.done)return step.value;options.progress?.(step.value);}
+  }
+  async function compareAsync(snap,p,addition,baseline,options={}) {
+    const without=baseline||await trajectoryAsync(snap,p,{pv:0,wind:0,cap:0,power:0},options);
+    const after=hasAddition(addition)?await trajectoryAsync(snap,p,addition,options):without;
+    return compose(p,addition,without,after);
+  }
   function compare(snap,p,addition,baseline) {
     const without=baseline||trajectory(snap,p,{pv:0,wind:0,cap:0,power:0});
     const withExpansion=hasAddition(addition)?trajectory(snap,p,addition):without;
+    return compose(p,addition,without,withExpansion);
+  }
+  function compose(p,addition,without,withExpansion) {
     const capital=withExpansion.capital,rows=withExpansion.rows.map((after,i)=>{
       const before=without.rows[i],benefit=before.operatingCost-after.operatingCost;
       return {y:i+1,before,after,benefit,cf:before.totalCost-after.totalCost};
@@ -2286,7 +2372,7 @@ const InvestmentModel = (() => {
   function rank(variants) {
     return [{id:'none',name:'Bez rozbudowy',npv:0,result:null},...variants].sort((a,b)=>b.npv-a.npv);
   }
-  return {snapshot,capital,hasAddition,trajectory,compare,rank};
+  return {snapshot,capital,hasAddition,trajectory,trajectoryAsync,compare,compareAsync,compose,rank};
 })();
 
 function storageBalanceRows(sim) {
@@ -2355,58 +2441,9 @@ function clearChartWarning(canvas) {
   canvas.parentElement?.querySelector('.chart-fallback')?.remove();
 }
 
-function mkChart(id, type, data, opts={}) {
-  const el = document.getElementById(id);
-  if (!el) return null;
-  if (!chartAvailable) {
-    showChartWarning(el);
-    return null;
-  }
-  clearChartWarning(el);
-  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
-  const hiddenParents = [];
-  let node = el.parentElement;
-  while (node && node !== document.body) {
-    const style = window.getComputedStyle(node);
-    if (style.display === 'none') {
-      node.style.display = 'block';
-      node.style.visibility = 'hidden';
-      hiddenParents.push(node);
-    }
-    node = node.parentElement;
-  }
-  charts[id] = new Chart(el.getContext('2d'), {
-    type, data,
-    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, ...opts }
-  });
-  hiddenParents.forEach(n => {
-    n.style.display = '';
-    n.style.visibility = '';
-  });
-  return charts[id];
-}
-
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => { n.classList.remove('active'); n.removeAttribute('aria-current'); });
-  g('page-'+name).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => {
-    if (n.getAttribute('onclick')?.includes("'"+name+"'")) { n.classList.add('active'); n.setAttribute('aria-current', 'page'); }
-  });
-  upd();
-  setTimeout(() => { Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} }); }, 100);
-}
-
-function showSub(page, idx) {
-  const subs = document.querySelectorAll('#page-'+page+' .sub-section');
-  const tabs = document.querySelectorAll('#page-'+page+' .sub-tab');
-  subs.forEach((s,i) => s.classList.toggle('active', i===idx));
-  tabs.forEach((t,i) => t.classList.toggle('active', i===idx));
-  // mkChart handles hidden parents internally, so just call upd() after DOM settles
-  upd();
-  setTimeout(() => { Object.values(charts).forEach(ch => { try { ch.resize(); } catch(e){} }); }, 100);
-}
-
+function mkChart(id,type,data,opts={}){return ChartViews.set(id,type,data,opts);}
+function showPage(name){switchPage(name);}
+function showSub(page,index){switchSub(page,index);}
 function setTryb(t) {
   if(g('data_source').value==='csv')return;
   g('tryb').value = t;
@@ -2559,6 +2596,7 @@ function renderStorageViews(state) {
 }
 
 function upd() {
+  if(Runtime.timer!==null){clearTimeout(Runtime.timer);Runtime.timer=null;}
   try {UnitInputs.refresh();refreshPriceControls();refreshTimeDescription();const blocker=simulationBlocker();if(blocker){clearSimulationResults(blocker);return;}}
   catch(e){clearSimulationResults(e.message);return;}
   const pp=iv('p_przyl'),pn=iv('p_noc'),pd=iv('p_dzien'),pvM=iv('pv_moc'),invEff=iv('pv_inv'),lossEff=iv('pv_loss');
@@ -2570,10 +2608,10 @@ function upd() {
   Object.entries(vals).forEach(([id,v])=>setText(id,v));UnitInputs.refresh();syncSeasonButtons();
   ['b3','b2','br'].forEach((id,i)=>{g(id).classList.toggle('active',['3','2','ramp'][i]===tryb);g(id).disabled=g('data_source').value==='csv';});
   let r;
-  try {r=simulate8760(pvM,fwM,fwW,fwV,meeK,meeP,meeEff,pp,pn,pd,invEff,lossEff,tryb,emsMode,cS,cN);}
+  try {r=annualResult([pvM,fwM,fwW,fwV,meeK,meeP,meeEff,pp,pn,pd,invEff,lossEff,tryb,emsMode,cS,cN]);}
   catch(e){clearSimulationResults(e.message);return;}
-  const S={};for(const key of ['dem','pv','fw','oze','gridArr','surplusArr','socArr','meePow'])S[key]=aggregate8760.toAverageDay(r[key]);
-  lastSim={S,S_8760:r,S_without:SimulationResults.withoutStorage(r),metrics:r.metrics,pp,pn,pd,pvM,fwM,fwW,fwV,meeK,meeP,meeEff,meeDeg,sezon,tryb,cS,cN,cWzrost,invEff,lossEff};
+  const S=Runtime.annual.average||{};if(!Runtime.annual.average){for(const key of ['dem','pv','fw','oze','gridArr','surplusArr','socArr','meePow'])S[key]=aggregate8760.toAverageDay(r[key]);Runtime.annual.average=S;}
+  lastSim={S,S_8760:r,S_without:Runtime.annual.without,metrics:r.metrics,pp,pn,pd,pvM,fwM,fwW,fwV,meeK,meeP,meeEff,meeDeg,sezon,tryb,cS,cN,cWzrost,invEff,lossEff};
   const m=r.metrics,a=r.timeAxis;
   renderStorageBalance(r);
   setText('app_data_status',t('Wspólny wynik symulacji: ','Shared simulation result: ')+axisDescription(a));g('app_data_status').className='ins good';
@@ -2601,7 +2639,7 @@ function upd() {
   renderPVViews(lastSim);renderWindViews(lastSim);renderStorageViews(lastSim);renderBalanceViews(lastSim);
   g('btn_hourly_settlement').disabled=false;
   renderSettlementViews(lastSim);
-  calcInv();buildReport();
+  prepareInvestment();buildReport();stage6Language();
 }
 
 
@@ -2646,7 +2684,7 @@ function readInvestmentInputs() {
   }
   p.landMode=g('inv_pv_grunt').value;
   if(!['zakup','dzierzawa','wlasny'].includes(p.landMode))throw new Error(t('Wybierz sposób pozyskania gruntu.','Select the land option.'));
-  if(p.existingAge>=p.existingLife)throw new Error(t('Wiek istniejącej baterii musi być mniejszy od okresu między wymianami. Podaj wiek od ostatniej wymiany.','Existing battery age must be below its replacement interval. Enter age since its last replacement.'));
+  if(p.existingAge>=p.existingLife){InputValidation.mark(g('inv_existing_age'),t('Wiek musi być mniejszy od okresu wymian.','Age must be below the replacement interval.'));throw new Error(t('Wiek istniejącej baterii musi być mniejszy od okresu między wymianami. Podaj wiek od ostatniej wymiany.','Existing battery age must be below its replacement interval. Enter age since its last replacement.'));}
   p.buyGrowth=lastSim.cWzrost;
   if(!Number.isFinite(p.buyGrowth)||p.buyGrowth<=-100||!Number.isFinite(lastSim.meeDeg)||lastSim.meeDeg<0||lastSim.meeDeg>=100)
     throw new Error(t('Nieprawidłowy wzrost cen lub degradacja MEE w Parametrach ogólnych.','Invalid price growth or BESS degradation in General parameters.'));
@@ -2670,6 +2708,7 @@ function irrExplanation(result) {
   return t('Wykryto pierwiastek wielokrotny lub zbyt bliskie wyniki. Kandydaci: ','A repeated root or numerically close results were detected. Candidates: ')+(rates||'—')+t('. IRR nie służy tu do oceny; użyj NPV.','. Do not use IRR to assess this case; use NPV.');
 }
 function clearInvestment(message) {
+  for(const id of ['c_cashflow','c_cashflow_annual','c_cmp_koszt','c_cmp_roi'])ChartViews.specs.delete(id);
   lastInvestment=null;
   for(const id of ['inv_capex_total','inv_sav_rok','inv_spbt','inv_npv','inv_irr','inv_dotacja_v','inv_actual_payback','inv_discounted_payback','cmp_pv_sav','cmp_fw_sav','cmp_mee_sav'])setText(id,'—');
   for(const id of ['tbl_capex_body','tbl_cashflow_body','tbl_inv_compare_body'])if(g(id))g(id).innerHTML='';
@@ -2678,13 +2717,9 @@ function clearInvestment(message) {
   setText('investment_status',message);if(g('investment_status'))g('investment_status').className='ins warn';
   if(g('btn_investment_csv'))g('btn_investment_csv').disabled=true;
 }
-function scheduleInv() {
-  if(investmentTimer!==null)clearTimeout(investmentTimer);
-  clearInvestment(t('Parametry zmienione — przeliczam analizę inwestycji…','Parameters changed — recalculating investment analysis…'));
-  if(lastSim)buildReport();
-  investmentTimer=setTimeout(()=>{investmentTimer=null;calcInv();},350);
-}
+function scheduleInv(){scheduleInvestment();}
 function calcInv() {
+  InvestmentJobs.cancel();
   if(investmentTimer!==null){clearTimeout(investmentTimer);investmentTimer=null;}
   investmentLanguage();
   if(!lastSim){clearInvestment(t('Analiza czeka na poprawną symulację energii.','Analysis is waiting for a valid energy simulation.'));return;}
@@ -2725,7 +2760,7 @@ function renderInvestment(data) {
     inv_npv:money(r.npv/1000),inv_irr:irrText(r.irr),inv_dotacja_v:money(c.grant/1000),
     inv_actual_payback:paybackText(r.payback),inv_discounted_payback:paybackText(r.discountedPayback)};
   Object.entries(values).forEach(([id,v])=>setText(id,v));
-  setText('investment_status',t('Obliczono oba scenariusze przez ','Both scenarios calculated over ')+p.horizon+t(' lat. Kwoty w PLN; NPV względem wariantu bez rozbudowy.',' years. Amounts in PLN; NPV is relative to no expansion.'));
+  setText('investment_status',t('Obliczono oba scenariusze przez ','Both scenarios calculated over ')+yearCount(p.horizon)+t('. Kwoty w PLN; NPV względem wariantu bez rozbudowy.','. Amounts in PLN; NPV is relative to no expansion.'));
   g('investment_status').className='ins good';g('btn_investment_csv').disabled=false;
   setText('inv_irr_details',irrExplanation(r.irr));
   setText('ins_inv0',t('Korzyść w 1. roku = różnica kosztów energii, serwisu i dzierżawy. SPBT dzieli nakład netto przez tę korzyść i zakłada jej stałość; nie uwzględnia wymian, wzrostu cen ani dyskonta. Zwrot z przepływów poniżej uwzględnia te zmiany.','Year-1 benefit is the difference in energy, maintenance and lease costs. SPBT divides net outlay by this benefit and assumes it stays constant; it excludes replacements, price growth and discounting. Cash-flow payback includes those changes.')+
@@ -2791,6 +2826,7 @@ function renderInvestmentReport() {
   g('rep_metoda').innerHTML+=g('inv_methodology').innerHTML;
 }
 function downloadInvestmentCSV() {
+  flushEnergy();if(!investmentIsCurrent()){clearInvestment(t('Przelicz analizę przed eksportem.','Recalculate the analysis before exporting.'));return;}
   if(!lastInvestment)return;
   const {p,result:r}=lastInvestment,rows=[['rok','cena_srednia_PLN_MWh','zakup_bez_PLN','przychod_bez_PLN','zakup_po_PLN','przychod_po_PLN','serwis_bez_PLN','serwis_po_PLN','dzierzawa_bez_PLN','dzierzawa_po_PLN','wymiana_bez_PLN','wymiana_po_PLN','wartosc_koncowa_roznica_PLN','CF_PLN','CF_skumulowany_PLN','CF_zdyskontowany_skumulowany_PLN','pojemnosc_bez_MWh','pojemnosc_po_MWh','SOC_pocz_bez_MWh','SOC_pocz_po_MWh','SOC_konc_bez_MWh','SOC_konc_po_MWh','utrata_zapasu_bez_MWh','utrata_zapasu_po_MWh'],
     [0,'','','','','','','','','','','','',r.cash[0],r.cash[0],r.cash[0]]];
@@ -2813,7 +2849,7 @@ function buildReportCore() {
   const table=rows=>'<div class="tbl-wrap"><table><tbody>'+rows.map(([name,value])=>'<tr><td style="width:55%">'+escapeText(name)+'</td><td class="td-mono">'+escapeText(value)+'</td></tr>').join('')+'</tbody></table></div>';
   const costDifference=no.metrics.cost.netCost-m.cost.netCost;
   g('rep_params').innerHTML=table([
-    [t('Wersja','Version'),t('EnergoSym — etap 5','EnergoSym — stage 5')],
+    [t('Wersja','Version'),t('EnergoSym — etap 6','EnergoSym — stage 6')],
     [t('Rok / strefa / długość profilu','Year / zone / profile length'),axisDescription(a)],
     [t('Profil zużycia','Demand profile'),g('data_source').value==='csv'?t('CSV zweryfikowany','Validated CSV')+' · '+window.importedDemand.unit+' / '+window.importedDemand.minutes+' min':t('Model ręczny z kalendarzem','Manual model with calendar')],
     ...(g('data_source').value==='manual'?[
@@ -2884,7 +2920,7 @@ function buildReportCore() {
     <b>Kontrola energii:</b> OZE + import = odbiorcy + nadwyżka + straty MEE + końcowy SOC. Dodatkowo sprawdzane są bilanse pochodzenia OZE i sieci. Wariant bez MEE zachowuje dokładnie te same szeregi odbiorców, PV i wiatru; zeruje wyłącznie magazyn. Różnica rocznych maksimów importu może dotyczyć różnych godzin; wartość ujemna oznacza wzrost szczytu.<br>
     <b>Czas:</b> ${escapeText(axisDescription(a))}. Oś obliczeń ma kolejne godziny UTC i granice roku w wybranej strefie. Rok przestępny zachowuje 29 lutego; zmiany czasu są uwzględniane. Dane 15-minutowe są agregowane energetycznie do godzin. Z CSV nie odtwarza się szczytów krótszych niż godzina.<br>
     <b>Pozostałe założenia:</b> S=P√(1+tg²φ), Q=P·tgφ, przy stałym, przyjętym tgφ=0,4; nie jest to pomiar ani ocena opłat. Wykres degradacji jest założeniem wykładniczym, nie dodatkowym wynikiem bieżącego roku. Ceny demo są syntetyczne. Rozliczenie energii jest opisane w etapie 4 poniżej. Analiza inwestycji i jej założenia są opisane w etapie 5 poniżej.<br>
-    Wersja: etap 5 — analiza inwestycji.
+    Wersja: etap 6 — wygoda, wydajność i scenariusze.
   `,`
     <b>Shared hourly result:</b> charts, cards and report use the same year profile. Energy is the sum of hourly power × 1 h; rounding is for display only.<br>
     <b>Means and peaks:</b> mean day = energy for each local clock hour / calendar days. Summer: Jun–Aug; winter: Dec–Feb; spring/autumn: Mar–May and Sep–Nov. Weekday means use actual weekday counts; mean week = annual energy / days × 7. Peaks use the whole hourly series and show timestamps with UTC offsets, not 15-minute peaks.<br>
@@ -2895,7 +2931,7 @@ function buildReportCore() {
     <b>Balance:</b> RES + import = loads + surplus + BESS losses + final SOC. Source balances are also checked. The no-BESS case preserves the exact same load, PV and wind series. Peak reductions compare annual maxima, potentially at different times; negative means an increase.<br>
     <b>Time:</b> ${escapeText(axisDescription(a))}. Successive UTC hours, year boundaries in the selected zone, leap day and DST retained. Quarter-hour data are energy-aggregated to hourly values.<br>
     <b>Other assumptions:</b> S=P√(1+tan²φ), Q=P·tanφ with assumed tanφ=0.4; no reactive-power measurement or fee assessment. Degradation is an exponential assumption. Demo prices are synthetic. Energy billing is described in stage 4 below. Investment analysis and its assumptions are described in stage 5 below.<br>
-    Version: stage 5 — investment analysis.
+    Version: stage 6 — usability, performance and scenarios.
   `);
   const labels=Array.from({length:24},(_,i)=>i+':00'),opts={scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:chartLegend()};
   mkChart('rpt_c1','bar',{labels,datasets:[{label:t('Odbiorcy — średnia','Loads — mean'),data:state.S.dem,backgroundColor:'#4d9de0'}]},opts);
@@ -2905,17 +2941,7 @@ function buildReportCore() {
   mkChart('rpt_c4','line',{labels,datasets:[['dem',t('Odbiorcy','Loads'),'#4d9de0'],['oze','OZE','#9b87f5'],['gridArr',t('Import','Import'),'#e05a5a'],['exportArr',t('Eksport','Export'),'#3ecf8e'],['curtailedArr',t('Ograniczenie produkcji','Curtailment'),'#9896a0'],['chargeArr',t('Ładowanie MEE','BESS charging'),'#f4a535'],['dischargeArr',t('Oddawanie MEE','BESS delivery'),'#7ab8ec']].map(([key,label,color])=>({label,data:aggregate8760.toAverageDay(r[key]),borderColor:color,pointRadius:0}))},opts);
 }
 
-function generateAIAdvice() {
-  if(!lastSim)return;
-  const r=lastSim.S_8760,m=r.metrics;
-  const text=t('Wspólny wynik roczny: pokrycie OZE ','Shared annual result: RES coverage ')+pctLabel(m.coveragePct)+
-    t(', autokonsumpcja użyteczna ',', useful self-consumption ')+pctLabel(m.selfConsumptionPct)+'. '+
-    t('Nadwyżka: ','Surplus: ')+fmtD(m.annual.surplus,3)+' MWh; '+t('końcowy zapas OZE w MEE: ','final RES-origin BESS stock: ')+fmtD(m.finalSOCRES,3)+' MWh. '+
-    t('Wskaźniki roczne nie oznaczają niezależności od sieci w każdej godzinie. Dobór rozbudowy wymaga analizy chronologii i kosztów, nie tylko sumy nadwyżek.',
-      'Annual indicators do not imply grid independence in every hour. Sizing an expansion requires chronology and cost analysis, not just total surplus.');
-  setText('ai_advisor_text',text);
-}
-
+function generateAIAdvice(){cautiousAdvice();}
 
 function renderSettlementViews(state) {
   const r=state.S_8760,c=r.settlement,no=state.S_without.settlement,a=r.timeAxis;
@@ -2992,7 +3018,7 @@ function renderSettlementReport(state) {
     <b>Scope:</b> energy-only charges using the selected prices; no taxes or fixed, capacity or distribution charges are added. Price generation is DEMO and fetches no PSE data. EMS is rule-based, not a profit optimiser. Multi-year NPV/IRR/SPBT still need their dedicated verification stage.
   `);
 }
-function buildReport(){buildReportCore();if(lastSim){renderSettlementReport(lastSim);renderInvestmentReport();}}
+function buildReport(){buildReportCore();if(lastSim){renderSettlementReport(lastSim);renderInvestmentReport();appendStage6Report();}}
 
 function generateDemoPrices() {
   const a=getTimeAxis(),revision=++priceRevision,cS=iv('c_szczyt'),cN=iv('c_noc_pl');
@@ -3012,6 +3038,7 @@ function generateDemoPrices() {
 function fetchPSEData(){generateDemoPrices();} // Zgodność ze starym przyciskiem; nie wykonuje żądań PSE.
 
 function downloadHourlySettlement() {
+  flushEnergy();
   if(!lastSim)return;
   const r=lastSim.S_8760,no=lastSim.S_without,rows=['czas;import_MWh;cena_zakupu_PLN_MWh;koszt_zakupu_PLN;eksport_MWh;cena_sprzedazy_PLN_MWh;przychod_PLN;koszt_netto_PLN;ograniczenie_MWh;koszt_bez_MEE_PLN;oszczednosc_MEE_PLN;zrodlo_cen;polityka_nadwyzek'];
   for(let i=0;i<r.timeAxis.length;i++)rows.push([EnergyData.label(r.timeAxis.epochs[i],r.timeAxis.zone),r.gridArr[i],r.prices[i],r.purchaseCostArr[i],r.exportArr[i],r.exportPrices[i],r.exportRevenueArr[i],r.netCostArr[i],r.curtailedArr[i],no.netCostArr[i],no.netCostArr[i]-r.netCostArr[i],r.config.priceKind==='synthetic-demo'?'DEMO_syntetyczne':'taryfa_dwustrefowa',r.settlement.mode].join(';'));
@@ -3020,7 +3047,8 @@ function downloadHourlySettlement() {
 }
 
 
-function copyReport() {
+async function copyReport() {
+  flushEnergy();if(!lastSim)return;if(!investmentIsCurrent()&&!await requestInvestment())return;buildReport();
   const el = g('report-content');
   if (!el) return;
   let text = el.innerText;
@@ -3034,6 +3062,379 @@ function copyReport() {
     copyReportFallback(text);
   }
 }
+
+// Etap 6: obliczenia, rysowanie i interakcje mają osobny cykl życia.
+const Runtime = {timer:null,annual:null,annualRuns:0,renderedCharts:0,activePage:'cfg',printing:false};
+const InputValidation = (()=>{
+  const errors=new Map();
+  function label(el){return el.getAttribute('aria-label')||document.querySelector('label[for="'+el.id+'"]')?.textContent?.trim()||el.id;}
+  function mark(el,message='') {
+    if(!el?.id)return message;
+    if(message)errors.set(el.id,message);else errors.delete(el.id);
+    el.setAttribute('aria-invalid',message?'true':'false');
+    let note=g('error_'+el.id);
+    if(!note&&el.parentElement){note=document.createElement('small');note.id='error_'+el.id;note.className='field-error';el.parentElement.appendChild(note);}
+    if(note){note.textContent=message;note.hidden=!message;el.setAttribute('aria-describedby',note.id);}
+    return message;
+  }
+  function check(el) {
+    if(!el||el.disabled)return '';
+    const raw=String(el.value).trim(),value=Number(raw),min=el.getAttribute('min'),max=el.getAttribute('max');
+    let message='';
+    if(!raw||!Number.isFinite(value))message=t('Wpisz skończoną liczbę.','Enter a finite number.');
+    else if(min!==null&&value<Number(min))message=t('Wartość minimalna: ','Minimum value: ')+min+'.';
+    else if(max!==null&&value>Number(max))message=t('Wartość maksymalna: ','Maximum value: ')+max+'.';
+    else if((el.id==='analysis_year'||investmentFields.some(f=>f.id===el.id&&f.integer))&&!Number.isInteger(value))message=t('Wpisz liczbę całkowitą.','Enter an integer.');
+    mark(el,message);return message?label(el)+': '+message:'';
+  }
+  function blocker() {
+    for(const id of ['analysis_year','p_noc','p_dzien','pv_inv','pv_loss','fw_wind','fw_var','mee_eff','mee_deg','c_wzrost']) {
+      if(['p_noc','p_dzien'].includes(id)&&g('data_source').value==='csv')continue;
+      const message=check(g(id));if(message)return message;
+    }
+    for(const [id,f] of Object.entries(UnitInputs.fields)) {
+      if(id==='export_sell_price'&&(g('surplus_mode').value!=='sell'||g('export_price_source').value!=='fixed'))continue;
+      if(id==='export_limit_mw'&&g('surplus_mode').value==='curtail')continue;
+      const value=Number(g(id).value);
+      if(g(id).value.trim()===''||!Number.isFinite(value)||(f.kind!=='price'&&(value<0||value>f.max)))return t('Popraw pole: ','Correct field: ')+t(...f.label);
+    }
+    return '';
+  }
+  function clear(){errors.clear();document.querySelectorAll('[aria-invalid]').forEach(el=>mark(el));}
+  return {check,mark,blocker,clear,errors};
+})();
+function previewControl(id) {
+  const el=g(id),output=g(({pv_inv:'pv_inv_v',pv_loss:'pv_loss_v',fw_wind:'fw_wind_v',fw_var:'fw_var_v',mee_eff:'mee_eff_v',mee_deg:'mee_deg_v',p_noc:'p_noc_v',p_dzien:'p_dzien_v',c_wzrost:'c_wzrost_v'})[id]);
+  if(output)output.textContent=el.value+(id==='fw_wind'?' m/s':'%');
+}
+function scheduleUpdate(id) {
+  if(id){previewControl(id);if(InputValidation.check(g(id))){cancelWork();clearSimulationResults(InputValidation.check(g(id)));return;}}
+  if(Runtime.timer!==null)clearTimeout(Runtime.timer);
+  InvestmentJobs.cancel();
+  clearInvestment(t('Parametry zmienione — analiza inwestycji czeka na przeliczenie.','Parameters changed — investment analysis awaits recalculation.'));
+  g('app_data_status').className='ins warn';setText('app_data_status',t('Parametry zmienione — przeliczam wynik…','Parameters changed — recalculating…'));
+  setText('hdr_koszt',t('Przeliczanie…','Recalculating…'));
+  Runtime.timer=setTimeout(()=>{Runtime.timer=null;upd();},180);
+}
+function cancelWork(){if(Runtime.timer!==null)clearTimeout(Runtime.timer);Runtime.timer=null;InvestmentJobs.cancel();}
+function annualResult(args) {
+  const key=JSON.stringify([getTimeAxis().key,args,g('data_source').value,g('pv_data_source').value,g('price_source').value,EnergySettlement.options()]);
+  const refs=[window.uploadedProfile8760,window.uploadedPV8760,window.uploadedPrices8760];
+  if(Runtime.annual&&Runtime.annual.key===key&&refs.every((v,i)=>v===Runtime.annual.refs[i]))return Runtime.annual.result;
+  const result=simulate8760(...args);Runtime.annualRuns++;
+  Runtime.annual={key,refs,result,without:SimulationResults.withoutStorage(result),average:null};return result;
+}
+function flushEnergy(){if(Runtime.timer!==null){clearTimeout(Runtime.timer);Runtime.timer=null;upd();}}
+function investmentIsCurrent() {
+  if(!lastInvestment||!lastSim)return false;
+  try {const {p,addition}=readInvestmentInputs();return JSON.stringify(p)===JSON.stringify(lastInvestment.p)&&JSON.stringify(addition)===JSON.stringify(lastInvestment.addition)&&
+    lastInvestment.snapshot.state.S_8760===lastSim.S_8760&&lastInvestment.snapshot.state.meeDeg===lastSim.meeDeg;}catch{return false;}
+}
+function prepareInvestment() {
+  investmentLanguage();
+  if(investmentIsCurrent()){renderInvestment(lastInvestment);generateAIAdvice();return;}
+  InvestmentJobs.cancel();
+  clearInvestment(t('Otwórz analizę inwestycji lub raport, aby przeliczyć wynik dla bieżących parametrów.','Open investment analysis or the report to calculate the current parameters.'));
+  generateAIAdvice();
+  if(['inwest','raport'].includes(Runtime.activePage))InvestmentJobs.schedule(0);
+}
+const InvestmentJobs=(()=>{
+  let revision=0,timer=null,pending=null;
+  function cancel(){revision++;if(timer!==null)clearTimeout(timer);timer=null;pending=null;g('investment_status')?.setAttribute('aria-busy','false');}
+  function schedule(delay=250){cancel();timer=setTimeout(()=>{timer=null;run();},delay);}
+  function cacheFor(p) {
+    const physicalKey=JSON.stringify([lastSim.S_8760.config,lastSim.S_8760.timeAxis.key,lastSim.fwW,lastSim.fwV,lastSim.meeDeg,lastSim.cWzrost,g('data_source').value]);
+    const demandRef=window.uploadedProfile8760,pvRef=window.uploadedPV8760,priceRef=window.uploadedPrices8760;
+    if(!investmentCache||investmentCache.physicalKey!==physicalKey||investmentCache.demandRef!==demandRef||investmentCache.pvRef!==pvRef||investmentCache.priceRef!==priceRef)
+      investmentCache={physicalKey,demandRef,pvRef,priceRef,snap:InvestmentModel.snapshot(lastSim),key:null,results:new Map()};
+    const key=JSON.stringify(p);if(investmentCache.key!==key){investmentCache.key=key;investmentCache.results.clear();investmentCache.baseline=null;}
+    return investmentCache;
+  }
+  async function run() {
+    if(timer!==null){clearTimeout(timer);timer=null;}
+    flushEnergy();
+    if(investmentIsCurrent()){renderInvestment(lastInvestment);buildReport();return lastInvestment;}
+    if(pending)return pending;
+    if(!lastSim){clearInvestment(t('Najpierw popraw dane symulacji energii.','Correct the energy inputs first.'));return null;}
+    const token=++revision;
+    const task=Promise.resolve().then(async()=>{
+      try {
+        for(const f of investmentFields){const message=InputValidation.check(g(f.id));if(message)throw new Error(message);}
+        const {p,addition}=readInvestmentInputs(),cache=cacheFor(p),snapshot=cache.snap;
+        clearInvestment(t('Liczenie analizy inwestycji…','Calculating investment analysis…'));
+        g('investment_status').setAttribute('aria-busy','true');
+        const options={cancelled:()=>token!==revision,progress:({year})=>setText('investment_status',t('Liczenie scenariusza — rok ','Calculating scenario — year ')+year+'/'+p.horizon)};
+        if(!cache.baseline)cache.baseline=await InvestmentModel.trajectoryAsync(snapshot,p,{pv:0,wind:0,cap:0,power:0},options);
+        const get=async a=>{const key=JSON.stringify(a);if(!cache.results.has(key)){const result=await InvestmentModel.compareAsync(snapshot,p,a,cache.baseline,options);if(cache.results.size>=12)cache.results.delete(cache.results.keys().next().value);cache.results.set(key,result);}return cache.results.get(key);};
+        const result=await get(addition),variants=[];
+        for(const v of [
+          {id:'custom',name:t('Wpisana rozbudowa','Entered expansion'),addition},
+          {id:'pv',name:'+25% PV',addition:{pv:lastSim.pvM*.25,wind:0,cap:0,power:0}},
+          {id:'wind',name:'+25% FW',addition:{pv:0,wind:lastSim.fwM*.25,cap:0,power:0}},
+          {id:'battery',name:'+50% MWh / +30% MW MEE',addition:{pv:0,wind:0,cap:lastSim.meeK*.5,power:lastSim.meeP*.3}}
+        ]) {const r=await get(v.addition);variants.push({id:v.id,name:v.name,result:r,npv:r.npv});}
+        if(token!==revision)return null;
+        lastInvestment={p,addition,result,variants,ranking:InvestmentModel.rank(variants),snapshot};
+        renderInvestment(lastInvestment);generateAIAdvice();buildReport();return lastInvestment;
+      }catch(e){if(token===revision){clearInvestment(e.message);generateAIAdvice();buildReport();}return null;}
+      finally{if(token===revision){pending=null;g('investment_status').setAttribute('aria-busy','false');}}
+    });pending=task;return task;
+  }
+  return {cancel,schedule,run};
+})();
+function requestInvestment(){return InvestmentJobs.run();}
+function scheduleInvestment(){InvestmentJobs.cancel();for(const f of investmentFields)InputValidation.check(g(f.id));clearInvestment(t('Założenia zmienione — czekam na zakończenie wpisywania.','Assumptions changed — waiting for typing to finish.'));generateAIAdvice();if(lastSim)buildReport();InvestmentJobs.schedule(350);}
+
+const ChartViews=(()=>{
+  const specs=new Map();
+  function visible(el){for(let n=el;n&&n!==document.body;n=n.parentElement){if(n.hidden)return false;if(n.classList?.contains('page')&&!n.classList.contains('active'))return Runtime.printing&&n.id==='page-raport';if(n.classList?.contains('sub-section')&&!n.classList.contains('active'))return false;}return true;}
+  function color(v){if(typeof v!=='string')return v;const palette={'#4d9de0':'#1768aa','#3ecf8e':'#087f5b','#6ddba9':'#087f5b','#f4a535':'#985400','#f7c068':'#985400','#e05a5a':'#b42332','#eb8484':'#b42332','#9b87f5':'#6a43b4','#7ab8ec':'#1768aa','#9896a0':'#62606b'};return (isLight||Runtime.printing)?(palette[v]||v):v;}
+  function accessible(el,spec) {
+    const title=spec.data.datasets.map(d=>d.label||'').join('; '),unit=spec.opts.scales?.y?.title?.text||'';
+    el.setAttribute('role','img');el.setAttribute('aria-label',t('Wykres: ','Chart: ')+title+(unit?' ['+unit+']':''));
+    let summary=g('summary_'+el.id);
+    if(!summary){summary=document.createElement('p');summary.id='summary_'+el.id;summary.className='sr-only';el.parentElement?.appendChild(summary);}
+    summary.textContent=spec.data.datasets.map(d=>{const values=Array.from(d.data||[]).filter(Number.isFinite);return (d.label||'')+': '+(values.length?t('liczba punktów ','points ')+values.length+t(', min. ',', min ')+fmtD(Math.min(...values),3)+t(', maks. ',', max ')+fmtD(Math.max(...values),3):t('brak danych','no data'));}).join('. ');
+    el.setAttribute('aria-describedby',summary.id);
+  }
+  function draw(id,force=false) {
+    const el=g(id),spec=specs.get(id);if(!el||!spec||(!force&&!visible(el)))return null;
+    accessible(el,spec);
+    if(!chartAvailable){showChartWarning(el);return null;}
+    clearChartWarning(el);
+    const data={...spec.data,datasets:spec.data.datasets.map(d=>{
+      const copy={...d};for(const k of ['borderColor','backgroundColor','pointBackgroundColor'])if(Array.isArray(copy[k]))copy[k]=copy[k].map(color);else if(copy[k])copy[k]=color(copy[k]);return copy;
+    })};
+    const options={responsive:true,maintainAspectRatio:false,animation:false,resizeDelay:80,...spec.opts,color:(isLight||Runtime.printing)?'#424852':'#c9c6d0',plugins:{legend:{display:false},...spec.opts.plugins}};
+    options.plugins.legend={...options.plugins.legend,labels:{...options.plugins.legend?.labels,color:options.color}};
+    if(options.scales)options.scales=Object.fromEntries(Object.entries(options.scales).map(([key,scale])=>[key,{...scale,ticks:{...scale.ticks,color:options.color},title:{...scale.title,color:options.color},grid:{...scale.grid,color:(isLight||Runtime.printing)?'#d1d5db':'#393b4c'}}]));
+    if(charts[id]&&charts[id].config.type===spec.type&&typeof charts[id].update==='function'){
+      charts[id].data=data;charts[id].options=options;charts[id].update('none');
+    }else {if(charts[id])charts[id].destroy();charts[id]=new Chart(el.getContext('2d'),{type:spec.type,data,options});}
+    Runtime.renderedCharts++;return charts[id];
+  }
+  function set(id,type,data,opts={}){specs.set(id,{type,data,opts});return draw(id);}
+  function flush(){for(const id of specs.keys()){draw(id);if(charts[id]&&visible(g(id)))charts[id].resize();}}
+  function clear(){specs.clear();}
+  return {set,flush,clear,specs,visible};
+})();
+function switchPage(name) {
+  flushEnergy();
+  document.querySelectorAll('.page').forEach(el=>el.classList.toggle('active',el.id==='page-'+name));
+  document.querySelectorAll('.nav-item').forEach(el=>{const active=el.getAttribute('onclick')?.includes("'"+name+"'");el.classList.toggle('active',!!active);if(active)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
+  Runtime.activePage=name;
+  if(['inwest','raport'].includes(name)){if(!investmentIsCurrent())InvestmentJobs.schedule(0);if(name==='raport')buildReport();}
+  if(name==='scenarios')Scenarios.render();
+  ChartViews.flush();syncAccessibility();
+}
+function switchSub(page,index) {
+  flushEnergy();const parent=g('page-'+page),sections=parent.querySelectorAll('.sub-section'),tabs=parent.querySelectorAll('.sub-tab');
+  sections.forEach((el,i)=>el.classList.toggle('active',i===index));tabs.forEach((el,i)=>{el.classList.toggle('active',i===index);el.setAttribute('aria-selected',String(i===index));el.setAttribute('tabindex',i===index?'0':'-1');});
+  if(page==='inwest'&&!investmentIsCurrent())InvestmentJobs.schedule(0);
+  if(page==='bilans'&&index===3&&lastSim)renderV2();
+  ChartViews.flush();syncAccessibility();
+}
+function syncAccessibility() {
+  document.documentElement.setAttribute?.('lang',currentLang);
+  document.querySelectorAll('.sub-tabs').forEach(el=>{el.setAttribute('role','tablist');el.setAttribute('aria-label',el.closest('.page')?.querySelector('.page-title')?.textContent||t('Widoki wyników','Result views'));});
+  document.querySelectorAll('.page').forEach(page=>{
+    const tabs=page.querySelectorAll('.sub-tab'),panels=page.querySelectorAll('.sub-section');
+    tabs.forEach((tab,i)=>{tab.id=tab.id||'tab_'+page.id+'_'+i;tab.setAttribute('role','tab');tab.setAttribute('aria-controls',panels[i]?.id||'');tab.setAttribute('aria-selected',String(tab.classList.contains('active')));tab.setAttribute('tabindex',tab.classList.contains('active')?'0':'-1');if(panels[i]){panels[i].setAttribute('role','tabpanel');panels[i].setAttribute('aria-labelledby',tab.id);}
+      tab.onkeydown=e=>{const directions={ArrowRight:1,ArrowLeft:-1,Home:-i,End:tabs.length-1-i};if(!(e.key in directions))return;e.preventDefault();const next=(i+directions[e.key]+tabs.length)%tabs.length;switchSub(page.id.replace('page-',''),next);tabs[next].focus();};
+    });
+  });
+  for(const el of document.querySelectorAll('input, select, textarea')) {
+    if(!el.id||el.type==='hidden')continue;
+    const text=document.querySelector('label[for="'+el.id+'"]')?.textContent?.trim()||el.closest('.form-row')?.querySelector('.form-label')?.textContent?.trim();
+    if(text)el.setAttribute('aria-label',text);
+  }
+  g('lang_toggle')?.setAttribute('aria-label',t('Zmień język na angielski','Change language to Polish'));
+  document.querySelectorAll('.tbl-wrap').forEach(el=>{el.setAttribute('tabindex','0');el.setAttribute('role','region');el.setAttribute('aria-label',el.closest('.page')?.querySelector('.page-title')?.textContent||t('Tabela wyników','Results table'));});
+  document.querySelectorAll('thead th').forEach(el=>el.setAttribute('scope','col'));
+}
+function stage6Language() {
+  document.querySelectorAll('[data-s6-pl]').forEach(el=>el.textContent=t(el.getAttribute('data-s6-pl'),el.getAttribute('data-s6-en')));
+  syncAccessibility();
+}
+function yearCount(n){return n+' '+t(n===1?'rok':n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?'lata':'lat',n===1?'year':'years');}
+function cautiousAdvice() {
+  if(!lastSim){setText('ai_advisor_text',t('Wskazówki pojawią się po poprawnym obliczeniu energii.','Notes will appear after a valid energy calculation.'));return;}
+  const r=lastSim.S_8760,m=r.metrics,notes=[];
+  notes.push(t('Pokrycie odbiorców przez OZE: ','Load coverage by RES: ')+pctLabel(m.coveragePct)+t('; autokonsumpcja użyteczna: ','; useful self-consumption: ')+pctLabel(m.selfConsumptionPct)+'.');
+  if(r.balance.connectionExcessHours)notes.push(t('Sprawdź przyłącze: limit poboru przekroczono w ','Check the connection: import exceeded the limit in ')+r.balance.connectionExcessHours+t(' godzinach; maksymalnie o ',' hours; by up to ')+powerText(r.balance.maxConnectionExcess)+' MW.');
+  if(r.settlement.curtailedEnergy>1e-8)notes.push(t('Ograniczona produkcja: ','Curtailed production: ')+fmtD(r.settlement.curtailedEnergy,3)+t(' MWh/rok. Samo występowanie nadwyżek nie przesądza o opłacalności większego magazynu.',' MWh/year. Surplus alone does not establish that a larger battery is profitable.'));
+  const saving=lastSim.S_without.settlement.netCost-r.settlement.netCost;
+  notes.push(t('Magazyn zmienia roczny koszt energii o ','BESS changes annual energy cost by ')+money(-saving)+t(' PLN (wartość dodatnia oznacza wyższy koszt).',' PLN (positive means a higher cost).'));
+  if(investmentIsCurrent())notes.push(t('NPV wpisanej rozbudowy: ','Entered expansion NPV: ')+money(lastInvestment.result.npv)+t(' PLN — wyłącznie przy wpisanych założeniach. Porównanie kilku wariantów nie jest automatycznym doborem instalacji.',' PLN — only under the entered assumptions. Comparing a few options is not automatic sizing.'));
+  else notes.push(t('Analiza inwestycji wymaga przeliczenia dla bieżących ustawień.','Investment analysis needs recalculating for the current settings.'));
+  if(investmentFields.filter(f=>f.group==='opex').some(f=>Number(g(f.id).value)===0))notes.push(t('Sprawdź zerowe koszty serwisu i utrzymania. Ceny urządzeń i usług są założeniami do własnego kosztorysu.','Check zero maintenance and operating costs. Equipment and service prices are assumptions for your own estimate.'));
+  if(r.config.priceKind==='synthetic-demo')notes.push(t('Używasz cen DEMO; wyniki nie są prognozą rynku.','DEMO prices are in use; results are not a market forecast.'));
+  setText('ai_advisor_text',notes.join('\n\n'));
+}
+async function printReport() {
+  flushEnergy();if(!lastSim)return;
+  if(!investmentIsCurrent()&&!await requestInvestment())return;
+  buildReport();window.print();
+}
+function beforeReportPrint(){flushEnergy();Runtime.printing=true;buildReport();for(const id of ChartViews.specs.keys())if(id.startsWith('rpt_')){const spec=ChartViews.specs.get(id);ChartViews.set(id,spec.type,spec.data,spec.opts);charts[id]?.resize(900,280);}}
+function afterReportPrint(){Runtime.printing=false;ChartViews.flush();}
+function appendStage6Report() {
+  const note=g('rep_stage6');if(!note)return;
+  const heading=document.createElement('p');heading.textContent=t('Wskazówki z obliczeń: ','Calculation-based notes: ')+(g('ai_advisor_text')?.textContent||'');
+  const quote=document.createElement('p');quote.textContent=quoteDescription();note.replaceChildren(quote,heading);
+}
+
+const CostQuoteFields=['cost_basis','quote_source','quote_location','quote_date','quote_note'];
+function quoteDescription(){return t('Podstawa kosztów: ','Cost basis: ')+({example:t('robocze stawki, do weryfikacji','working rates, to verify'),estimate:t('własny szacunek','own estimate'),quote:t('oferta / kosztorys','quotation / estimate')})[g('cost_basis').value]+'. '+CostQuoteFields.slice(1).map(id=>g(id).value.trim()).filter(Boolean).join(' · ');}
+const ScenarioData=(()=>{
+  const scalarIds=['analysis_year','analysis_zone',...Object.keys(UnitInputs.fields),'p_noc','p_dzien','tryb','pv_inv','pv_loss','fw_wind','fw_var','mee_eff','mee_deg','c_wzrost','ems_mode','sezon','data_source','pv_data_source','price_source','surplus_mode','export_price_source','export_allow_negative','power_unit','energy_unit','price_unit','api_lat','api_lon',...investmentFields.map(f=>f.id),'inv_pv_grunt',...CostQuoteFields];
+  const enums={analysis_zone:['Europe/Warsaw','UTC','CET'],tryb:['3','2','ramp'],ems_mode:['auto','arbitrage'],sezon:['rok','lato','zima','wiosna'],data_source:['manual','csv'],pv_data_source:['manual','api'],price_source:['tariff','demo'],surplus_mode:['free','curtail','sell'],export_price_source:['fixed','indexed'],power_unit:['MW','kW'],energy_unit:['MWh','kWh'],price_unit:['PLN/MWh','PLN/kWh'],inv_pv_grunt:['zakup','dzierzawa','wlasny'],cost_basis:['example','estimate','quote']};
+  const numeric={analysis_year:[2000,2099,true],p_noc:[0,100],p_dzien:[0,100],pv_inv:[0,100],pv_loss:[0,100],fw_wind:[0,25],fw_var:[0,100],mee_eff:[0.000001,100],mee_deg:[0,99.999],c_wzrost:[-50,100],api_lat:[-90,90],api_lon:[-180,180]};
+  for(const [id,f] of Object.entries(UnitInputs.fields))numeric[id]=f.kind==='price'?[-1e9,1e9]:[0,f.max];
+  for(const f of investmentFields)numeric[f.id]=[f.min,f.max,!!f.integer];
+  for(const [id,limits] of Object.entries(numeric))if(g(id)?.getAttribute('type')==='range'){
+    limits[0]=Number(g(id).getAttribute('min'));limits[1]=Number(g(id).getAttribute('max'));
+  }
+  const texts={quote_source:200,quote_location:200,quote_note:1000,quote_date:10};
+  function text(value,max,name){if(typeof value!=='string'||value.length>max)throw new Error(t('Nieprawidłowy tekst: ','Invalid text: ')+name);return value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'');}
+  function validate(raw) {
+    if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error(t('Nieprawidłowy scenariusz.','Invalid scenario.'));
+    const controls=Object.create(null),input=raw.controls;
+    if(!input||typeof input!=='object'||Object.keys(input).some(id=>!scalarIds.includes(id)))throw new Error(t('Nieznane pola scenariusza.','Unknown scenario fields.'));
+    for(const id of scalarIds) {
+      if(!Object.hasOwn(input,id))throw new Error(t('Brak pola: ','Missing field: ')+id);
+      const value=input[id];
+      if(id==='export_allow_negative'){if(typeof value!=='boolean')throw new Error('Nieprawidłowe pole logiczne.');controls[id]=value;}
+      else if(enums[id]){if(!enums[id].includes(value))throw new Error(t('Niedozwolony wybór: ','Invalid selection: ')+id);controls[id]=value;}
+      else if(numeric[id]){const [min,max,integer]=numeric[id];if(typeof value!=='number'||!Number.isFinite(value)||value<min||value>max||(integer&&!Number.isInteger(value)))throw new Error(t('Nieprawidłowa liczba: ','Invalid number: ')+id);controls[id]=value;}
+      else controls[id]=text(value,texts[id],id);
+    }
+    if(controls.inv_existing_age>=controls.inv_existing_life)throw new Error(t('Wiek baterii jest niezgodny z okresem wymian.','Battery age conflicts with the replacement interval.'));
+    if(controls.quote_date&&(!/^\d{4}-\d{2}-\d{2}$/.test(controls.quote_date)||!Number.isFinite(Date.parse(controls.quote_date+'T00:00:00Z'))||new Date(controls.quote_date+'T00:00:00Z').toISOString().slice(0,10)!==controls.quote_date))throw new Error(t('Nieprawidłowa data kosztorysu.','Invalid estimate date.'));
+    const axis=EnergyData.axis(controls.analysis_year,controls.analysis_zone),profiles={};
+    for(const [key,active,negative] of [['demand',controls.data_source==='csv',false],['pv',controls.pv_data_source==='api',false],['prices',controls.price_source==='demo',true]]) {
+      const values=raw.profiles?.[key];
+      if(!active){profiles[key]=null;continue;}
+      if(!Array.isArray(values)||values.length!==axis.length||values.some(v=>typeof v!=='number'||!Number.isFinite(v)||(!negative&&v<0)||Math.abs(v)>1e9))throw new Error(t('Nieprawidłowy profil godzinowy: ','Invalid hourly profile: ')+key);
+      profiles[key]=values.slice();
+    }
+    return {id:text(raw.id,100,'id'),name:text(raw.name,100,'name').trim()||t('Scenariusz','Scenario'),savedAt:text(raw.savedAt,40,'savedAt'),controls,profiles};
+  }
+  function capture(name) {
+    flushEnergy();if(!lastSim||!investmentIsCurrent())throw new Error(t('Najpierw przelicz poprawny wariant energii i inwestycji.','Calculate valid energy and investment results first.'));
+    const controls=Object.create(null);
+    for(const id of scalarIds)controls[id]=id==='export_allow_negative'?g(id).checked:numeric[id]?Number(g(id).value):g(id).value;
+    const copy=arr=>arr?Array.from(arr):null;
+    return validate({id:'s_'+Date.now().toString(36)+'_'+(++serial),name,savedAt:new Date().toISOString(),controls,profiles:{demand:copy(window.uploadedProfile8760),pv:copy(window.uploadedPV8760),prices:copy(window.uploadedPrices8760)}});
+  }
+  let serial=0;
+  function settings(s){const p={},addition={};for(const f of investmentFields)(f.group==='addition'?addition:p)[f.key]=s.controls[f.id];p.landMode=s.controls.inv_pv_grunt;p.buyGrowth=s.controls.c_wzrost;return {p,addition};}
+  function energy(s) {
+    const v=s.controls,axis=EnergyData.axis(v.analysis_year,v.analysis_zone);
+    const sources={csv:v.data_source==='csv',api:v.pv_data_source==='api',dynamic:v.price_source==='demo',demand:s.profiles.demand,pv:s.profiles.pv,prices:s.profiles.prices};
+    const settlement={mode:v.surplus_mode,limit:v.export_limit_mw,fixedPrice:v.export_sell_price,sellSource:v.export_price_source,allowNegative:v.export_allow_negative};
+    const r=simulate8760(v.pv_moc,v.fw_moc,v.fw_wind,v.fw_var,v.mee_kwh,v.mee_mw,v.mee_eff,v.p_przyl,v.p_noc,v.p_dzien,v.pv_inv,v.pv_loss,v.tryb,v.ems_mode,v.c_szczyt,v.c_noc_pl,{timeAxis:axis,sources,settlement});
+    return {S_8760:r,pp:v.p_przyl,pn:v.p_noc,pd:v.p_dzien,pvM:v.pv_moc,fwM:v.fw_moc,fwW:v.fw_wind,fwV:v.fw_var,meeK:v.mee_kwh,meeP:v.mee_mw,meeEff:v.mee_eff,meeDeg:v.mee_deg,tryb:v.tryb,cS:v.c_szczyt,cN:v.c_noc_pl,cWzrost:v.c_wzrost,invEff:v.pv_inv,lossEff:v.pv_loss};
+  }
+  async function calculate(s,options={}) {
+    const state=energy(s),{p,addition}=settings(s),snapshot=InvestmentModel.snapshot(state);
+    const result=await InvestmentModel.compareAsync(snapshot,p,addition,null,options);
+    return {energy:state.S_8760.metrics,settlement:state.S_8760.settlement,result,p};
+  }
+  function compatible(a,b) {
+    const ignore=new Set(['inv_pv_mw','inv_fw_mw','inv_mee_kwh','inv_mee_mw','inv_pv_cost','inv_wind_cost','inv_battery_cost','inv_pcs_cost','inv_land_area','inv_land_buy','inv_land_rent','inv_pv_grunt','inv_dotacja','inv_added_fixed','inv_added_life','inv_residual_pct','power_unit','energy_unit','price_unit','sezon','api_lat','api_lon',...CostQuoteFields]);
+    if(scalarIds.some(id=>!ignore.has(id)&&a.controls[id]!==b.controls[id]))return false;
+    return ['demand','pv','prices'].every(key=>{const x=a.profiles[key],y=b.profiles[key];return x===null&&y===null||Array.isArray(x)&&Array.isArray(y)&&x.length===y.length&&x.every((v,i)=>v===y[i]);});
+  }
+  function parse(text) {
+    if(typeof text!=='string'||text.length>20*1024*1024)throw new Error(t('Plik scenariuszy przekracza limit 20 MB.','Scenario file exceeds 20 MB.'));
+    let raw;try{raw=JSON.parse(text);}catch{throw new Error(t('Plik nie jest poprawnym JSON.','The file is not valid JSON.'));}
+    if(raw?.app!=='EnergoSym'||raw.format!==1||raw.model!=='energy-stage5-v1'||!Array.isArray(raw.scenarios)||raw.scenarios.length>12)throw new Error(t('Nieobsługiwany format lub wersja scenariuszy.','Unsupported scenario format or version.'));
+    const all=raw.scenarios.map(validate);if(new Set(all.map(s=>s.id)).size!==all.length)throw new Error(t('Powtórzone identyfikatory scenariuszy.','Duplicate scenario identifiers.'));return all;
+  }
+  function stringify(list){return JSON.stringify({app:'EnergoSym',format:1,model:'energy-stage5-v1',scenarios:list});}
+  return {scalarIds,validate,capture,settings,energy,calculate,compatible,parse,stringify};
+})();
+const Scenarios=(()=>{
+  let list=[],selected=new Set(),deleted=null,operation=0,readOnlyStore=false;
+  const summaries=new WeakMap(),storageKey='energosym.scenarios.v1';
+  function message(text,warn=false){setText('scenario_status',text);g('scenario_status').className=warn?'ins warn':'ins info';}
+  function persist(){try{window.localStorage.setItem(storageKey,ScenarioData.stringify(list));readOnlyStore=false;return true;}catch{readOnlyStore=true;return false;}}
+  function init(){try{const raw=window.localStorage.getItem(storageKey);if(raw)list=ScenarioData.parse(raw);}catch{readOnlyStore=true;message(t('Nie odczytano pamięci przeglądarki. Możesz pracować w tej sesji i użyć eksportu JSON.','Browser storage could not be read. Work in this session and use JSON export.'),true);}render();}
+  function render() {
+    const body=g('scenario_list');if(!body)return;body.replaceChildren();
+    for(const s of list) {
+      const row=document.createElement('tr'),choose=document.createElement('td'),check=document.createElement('input');check.type='checkbox';check.checked=selected.has(s.id);check.setAttribute('aria-label',t('Porównaj: ','Compare: ')+s.name);check.onchange=()=>{if(check.checked){if(selected.size>=4){check.checked=false;message(t('Porównuj najwyżej 4 scenariusze jednocześnie.','Compare up to 4 scenarios at once.'),true);return;}selected.add(s.id);}else selected.delete(s.id);operation++;clearComparison();};choose.appendChild(check);row.appendChild(choose);
+      for(const value of [s.name,s.controls.quote_source||'—',s.controls.quote_location||'—',s.controls.quote_date||'—']){const td=document.createElement('td');td.textContent=value;row.appendChild(td);}
+      const actions=document.createElement('td');for(const [label,fn] of [[t('Wczytaj','Load'),()=>load(s.id)],[t('Usuń','Delete'),()=>remove(s.id)]]){const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=label;button.onclick=fn;actions.appendChild(button);}row.appendChild(actions);body.appendChild(row);
+    }
+    setText('scenario_count',list.length+'/12');g('scenario_undo').hidden=!deleted;
+  }
+  async function save() {
+    try {
+      const name=g('scenario_name').value.trim();if(!name){const text=t('Nadaj scenariuszowi nazwę.','Name the scenario.');InputValidation.mark(g('scenario_name'),text);message(text,true);g('scenario_name').focus();return;}InputValidation.mark(g('scenario_name'));
+      if(list.length>=12)throw new Error(t('Osiągnięto limit 12 scenariuszy. Wyeksportuj i usuń niepotrzebne.','Limit of 12 scenarios reached. Export and remove unused scenarios.'));
+      const token=++operation;
+      const current=await requestInvestment();if(!current||token!==operation)return;
+      const scenario=ScenarioData.capture(name);list.push(scenario);summaries.set(scenario,{energy:lastSim.metrics,settlement:lastSim.S_8760.settlement,result:current.result,p:current.p});
+      selected.add(scenario.id);if(selected.size>4)selected.delete(selected.values().next().value);
+      const stored=persist();render();clearComparison();message(stored?t('Scenariusz zapisany w tej przeglądarce. Dla kopii zapasowej pobierz JSON.','Scenario saved in this browser. Download JSON for backup.'):t('Scenariusz jest tylko w pamięci tej sesji — pobierz JSON, aby go zachować.','Scenario is only in session memory — download JSON to retain it.'),!stored);
+    }catch(e){message(e.message,true);}
+  }
+  function load(id) {
+    const s=list.find(s=>s.id===id);if(!s)return;
+    try {
+      const valid=ScenarioData.validate(s);cancelWork();operation++;weatherRevision++;priceRevision++;csvState.readToken++;weatherController?.abort();
+      for(const [id,value] of Object.entries(valid.controls)){if(id==='export_allow_negative')g(id).checked=value;else g(id).value=String(value);}
+      const axis=EnergyData.axis(valid.controls.analysis_year,valid.controls.analysis_zone);
+      window.uploadedProfile8760=valid.profiles.demand?Float64Array.from(valid.profiles.demand):null;
+      window.importedDemand=window.uploadedProfile8760?{key:axis.key,unit:'MW',minutes:60,filename:valid.name}:null;
+      window.uploadedPV8760=valid.profiles.pv?Float64Array.from(valid.profiles.pv):null;window.weatherMeta=window.uploadedPV8760?{key:axis.key,lat:valid.controls.api_lat,lon:valid.controls.api_lon}:null;
+      window.uploadedPrices8760=valid.profiles.prices?Float64Array.from(valid.profiles.prices):null;window.pricesMeta=window.uploadedPrices8760?{key:axis.key,kind:'synthetic-demo'}:null;
+      csvState={text:null,parsed:null,result:null,filename:valid.name,readToken:csvState.readToken};g('csv_upload').value='';g('csv_mapping').hidden=true;g('csv_errors_download').disabled=true;
+      setText('csv_status',t('Zastosowano zweryfikowany profil godzinowy ze scenariusza. Aby zmienić import, wybierz nowy CSV.','Applied the validated hourly profile from the scenario. Select a new CSV to change the import.'));
+      for(const id of ['weather_status','pse_status'])setText(id,t('Dane godzinowe odtworzone z zapisu scenariusza.','Hourly data restored from the saved scenario.'));
+      g('box_csv').style.display=valid.controls.data_source==='csv'?'block':'none';['p_noc','p_dzien','tryb'].forEach(id=>g(id).disabled=valid.controls.data_source==='csv');
+      g('pv_box_manual').style.display=valid.controls.pv_data_source==='api'?'none':'block';g('pv_box_api').style.display=valid.controls.pv_data_source==='api'?'block':'none';
+      UnitInputs.resetValidation();InputValidation.clear();Runtime.annual=null;investmentCache=null;lastInvestment=null;upd();
+      g('scenario_name').value=valid.name;message(t('Wczytano scenariusz: ','Loaded scenario: ')+valid.name);
+    }catch(e){message(e.message,true);}
+  }
+  function remove(id){const found=list.find(s=>s.id===id);if(!found)return;operation++;deleted=found;list=list.filter(s=>s.id!==id);selected.delete(id);const stored=persist();render();clearComparison();message(stored?t('Usunięto scenariusz. Możesz cofnąć ostatnie usunięcie.','Scenario removed. You can undo the last deletion.'):t('Usunięto tylko z tej sesji. Zapis w przeglądarce nie powiódł się.','Removed only in this session. Browser storage could not be updated.'),!stored);}
+  function undo(){if(!deleted||list.length>=12)return;list.push(deleted);deleted=null;const stored=persist();render();message(stored?t('Przywrócono scenariusz.','Scenario restored.'):t('Przywrócono w tej sesji; pobierz JSON.','Restored in this session; download JSON.'),!stored);}
+  function clearComparison(){g('scenario_comparison').replaceChildren();setText('scenario_comparison_note','');}
+  async function compare() {
+    const chosen=list.filter(s=>selected.has(s.id));if(chosen.length<2||chosen.length>4){message(t('Zaznacz od 2 do 4 scenariuszy.','Select 2 to 4 scenarios.'),true);return;}
+    const token=++operation;g('scenario_comparison').setAttribute('aria-busy','true');clearComparison();
+    try {
+      for(const s of chosen)if(!summaries.has(s)) {message(t('Przeliczam zapisany scenariusz: ','Recalculating saved scenario: ')+s.name);const summary=await ScenarioData.calculate(s,{cancelled:()=>token!==operation,progress:({year})=>message(s.name+t(' — rok ',' — year ')+year)});summaries.set(s,summary);}
+      if(token!==operation)return;
+      const compatible=chosen.every(s=>ScenarioData.compatible(s,chosen[0]));
+      const note=compatible?t('Wspólny stan wyjściowy i założenia porównania. NPV uwzględnia różne nakłady i korzyści zapisanych rozbudów.','Common baseline and comparison assumptions. NPV includes the different costs and benefits of saved expansions.'):
+        t('Różny stan wyjściowy, dane lub założenia finansowe — poniżej osobne wyniki, bez rankingu NPV. Dla uczciwego porównania ofert zachowaj ten sam popyt, istniejące urządzenia, ceny energii, horyzont i dyskonto.','Different baselines, data or financial assumptions — separate results are shown without an NPV ranking. To compare quotations fairly, keep demand, existing assets, energy prices, horizon and discount rate the same.');
+      setText('scenario_comparison_note',note);g('scenario_comparison_note').className=compatible?'ins info':'ins warn';
+      const table=document.createElement('table'),thead=document.createElement('thead'),tr=document.createElement('tr');
+      for(const label of [t('Wskaźnik','Metric'),...chosen.map(s=>s.name)]){const th=document.createElement('th');th.scope='col';th.textContent=label;tr.appendChild(th);}thead.appendChild(tr);table.appendChild(thead);
+      const body=document.createElement('tbody'),rows=[
+        [t('Energia bez rozbudowy — rok 1 [PLN]','Energy without expansion — year 1 [PLN]'),x=>money(x.result.rows[0].before.energy)],
+        [t('Energia po rozbudowie — rok 1 [PLN]','Energy after expansion — year 1 [PLN]'),x=>money(x.result.rows[0].after.energy)],
+        [t('Pokrycie OZE obecnego układu','Existing system RES coverage'),x=>pctLabel(x.energy.coveragePct)],
+        [t('Szczyt importu obecnego układu [MW]','Existing system import peak [MW]'),x=>powerText(x.energy.peaks.grid.value)],
+        [t('Nakład netto rozbudowy [PLN]','Net expansion capital [PLN]'),x=>money(x.result.capital.net)],
+        [t('Korzyść operacyjna roku 1 [PLN]','Year-1 operating benefit [PLN]'),x=>money(x.result.firstYearBenefit)],
+        ['NPV [PLN]',x=>money(x.result.npv)],['IRR',x=>irrText(x.result.irr)],
+        [t('Zwrot zdyskontowany','Discounted payback'),x=>paybackText(x.result.discountedPayback)],
+        [t('Okres / dyskonto','Horizon / discount'),x=>x.p.horizon+t(' lat / ',' years / ')+x.p.discount+'%']
+      ];
+      for(const [name,value] of rows){const row=document.createElement('tr'),th=document.createElement('th');th.scope='row';th.textContent=name;row.appendChild(th);for(const s of chosen){const td=document.createElement('td');td.textContent=value(summaries.get(s));row.appendChild(td);}body.appendChild(row);}table.appendChild(body);g('scenario_comparison').appendChild(table);
+      if(compatible){const best=chosen.reduce((best,s)=>summaries.get(s).result.npv>summaries.get(best).result.npv?s:best);const value=summaries.get(best).result.npv;message(value>0?t('Najwyższe NPV w zaznaczonym porównaniu: ','Highest NPV in the selection: ')+best.name+t('. To wynik dla zapisanych kosztorysów, nie rekomendacja wykonawcy.','. This compares the saved estimates, not contractors.'):t('Żaden zaznaczony wariant nie ma dodatniego NPV względem pozostawienia swojego układu bez rozbudowy.','None of the selected options has positive NPV versus retaining its baseline.'));}else message(note,true);
+    }catch(e){if(token===operation)message(e.message,true);}finally{if(token===operation)g('scenario_comparison').setAttribute('aria-busy','false');}
+  }
+  function exportAll(){if(!list.length){message(t('Najpierw zapisz scenariusz.','Save a scenario first.'),true);return;}const url=URL.createObjectURL(new Blob([ScenarioData.stringify(list)],{type:'application/json;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='EnergoSym_scenariusze.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),0);message(t('Wyeksportowano ustawienia i aktywne profile godzinowe. Plik zawiera dane zużycia, jeśli użyto CSV.','Exported settings and active hourly profiles. The file contains consumption data if CSV was used.'));}
+  async function importFile(event){const file=event.target.files?.[0];if(!file)return;const token=++operation;try{if(file.size>20*1024*1024)throw new Error(t('Maksymalny rozmiar pliku: 20 MB.','Maximum file size: 20 MB.'));const text=await file.text();if(token!==operation)return;const incoming=ScenarioData.parse(text);if(list.length+incoming.length>12)throw new Error(t('Import przekroczyłby limit 12 scenariuszy.','Import would exceed the limit of 12 scenarios.'));for(const s of incoming)s.id='import_'+Date.now().toString(36)+'_'+(++importSerial);list.push(...incoming);const stored=persist();render();clearComparison();message(stored?t('Dodano scenariusze. Wyniki zostaną obliczone z zapisanych danych przy porównaniu.','Scenarios added. Results will be recalculated from the saved inputs when compared.'):t('Dodano tylko do tej sesji — pobierz JSON.','Added only for this session — download JSON.'),!stored);}catch(e){if(token===operation)message(e.message,true);}finally{event.target.value='';}}
+  let importSerial=0;
+  return {init,render,save,load,remove,undo,compare,exportAll,importFile,clearComparison,get list(){return list;},get selected(){return selected;},get summaries(){return summaries;},get readOnlyStore(){return readOnlyStore;}};
+})();
 
 function copyReportFallback(text) {
   const ta = document.createElement('textarea');
@@ -3087,10 +3488,12 @@ function isVisible(id) {
 
 
 window.addEventListener('DOMContentLoaded', () => {
-  initAccessibility();
+  initAccessibility();if(!chartAvailable)document.body.classList.add('no-charts');
+  stage6Language();Scenarios.init();
   UnitInputs.refresh();refreshPriceControls();
   refreshTimeDescription();
   try {upd();} catch(e) {clearSimulationResults(t('Obliczenia przerwane: ','Calculations stopped: ')+e.message);}
+  window.addEventListener('beforeprint',beforeReportPrint);window.addEventListener('afterprint',afterReportPrint);
   window.addEventListener('error', event=>{
     if(event.error) {setText('app_data_status',t('Błąd aplikacji: ','Application error: ')+event.error.message);g('app_data_status').className='ins warn';}
   });
