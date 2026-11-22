@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EnergoSym — etap 3: jeden profil i spójne wyniki</title>
+<title>EnergoSym — etap 4: jeden profil i spójne wyniki</title>
 <link rel="preconnect" href="https://fonts.googleapis.com/">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -248,7 +248,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 
 <header class="header">
   <div class="header-logo">EnergoSym<span>.pl</span></div>
-  <div class="header-sub" data-i18n="header-sub">Symulator energetyczny zakładu produkcyjnego — etap 3</div>
+  <div class="header-sub" data-i18n="header-sub">Symulator energetyczny zakładu produkcyjnego — etap 4</div>
   <div class="header-metrics">
     <span id="hdr_pokrycie" class="pill amber">Pokrycie 20%</span>
     <span id="hdr_koszt" style="font-family:var(--mono);font-size:12px;color:var(--text3)">Koszt sieci: — PLN/dobę</span>
@@ -304,6 +304,13 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div id="time_axis_info" class="ins info"></div>
     <p style="font-size:12px;color:var(--text2)">Zmiana roku lub strefy wymaga ponownego zatwierdzenia CSV i pobrania pogody. Rok przestępny obejmuje pełne 8784 godziny. Daty z Z lub przesunięciem UTC są jednoznaczne i przeliczane na wybraną strefę.</p>
   </div>
+<div class="card" style="margin-bottom:14px">
+  <div class="card-title">Jednostki parametrów</div><div class="grid3">
+  <div><label for="power_unit">Moc przyłącza, PV, FW i MEE</label><select id="power_unit" onchange="changeDisplayUnits()"><option value="MW">MW</option><option value="kW">kW</option></select></div>
+  <div><label for="energy_unit">Pojemność magazynu</label><select id="energy_unit" onchange="changeDisplayUnits()"><option value="MWh">MWh</option><option value="kWh">kWh</option></select></div>
+  <div><label for="price_unit">Ceny zakupu i sprzedaży</label><select id="price_unit" onchange="changeDisplayUnits()"><option value="PLN/MWh">zł/MWh</option><option value="PLN/kWh">zł/kWh</option></select></div>
+  </div><p style="font-size:12px;color:var(--text2);margin-top:8px">Zmiana jednostki przelicza zapis tej samej wartości: 1 MW = 1000 kW, 1 MWh = 1000 kWh, 600 zł/MWh = 0,60 zł/kWh. Dotyczy pól w Parametrach ogólnych. Wykresy i raport podają własne jednostki MW/MWh; kwoty rachunku są w zł.</p>
+</div>
   <div id="app_data_status" class="ins info" role="status">Oczekiwanie na obliczenia…</div>
   <div class="grid2">
     <!-- LEWA KOLUMNA -->
@@ -322,7 +329,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 
       <!-- BLOK RĘCZNY (SUWAKI) -->
       <div id="box_manual">
-        <div class="form-row"><span class="form-label" data-i18n="cfg-moc">Moc przyłączeniowa [MW]</span><input type="range" id="p_przyl" min="1" max="200" step="1" value="30" onchange="upd(); document.getElementById('num_p_przyl').value=this.value"><input type="number" id="num_p_przyl" value="30" min="1" max="200" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('p_przyl').value=this.value; upd()"><span class="val-display" id="p_przyl_v">30 MW</span></div>
+        <div class="form-row"><label class="form-label" id="label_p_przyl" for="num_p_przyl">p_przyl</label><input type="hidden" id="p_przyl" value="30"><input type="range" id="slider_p_przyl" min="0" max="200" step="0.000001" value="30" onchange="UnitInputs.commit('p_przyl',true)"><input type="number" id="num_p_przyl" value="30" step="any" min="0" max="200" style="width:110px;padding:4px" onchange="UnitInputs.commit('p_przyl')"><span class="val-display" id="p_przyl_v">—</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-noc">Zapotrzebowanie nocne 22–6 [%]</span><input type="range" id="p_noc" min="20" max="60" step="5" value="35" oninput="upd()"><span class="val-display" id="p_noc_v">35%</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-dzien">Zapotrzebowanie dzienne 6–22 [%]</span><input type="range" id="p_dzien" min="60" max="95" step="5" value="85" oninput="upd()"><span class="val-display" id="p_dzien_v">85%</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-tryb">Tryb pracy zakładu</span>
@@ -360,15 +367,25 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 
       <hr class="sdiv">
       <div class="stitle" data-i18n="cfg-ceny">Ceny energii elektrycznej</div>
-      <div class="form-row"><span class="form-label" data-i18n="cfg-cszczyt">Cena szczytowa 6–21 [PLN/MWh]</span><input type="range" id="c_szczyt" min="100" max="1000" step="10" value="600" oninput="upd()"><span class="val-display" id="c_szczyt_v">600</span></div>
-      <div class="form-row"><span class="form-label" data-i18n="cfg-cnoc">Cena nocna 21–6 [PLN/MWh]</span><input type="range" id="c_noc_pl" min="100" max="1000" step="10" value="250" oninput="upd()"><span class="val-display" id="c_noc_v">250</span></div>
+      <div class="form-row"><label for="price_source" class="form-label">Źródło cen zakupu</label><select id="price_source" onchange="changePriceSource()"><option value="tariff">Taryfa dwustrefowa — wpisane ceny</option><option value="demo">DEMO — syntetyczne ceny godzinowe</option></select></div>
+      <div id="price_source_status" class="ins info" role="status"></div>
+      <div class="form-row"><label class="form-label" id="label_c_szczyt" for="num_c_szczyt">c_szczyt</label><input type="hidden" id="c_szczyt" value="600"><input type="number" id="num_c_szczyt" value="600" step="any"  style="width:110px;padding:4px" onchange="UnitInputs.commit('c_szczyt')"><span class="val-display" id="c_szczyt_v">—</span></div>
+      <div class="form-row"><label class="form-label" id="label_c_noc_pl" for="num_c_noc_pl">c_noc_pl</label><input type="hidden" id="c_noc_pl" value="250"><input type="number" id="num_c_noc_pl" value="250" step="any"  style="width:110px;padding:4px" onchange="UnitInputs.commit('c_noc_pl')"><span class="val-display" id="c_noc_v">—</span></div>
       <div class="form-row"><span class="form-label" data-i18n="cfg-wzrost">Wzrost cen energii [%/rok]</span><input type="range" id="c_wzrost" min="0" max="15" step="0.5" value="4" oninput="upd()"><span class="val-display" id="c_wzrost_v">4%</span></div>
 
       <hr class="sdiv">
-      <!-- WERSJA 2.0: API PSE -->
+<hr class="sdiv"><div class="stitle">Co dzieje się z nadwyżką po magazynie?</div>
+  <div class="form-row"><label for="surplus_mode" class="form-label">Sposób rozliczenia</label><select id="surplus_mode" onchange="changeSurplusPolicy()"><option value="free">Oddawanie do sieci bez zapłaty</option><option value="curtail">Ograniczanie niewykorzystanej produkcji</option><option value="sell">Sprzedaż nadwyżek</option></select></div>
+  <div class="form-row"><label class="form-label" id="label_export_limit_mw" for="num_export_limit_mw">export_limit_mw</label><input type="hidden" id="export_limit_mw" value="30"><input type="number" id="num_export_limit_mw" value="30" step="any" min="0" max="1000" style="width:110px;padding:4px" onchange="UnitInputs.commit('export_limit_mw')"></div>
+  <div id="surplus_sell_options" hidden>
+  <div class="form-row"><label for="export_price_source" class="form-label">Cena sprzedaży</label><select id="export_price_source" onchange="changeSurplusPolicy()"><option value="fixed">Stała — wpisana poniżej</option><option value="indexed">Godzinowa taka jak zakup — założenie</option></select></div>
+  <div class="form-row"><label class="form-label" id="label_export_sell_price" for="num_export_sell_price">export_sell_price</label><input type="hidden" id="export_sell_price" value="250"><input type="number" id="num_export_sell_price" value="250" step="any"  style="width:110px;padding:4px" onchange="UnitInputs.commit('export_sell_price')"></div>
+  <label><input type="checkbox" id="export_allow_negative" onchange="changeSurplusPolicy()"> Pozwól na sprzedaż przy cenie ujemnej (zwiększa koszty)</label>
+  </div><div class="ins info" style="font-size:12px">Oddawanie bez zapłaty daje zerowy przychód. Sprzedaż daje przychód według wybranej ceny. Część niewyeksportowana, w tym ponad limit oddawania, jest ograniczana. Podany limit eksportu jest założeniem użytkownika, niezależnym od limitu poboru.</div>
+      <!-- Generator DEMO — bez API PSE -->
       <div style="padding: 15px; background: var(--bg3); border: 1px dashed var(--amber); border-radius: var(--radius);">
-        <div style="font-size: 12px; font-weight: 600; color: var(--amber2); margin-bottom: 8px;">Ceny demonstracyjne — syntetyczny profil roczny</div>
-        <button class="btn" onclick="fetchPSEData()" id="btn_pse_fetch" style="border-color: var(--amber); color: var(--amber2); width: 100%;">Generuj ceny demo</button>
+        <div style="font-size: 12px; font-weight: 600; color: var(--amber2); margin-bottom: 8px;">DEMO — generator syntetycznych cen rocznych (bez PSE)</div>
+        <button class="btn" onclick="generateDemoPrices()" id="btn_pse_fetch" style="border-color: var(--amber); color: var(--amber2); width: 100%;">Generuj ceny demo</button>
         <div id="pse_status" style="font-size: 11px; margin-top: 8px; color: var(--text2);">Generator demo — nie pobiera cen z PSE.</div>
         <!-- NOWE: Okienko na mini-wykres cen -->
         <div id="pse_chart_wrapper" style="display: none; margin-top: 15px; height: 100px; position: relative;">
@@ -382,7 +399,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--amber)"></span><span data-i18n="cfg-pv">Fotowoltaika (PV)</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-pvmoc">Moc zainstalowana PV [MW]</span><input type="range" id="pv_moc" min="0" max="300" step="1" value="30" onchange="upd(); document.getElementById('num_pv_moc').value=this.value"><input type="number" id="num_pv_moc" value="30" min="0" max="300" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('pv_moc').value=this.value; upd()"><span class="val-display" id="pv_v">30 MW</span></div>
+        <div class="form-row"><label class="form-label" id="label_pv_moc" for="num_pv_moc">pv_moc</label><input type="hidden" id="pv_moc" value="30"><input type="range" id="slider_pv_moc" min="0" max="300" step="0.000001" value="30" onchange="UnitInputs.commit('pv_moc',true)"><input type="number" id="num_pv_moc" value="30" step="any" min="0" max="300" style="width:110px;padding:4px" onchange="UnitInputs.commit('pv_moc')"><span class="val-display" id="pv_v">—</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-pveff">Sprawność falownika [%]</span><input type="range" id="pv_inv" min="92" max="99" step="0.5" value="97" oninput="upd()"><span class="val-display" id="pv_inv_v">97%</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-pvloss">Straty (zacienienie) [%]</span><input type="range" id="pv_loss" min="0" max="15" step="1" value="5" oninput="upd()"><span class="val-display" id="pv_loss_v">5%</span></div>
         
@@ -420,7 +437,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       </div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title"><span class="card-title-dot" style="background:var(--green)"></span><span data-i18n="cfg-fw">Elektrownia wiatrowa (FW)</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-fwmoc">Moc zainstalowana FW [MW]</span><input type="range" id="fw_moc" min="0" max="150" step="1" value="16" onchange="upd(); document.getElementById('num_fw_moc').value=this.value"><input type="number" id="num_fw_moc" value="16" min="0" max="150" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('fw_moc').value=this.value; upd()"><span class="val-display" id="fw_v">16 MW</span></div>
+        <div class="form-row"><label class="form-label" id="label_fw_moc" for="num_fw_moc">fw_moc</label><input type="hidden" id="fw_moc" value="16"><input type="range" id="slider_fw_moc" min="0" max="150" step="0.000001" value="16" onchange="UnitInputs.commit('fw_moc',true)"><input type="number" id="num_fw_moc" value="16" step="any" min="0" max="150" style="width:110px;padding:4px" onchange="UnitInputs.commit('fw_moc')"><span class="val-display" id="fw_v">—</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-fwwind">Śr. prędkość wiatru [m/s]</span><input type="range" id="fw_wind" min="0" max="25" step="0.5" value="8" oninput="upd()"><span class="val-display" id="fw_wind_v">8 m/s</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-fwvar">Zmienność dobowa wiatru [%]</span><input type="range" id="fw_var" min="0" max="60" step="5" value="20" oninput="upd()"><span class="val-display" id="fw_var_v">20%</span></div>
         <div id="fw_status_cfg" class="fw-bar"></div>
@@ -433,8 +450,8 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
             <option value="arbitrage" data-i18n="opt-ems-arb">Arbitraż cenowy (RDN)</option>
           </select>
         </div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-meecap">Pojemność MEE [MWh]</span><input type="range" id="mee_kwh" min="0" max="200" step="1" value="9" onchange="upd(); document.getElementById('num_mee_kwh').value=this.value"><input type="number" id="num_mee_kwh" value="9" min="0" max="200" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('mee_kwh').value=this.value; upd()"><span class="val-display" id="mee_kwh_v">9 MWh</span></div>
-        <div class="form-row"><span class="form-label" data-i18n="cfg-meepow">Moc MEE AC [MW]</span><input type="range" id="mee_mw" min="0" max="100" step="1" value="3" onchange="upd(); document.getElementById('num_mee_mw').value=this.value"><input type="number" id="num_mee_mw" value="3" min="0" max="100" style="width:60px; padding:2px; height:26px;" onchange="document.getElementById('mee_mw').value=this.value; upd()"><span class="val-display" id="mee_mw_v">3 MW</span></div>
+        <div class="form-row"><label class="form-label" id="label_mee_kwh" for="num_mee_kwh">mee_kwh</label><input type="hidden" id="mee_kwh" value="9"><input type="range" id="slider_mee_kwh" min="0" max="200" step="0.000001" value="9" onchange="UnitInputs.commit('mee_kwh',true)"><input type="number" id="num_mee_kwh" value="9" step="any" min="0" max="200" style="width:110px;padding:4px" onchange="UnitInputs.commit('mee_kwh')"><span class="val-display" id="mee_kwh_v">—</span></div>
+        <div class="form-row"><label class="form-label" id="label_mee_mw" for="num_mee_mw">mee_mw</label><input type="hidden" id="mee_mw" value="3"><input type="range" id="slider_mee_mw" min="0" max="100" step="0.000001" value="3" onchange="UnitInputs.commit('mee_mw',true)"><input type="number" id="num_mee_mw" value="3" step="any" min="0" max="100" style="width:110px;padding:4px" onchange="UnitInputs.commit('mee_mw')"><span class="val-display" id="mee_mw_v">—</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-meert">Sprawność round-trip [%]</span><input type="range" id="mee_eff" min="80" max="98" step="1" value="92" oninput="upd()"><span class="val-display" id="mee_eff_v">92%</span></div>
         <div class="form-row"><span class="form-label" data-i18n="cfg-meedeg">Degradacja pojemności [%/rok]</span><input type="range" id="mee_deg" min="1" max="4" step="0.5" value="2" oninput="upd()"><span class="val-display" id="mee_deg_v">2%</span></div>
       </div>
@@ -444,16 +461,23 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   <div class="stitle" data-i18n="cfg-sum">Podsumowanie bieżącej konfiguracji</div>
   <div class="grid4">
     <div class="mc blue"><div class="mc-label" data-i18n="mc-zap">Zapotrzebowanie</div><div class="mc-value blue" id="cfg_zap">—</div><div class="mc-unit">MWh/dobę</div></div>
-    <div class="mc green"><div class="mc-label" data-i18n="mc-prod">Produkcja OZE</div><div class="mc-value green" id="cfg_oze">—</div><div class="mc-unit">MWh/dobę</div></div>
+    <div class="mc green"><div class="mc-label" data-i18n="mc-prod">Dostępna energia OZE</div><div class="mc-value green" id="cfg_oze">—</div><div class="mc-unit">MWh/dobę</div></div>
     <div class="mc amber"><div class="mc-label" data-i18n="mc-siec">Pobór z sieci</div><div class="mc-value amber" id="cfg_siec">—</div><div class="mc-unit">MWh/dobę</div></div>
-    <div class="mc purple"><div class="mc-label" data-i18n="mc-auto">Autokonsumpcja użyteczna OZE</div><div class="mc-value purple" id="cfg_auto">—</div><div class="mc-unit">%</div></div>
+    <div class="mc purple"><div class="mc-label" data-i18n="mc-auto">Autokonsumpcja użyteczna potencjału OZE</div><div class="mc-value purple" id="cfg_auto">—</div><div class="mc-unit">%</div></div>
   </div>
   <div class="grid3">
-    <div class="mc amber"><div class="mc-label" data-i18n="mc-koszt">Koszt energii z sieci</div><div class="mc-value amber" id="cfg_koszt">—</div><div class="mc-unit">PLN/dobę</div></div>
-    <div class="mc green"><div class="mc-label" data-i18n="mc-oszcz">Oszczędności vs. bez OZE</div><div class="mc-value green" id="cfg_oszcz">—</div><div class="mc-unit">PLN/dobę</div></div>
+    <div class="mc amber"><div class="mc-label" data-i18n="mc-koszt">Koszt netto energii</div><div class="mc-value amber" id="cfg_koszt">—</div><div class="mc-unit">PLN/dobę</div></div>
+    <div class="mc green"><div class="mc-label" data-i18n="mc-oszcz">Oszczędność vs. brak OZE i MEE</div><div class="mc-value green" id="cfg_oszcz">—</div><div class="mc-unit">PLN/dobę</div></div>
     <div class="mc blue"><div class="mc-label" data-i18n="mc-fw">Śr. prod. FW</div><div class="mc-value blue" id="cfg_fw_avg">—</div><div class="mc-unit">MW (średnia roczna)</div></div>
   </div>
   <div id="ins_cfg" class="ins warn"></div>
+<div class="stitle">Roczne rozliczenie energii</div>
+ <div class="grid4">
+ <div class="mc"><div class="mc-label">Koszt zakupu</div><div class="mc-value" id="cost_purchase_year">—</div><div class="mc-unit">zł/rok</div></div><div class="mc"><div class="mc-label">Przychód ze sprzedaży</div><div class="mc-value" id="cost_revenue_year">—</div><div class="mc-unit">zł/rok</div></div><div class="mc"><div class="mc-label">Koszt netto</div><div class="mc-value" id="cost_net_year">—</div><div class="mc-unit">zł/rok</div></div><div class="mc"><div class="mc-label">Oszczędność magazynu</div><div class="mc-value" id="cost_storage_year">—</div><div class="mc-unit">zł/rok</div></div>
+ </div><div id="cost_source_summary" class="ins info"></div>
+ <div class="grid3"><div class="mc"><div class="mc-label">Eksport</div><div class="mc-value" id="energy_export_year">—</div><div class="mc-unit">MWh/rok</div></div><div class="mc"><div class="mc-label">Ograniczona produkcja</div><div class="mc-value" id="energy_curtail_year">—</div><div class="mc-unit">MWh/rok</div></div><div class="mc"><div class="mc-label">Faktyczna produkcja OZE</div><div class="mc-value" id="energy_actual_year">—</div><div class="mc-unit">MWh/rok</div></div></div>
+ <div id="surplus_summary" class="ins info"></div>
+ <div class="card"><div class="cwm"><canvas id="c_settlement_monthly"></canvas></div></div>
 </div>
 
 <div class="page" id="page-zaklad">
@@ -504,7 +528,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       <div class="mc blue"><div class="mc-label" data-i18n="mc-entyg">Średnia energia tygodniowa</div><div class="mc-value blue" id="zak_tyg_e">—</div><div class="mc-unit">MWh/tydzień</div></div>
       <div class="mc"><div class="mc-label" data-i18n="mc-enrok">Energia roczna — suma godzin</div><div class="mc-value" id="zak_rok_e">—</div><div class="mc-unit">MWh/rok</div></div>
       <div class="mc green"><div class="mc-label" data-i18n="mc-enrokreal">Energia roczna — wspólny profil</div><div class="mc-value green" id="zak_rok_e_real">—</div><div class="mc-unit">MWh/rok</div></div>
-      <div class="mc amber"><div class="mc-label" data-i18n="mc-kosztbez">Koszt roczny (bez OZE)</div><div class="mc-value amber" id="zak_rok_koszt">—</div><div class="mc-unit">PLN/rok</div></div>
+      <div class="mc amber"><div class="mc-label" data-i18n="mc-kosztbez">Koszt roczny bez OZE i MEE</div><div class="mc-value amber" id="zak_rok_koszt">—</div><div class="mc-unit">PLN/rok</div></div>
     </div>
     <div id="ins_zak2" class="ins info"></div>
   </div>
@@ -513,7 +537,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div class="stitle" data-i18n="zest-wskaz">Wskaźniki aktywnego profilu rocznego</div>
     <div class="tbl-wrap" style="margin-bottom:1rem">
       <table id="tbl_zaklad">
-        <thead><tr><th data-i18n="th-tryb">Aktywny profil</th><th data-i18n="th-energia">Śr. energia [MWh/dobę]</th><th data-i18n="th-szczyt">Szczyt w roku [MW]</th><th data-i18n="th-min">Minimum w roku [MW]</th><th data-i18n="th-lf">Średnia / szczyt [%]</th><th data-i18n="th-koszt">Koszt bez OZE [PLN/dobę]</th></tr></thead>
+        <thead><tr><th data-i18n="th-tryb">Aktywny profil</th><th data-i18n="th-energia">Śr. energia [MWh/dobę]</th><th data-i18n="th-szczyt">Szczyt w roku [MW]</th><th data-i18n="th-min">Minimum w roku [MW]</th><th data-i18n="th-lf">Średnia / szczyt [%]</th><th data-i18n="th-koszt">Koszt bez OZE i MEE [PLN/dobę]</th></tr></thead>
         <tbody id="tbl_zaklad_body"></tbody>
       </table>
     </div>
@@ -563,8 +587,8 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div class="legend"><span><span class="ld" style="background:var(--amber)"></span><span data-i18n="leg-pvmies">Produkcja miesięczna PV [MWh]</span></span></div>
     <div class="card"><div class="cwm"><canvas id="c_pv_miesiace"></canvas></div></div>
     <div class="grid3" style="margin-top:1rem">
-      <div class="mc amber"><div class="mc-label" data-i18n="mc-pvroczna">Produkcja roczna PV</div><div class="mc-value amber" id="pv_rok">—</div><div class="mc-unit">MWh/rok</div></div>
-      <div class="mc green"><div class="mc-label" data-i18n="mc-pvcf">Współczynnik CF (roczny)</div><div class="mc-value green" id="pv_cf">—</div><div class="mc-unit">%</div></div>
+      <div class="mc amber"><div class="mc-label" data-i18n="mc-pvroczna">Dostępna energia roczna PV</div><div class="mc-value amber" id="pv_rok">—</div><div class="mc-unit">MWh/rok</div></div>
+      <div class="mc green"><div class="mc-label" data-i18n="mc-pvcf">CF dostępnego profilu PV</div><div class="mc-value green" id="pv_cf">—</div><div class="mc-unit">%</div></div>
       <div class="mc blue"><div class="mc-label" data-i18n="mc-pvwartosc">Średnia moc PV w roku</div><div class="mc-value blue" id="pv_wartosc">—</div><div class="mc-unit">MW</div></div>
     </div>
     <div id="ins_pv3" class="ins info"></div>
@@ -592,9 +616,9 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div class="card"><div class="cwl"><canvas id="c_fw_dobowy"></canvas></div></div>
     <div class="grid4" style="margin-top:1rem">
       <div class="mc green"><div class="mc-label" data-i18n="mc-fwsr">Średnia moc w roku</div><div class="mc-value green" id="fw_avg">—</div><div class="mc-unit">MW</div></div>
-      <div class="mc"><div class="mc-label" data-i18n="mc-fweff">CF — wykorzystanie mocy</div><div class="mc-value" id="fw_eff">—</div><div class="mc-unit">%</div></div>
+      <div class="mc"><div class="mc-label" data-i18n="mc-fweff">CF dostępnego profilu FW</div><div class="mc-value" id="fw_eff">—</div><div class="mc-unit">%</div></div>
       <div class="mc amber"><div class="mc-label" data-i18n="mc-fwendob">Energia dobowa</div><div class="mc-value amber" id="fw_e_day">—</div><div class="mc-unit">MWh/dobę</div></div>
-      <div class="mc blue"><div class="mc-label" data-i18n="mc-fwenrok">Energia roczna — suma godzin</div><div class="mc-value blue" id="fw_e_rok">—</div><div class="mc-unit">MWh/rok</div></div>
+      <div class="mc blue"><div class="mc-label" data-i18n="mc-fwenrok">Dostępna energia FW — suma godzin</div><div class="mc-value blue" id="fw_e_rok">—</div><div class="mc-unit">MWh/rok</div></div>
     </div>
     <div id="ins_fw1" class="ins info"></div>
   </div>
@@ -635,13 +659,13 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div class="legend">
       <span><span class="ld" style="background:var(--purple)"></span><span data-i18n="leg-meesoc">Stan naładowania SOC [MWh]</span></span>
       <span><span class="ld" style="background:var(--green)"></span><span data-i18n="leg-meemoc">Moc MEE AC [MW] (+ładowanie / –rozładowanie)</span></span>
-      <span><span class="ld" style="background:var(--red2)"></span><span data-i18n="leg-meetaryfa">Taryfa [PLN/MWh ÷ 10]</span></span>
+      <span><span class="ld" style="background:var(--red2)"></span><span data-i18n="leg-meetaryfa">Cena zakupu — osobna oś</span></span>
     </div>
     <div class="card"><div class="cwl"><canvas id="c_mee_dobowy"></canvas></div></div>
     <div class="grid4" style="margin-top:1rem">
       <div class="mc purple"><div class="mc-label" data-i18n="mc-meerozl">Energia rozładowana</div><div class="mc-value purple" id="mee_e_dis">—</div><div class="mc-unit">MWh/dobę</div></div>
-      <div class="mc green"><div class="mc-label" data-i18n="mc-meearb">Różnica kosztów MEE (2 strefy)</div><div class="mc-value green" id="mee_sav_day">—</div><div class="mc-unit">PLN/dobę</div></div>
-      <div class="mc amber"><div class="mc-label" data-i18n="mc-meearbrok">Różnica kosztów MEE rocznie</div><div class="mc-value amber" id="mee_sav_rok">—</div><div class="mc-unit">PLN/rok</div></div>
+      <div class="mc green"><div class="mc-label" data-i18n="mc-meearb">Oszczędność MEE (netto)</div><div class="mc-value green" id="mee_sav_day">—</div><div class="mc-unit">PLN/dobę</div></div>
+      <div class="mc amber"><div class="mc-label" data-i18n="mc-meearbrok">Oszczędność MEE rocznie</div><div class="mc-value amber" id="mee_sav_rok">—</div><div class="mc-unit">PLN/rok</div></div>
       <div class="mc blue"><div class="mc-label" data-i18n="mc-meecykle">Cykle równoważne rozładowania/dobę</div><div class="mc-value blue" id="mee_cycles">—</div><div class="mc-unit">cykli</div></div>
     </div>
     <div id="ins_mee1" class="ins info"></div>
@@ -654,7 +678,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     
     <div id="mee_balance_details" class="ins info"></div>
     <div id="mee_connection_status" class="ins info" role="status"></div>
-    <div class="ins warn" data-i18n="stage1-economics">Etapy 1–3: wskaźniki finansowe pozostają szacunkowe i wymagają osobnej korekty.</div>
+    <div class="ins warn" data-i18n="stage1-economics">Etap 4: rachunek energii jest godzinowy. Wieloletnia ekonomika NPV/IRR/SPBT wymaga osobnej weryfikacji.</div>
   </div>
 
   <div class="sub-section" id="mee_1">
@@ -664,8 +688,8 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     </div>
     <div class="card"><div class="cwl"><canvas id="c_mee_porownanie"></canvas></div></div>
     <div class="grid3" style="margin-top:1rem">
-      <div class="mc blue"><div class="mc-label" data-i18n="mc-meekosztbez">Koszt sieci BEZ MEE</div><div class="mc-value blue" id="mee_koszt_bez">—</div><div class="mc-unit">PLN/dobę</div></div>
-      <div class="mc green"><div class="mc-label" data-i18n="mc-meekosztz">Koszt sieci Z MEE</div><div class="mc-value green" id="mee_koszt_z">—</div><div class="mc-unit">PLN/dobę</div></div>
+      <div class="mc blue"><div class="mc-label" data-i18n="mc-meekosztbez">Koszt netto BEZ MEE</div><div class="mc-value blue" id="mee_koszt_bez">—</div><div class="mc-unit">PLN/dobę</div></div>
+      <div class="mc green"><div class="mc-label" data-i18n="mc-meekosztz">Koszt netto Z MEE</div><div class="mc-value green" id="mee_koszt_z">—</div><div class="mc-unit">PLN/dobę</div></div>
       <div class="mc amber"><div class="mc-label" data-i18n="mc-meeredukcja">Redukcja rocznego szczytu importu</div><div class="mc-value amber" id="mee_peak_red">—</div><div class="mc-unit">MW (–%)</div></div>
     </div>
     <div id="ins_mee2" class="ins info"></div>
@@ -706,13 +730,13 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
       <span><span class="ld" style="background:var(--blue)"></span><span data-i18n="leg-bilzap">Zapotrzebowanie</span></span>
       <span><span class="ld" style="background:var(--purple)"></span><span data-i18n="leg-biloze">OZE łącznie</span></span>
       <span><span class="ld" style="background:var(--red)"></span><span data-i18n="leg-bilsiec">Pobór z sieci</span></span>
-      <span><span class="ld" style="background:var(--green)"></span><span data-i18n="leg-bilnad">Nadwyżka OZE</span></span>
+      <span><span class="ld" style="background:var(--green)"></span><span data-i18n="leg-bilnad">Eksport po MEE</span></span>
     </div>
     <div class="card"><div class="cwl"><canvas id="c_bil_dobowy"></canvas></div></div>
     <div class="grid4" style="margin-top:1rem">
       <div class="mc red"><div class="mc-label" data-i18n="mc-bilmaxsiec">Szczyt godzinowy importu w roku</div><div class="mc-value red" id="bil_max_siec">—</div><div class="mc-unit">MW (szczyt)</div></div>
       <div class="mc green"><div class="mc-label" data-i18n="mc-bilmee">Energia z MEE</div><div class="mc-value green" id="bil_mee_e">—</div><div class="mc-unit">MWh/dobę</div></div>
-      <div class="mc amber"><div class="mc-label" data-i18n="mc-bilnad">Nadwyżka OZE</div><div class="mc-value amber" id="bil_nadwyzka">—</div><div class="mc-unit">MWh/dobę</div></div>
+      <div class="mc amber"><div class="mc-label" data-i18n="mc-bilnad">Nadwyżka przed eksportem/ograniczeniem</div><div class="mc-value amber" id="bil_nadwyzka">—</div><div class="mc-unit">MWh/dobę</div></div>
       <div class="mc blue"><div class="mc-label" data-i18n="mc-bilpokrycie">Pokrycie odbiorców przez OZE</div><div class="mc-value blue" id="bil_pokrycie">—</div><div class="mc-unit">%</div></div>
     </div>
     <div id="ins_bil1" class="ins info"></div>
@@ -721,7 +745,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   <div class="sub-section" id="bilans_1">
     <div class="legend">
       <span><span class="ld" style="background:var(--blue)"></span><span data-i18n="leg-bilzap">Zapotrzebowanie</span></span>
-      <span><span class="ld" style="background:var(--green)"></span><span data-i18n="mc-prod">Produkcja OZE</span></span>
+      <span><span class="ld" style="background:var(--green)"></span><span data-i18n="mc-prod">Dostępna energia OZE</span></span>
       <span><span class="ld" style="background:var(--red)"></span><span data-i18n="leg-bilsiec">Pobór z sieci</span></span>
     </div>
     <div class="card"><div class="cwl"><canvas id="c_bil_tygodniowy"></canvas></div></div>
@@ -734,10 +758,11 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   </div>
 
   <div class="sub-section" id="bilans_2">
+  <button class="btn" id="btn_hourly_settlement" onclick="downloadHourlySettlement()">Pobierz pełne rozliczenie godzinowe CSV</button>
     <div class="stitle" data-i18n="zest-godz">Bilans energetyczny godzinowy (24h)</div>
     <div class="tbl-wrap" style="margin-bottom:1rem">
       <table>
-        <thead><tr><th data-i18n="th-godz">Godz.</th><th data-i18n="th-zap">Zapotrzebowanie [MW]</th><th>PV [MW]</th><th>FW [MW]</th><th>MEE [MW]</th><th data-i18n="th-zsieci">Z sieci [MW]</th><th data-i18n="th-nadwyzka">Nadwyżka [MW]</th><th data-i18n="th-koszt-pln">Koszt [PLN]</th></tr></thead>
+        <thead><tr><th data-i18n="th-godz">Godz.</th><th data-i18n="th-zap">Zapotrzebowanie [MW]</th><th>PV [MW]</th><th>FW [MW]</th><th>MEE [MW]</th><th data-i18n="th-zsieci">Z sieci [MW]</th><th data-i18n="th-nadwyzka">Nadwyżka przed decyzją [MW]</th><th data-i18n="th-koszt-pln">Śr. koszt netto tej godziny [PLN]</th></tr></thead>
         <tbody id="tbl_bilans_body"></tbody>
       </table>
     </div>
@@ -761,6 +786,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <h1 class="page-title" data-i18n="inv-title">Analiza inwestycji</h1>
   </div>
 
+  <div class="ins warn">Etap 4 poprawia roczny rachunek energii. Wieloletni model NPV/IRR/SPBT wymaga jeszcze osobnej weryfikacji w etapie 5.</div>
   <div class="sub-tabs">
     <button class="sub-tab active" onclick="showSub('inwest',0)" data-i18n="tab-invcalc">Kalkulator inwestycji</button>
     <button class="sub-tab" onclick="showSub('inwest',1)" data-i18n="tab-invpor">Porównanie 3 wariantów</button>
@@ -860,7 +886,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
     <div class="stitle" data-i18n="szczeg-przep">Szczegółowe przepływy roczne</div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th data-i18n="th-rok">Rok</th><th data-i18n="th-cenaen">Cena energii [PLN/MWh]</th><th data-i18n="th-oszczrok">Oszczędność roczna [PLN]</th><th data-i18n="th-przeplyw">Przepływ [PLN]</th><th data-i18n="th-skumulowany">Skumulowany [PLN]</th><th data-i18n="th-status">Status</th></tr></thead>
+        <thead><tr><th data-i18n="th-rok">Rok</th><th data-i18n="th-cenaen">Średnia czasowa ceny zakupu [PLN/MWh]</th><th data-i18n="th-oszczrok">Oszczędność roczna [PLN]</th><th data-i18n="th-przeplyw">Przepływ [PLN]</th><th data-i18n="th-skumulowany">Skumulowany [PLN]</th><th data-i18n="th-status">Status</th></tr></thead>
         <tbody id="tbl_cashflow_body"></tbody>
       </table>
     </div>
@@ -935,8 +961,8 @@ const translations = {
   'stage1-discharge': { pl: 'Oddane odbiorcom rocznie', en: 'Annual energy delivered to loads' },
   'stage1-loss': { pl: 'Straty magazynu rocznie', en: 'Annual storage losses' },
   'stage1-final': { pl: 'Zapas na koniec roku', en: 'End-of-year stored energy' },
-  'stage1-economics': { pl: 'Etapy 1–3: wskaźniki finansowe pozostają szacunkowe i wymagają osobnej korekty.', en: 'Stages 1–3: financial indicators remain estimates and require a separate correction.' },
-  'header-sub': { pl: 'Symulator energetyczny zakładu produkcyjnego — etap 3', en: 'Manufacturing Plant Energy Simulator — stage 3' },
+  'stage1-economics': { pl: 'Etap 4: rachunek energii jest godzinowy. Wieloletnia ekonomika NPV/IRR/SPBT wymaga osobnej weryfikacji.', en: 'Stage 4: energy is billed hourly. Multi-year NPV/IRR/SPBT still require dedicated verification.' },
+  'header-sub': { pl: 'Symulator energetyczny zakładu produkcyjnego — etap 4', en: 'Manufacturing Plant Energy Simulator — stage 4' },
   'nav-cfg': { pl: 'Parametry ogólne', en: 'General Parameters' },
   'nav-zaklad': { pl: 'Profil produkcyjny', en: 'Production Profile' },
   'nav-pv': { pl: 'Fotowoltaika (PV)', en: 'Photovoltaics (PV)' },
@@ -992,11 +1018,11 @@ const translations = {
   
   'cfg-sum': { pl: 'Podsumowanie bieżącej konfiguracji', en: 'Current configuration summary' },
   'mc-zap': { pl: 'Zapotrzebowanie', en: 'Demand' },
-  'mc-prod': { pl: 'Produkcja OZE', en: 'RES Production' },
+  'mc-prod': {pl:"Dostępna energia OZE",en:"Available RES energy"},
   'mc-siec': { pl: 'Pobór z sieci', en: 'Grid Draw' },
-  'mc-auto': { pl: "Autokonsumpcja użyteczna OZE", en: "Useful RES self-consumption" },
-  'mc-koszt': { pl: 'Koszt energii z sieci', en: 'Grid energy cost' },
-  'mc-oszcz': { pl: 'Oszczędności vs. bez OZE', en: 'Savings vs. no RES' },
+  'mc-auto': {pl:"Autokonsumpcja użyteczna potencjału OZE",en:"Useful self-consumption of available RES"},
+  'mc-koszt': {pl:"Koszt netto energii",en:"Net energy cost"},
+  'mc-oszcz': {pl:"Oszczędność vs. brak OZE i MEE",en:"Savings vs. no RES and BESS"},
   'mc-fw': { pl: 'Śr. prod. FW', en: 'Avg. FW prod.' },
 
   'zak-title': { pl: 'Profil produkcyjny zakładu', en: 'Plant Production Profile' },
@@ -1023,14 +1049,14 @@ const translations = {
   'mc-entyg': { pl: "Średnia energia tygodniowa", en: "Mean weekly energy" },
   'mc-enrok': { pl: "Energia roczna — suma godzin", en: "Annual energy — hourly sum" },
   'mc-enrokreal': { pl: "Energia roczna — wspólny profil", en: "Annual energy — shared profile" },
-  'mc-kosztbez': { pl: 'Koszt roczny (bez OZE)', en: 'Yearly cost (no RES)' },
+  'mc-kosztbez': {pl:"Koszt roczny bez OZE i MEE",en:"Annual cost without RES and BESS"},
   'zest-wskaz': { pl: "Wskaźniki aktywnego profilu rocznego", en: "Active annual profile indicators" },
   'th-tryb': { pl: "Aktywny profil", en: "Active profile" },
   'th-energia': { pl: "Śr. energia [MWh/dobę]", en: "Mean energy [MWh/day]" },
   'th-szczyt': { pl: "Szczyt w roku [MW]", en: "Annual peak [MW]" },
   'th-min': { pl: "Minimum w roku [MW]", en: "Annual minimum [MW]" },
   'th-lf': { pl: "Średnia / szczyt [%]", en: "Mean / peak [%]" },
-  'th-koszt': { pl: 'Koszt bez OZE [PLN/dobę]', en: 'Cost without RES [PLN/day]' },
+  'th-koszt': {pl:"Koszt bez OZE i MEE [PLN/dobę]",en:"Cost without RES and BESS [PLN/day]"},
 
   'pv-title': { pl: 'Fotowoltaika (PV)', en: 'Photovoltaics (PV)' },
   'tab-porownanie': { pl: 'Porównanie sezonów', en: 'Season Comparison' },
@@ -1045,8 +1071,8 @@ const translations = {
   'mc-pvstraty': { pl: "Straty roczne brutto → netto", en: "Annual losses gross → net" },
   'mc-pvh': { pl: "Godziny dodatniej produkcji — średnio", en: "Positive production hours — mean" },
   'leg-pvmies': { pl: 'Produkcja miesięczna PV [MWh]', en: 'Monthly PV production [MWh]' },
-  'mc-pvroczna': { pl: 'Produkcja roczna PV', en: 'Yearly PV production' },
-  'mc-pvcf': { pl: 'Współczynnik CF (roczny)', en: 'CF Factor (yearly)' },
+  'mc-pvroczna': {pl:"Dostępna energia roczna PV",en:"Available annual PV energy"},
+  'mc-pvcf': {pl:"CF dostępnego profilu PV",en:"Available-profile PV CF"},
   'mc-pvwartosc': { pl: "Średnia moc PV w roku", en: "Annual mean PV power" },
 
   'fw-title': { pl: 'Elektrownia wiatrowa (FW)', en: 'Wind Power Plant (FW)' },
@@ -1056,9 +1082,9 @@ const translations = {
   'leg-fwprod': { pl: 'Produkcja FW [MW]', en: 'FW Production [MW]' },
   'leg-fwzakres': { pl: "Minimum / maksimum godzin w roku", en: "Minimum / maximum of annual hours" },
   'mc-fwsr': { pl: "Średnia moc w roku", en: "Annual mean power" },
-  'mc-fweff': { pl: "CF — wykorzystanie mocy", en: "CF — capacity utilisation" },
+  'mc-fweff': {pl:"CF dostępnego profilu FW",en:"Available-profile wind CF"},
   'mc-fwendob': { pl: 'Energia dobowa', en: 'Daily energy' },
-  'mc-fwenrok': { pl: "Energia roczna — suma godzin", en: "Annual energy — hourly sum" },
+  'mc-fwenrok': {pl:"Dostępna energia FW — suma godzin",en:"Available wind energy — hourly sum"},
   'leg-fwmocvs': { pl: 'Moc [MW] vs prędkość wiatru [m/s]', en: 'Power [MW] vs wind speed [m/s]' },
   'leg-fwpunkt': { pl: "Krzywa referencyjna, nie moc dla średniej rocznej", en: "Reference curve, not power at annual mean wind" },
   'leg-weibullprob': { pl: 'Rozkład Weibulla (prawdopodobieństwo) [%]', en: 'Weibull Distribution (probability) [%]' },
@@ -1070,15 +1096,15 @@ const translations = {
   'tab-meedeg': { pl: 'Degradacja w czasie', en: 'Degradation over time' },
   'leg-meesoc': { pl: 'Stan naładowania SOC [MWh]', en: 'State of Charge SOC [MWh]' },
   'leg-meemoc': { pl: 'Moc MEE AC [MW] (+ładowanie / –rozładowanie)', en: 'BESS AC power [MW] (+charge / –discharge)' },
-  'leg-meetaryfa': { pl: 'Taryfa [PLN/MWh ÷ 10]', en: 'Tariff [PLN/MWh ÷ 10]' },
+  'leg-meetaryfa': {pl:"Cena zakupu — osobna oś",en:"Purchase price — separate axis"},
   'mc-meerozl': { pl: 'Energia rozładowana', en: 'Discharged energy' },
-  'mc-meearb': { pl: "Różnica kosztów MEE (2 strefy)", en: "BESS cost difference (2 rates)" },
-  'mc-meearbrok': { pl: "Różnica kosztów MEE rocznie", en: "Annual BESS cost difference" },
+  'mc-meearb': {pl:"Oszczędność MEE (netto)",en:"BESS savings (net)"},
+  'mc-meearbrok': {pl:"Oszczędność MEE rocznie",en:"Annual BESS savings"},
   'mc-meecykle': { pl: "Cykle równoważne rozładowania/dobę", en: "Equivalent discharge cycles/day" },
   'leg-meesiecbez': { pl: 'Pobór z sieci — BEZ MEE [MW]', en: 'Grid draw — NO BESS [MW]' },
   'leg-meesiecz': { pl: 'Pobór z sieci — Z MEE [MW]', en: 'Grid draw — WITH BESS [MW]' },
-  'mc-meekosztbez': { pl: 'Koszt sieci BEZ MEE', en: 'Grid cost NO BESS' },
-  'mc-meekosztz': { pl: 'Koszt sieci Z MEE', en: 'Grid cost WITH BESS' },
+  'mc-meekosztbez': {pl:"Koszt netto BEZ MEE",en:"Net cost WITHOUT BESS"},
+  'mc-meekosztz': {pl:"Koszt netto Z MEE",en:"Net cost WITH BESS"},
   'mc-meeredukcja': { pl: "Redukcja rocznego szczytu importu", en: "Annual import peak reduction" },
   'leg-meenom': { pl: 'Pojemność nominalna [MWh]', en: 'Nominal capacity [MWh]' },
   'leg-meedeg': { pl: 'Pojemność po degradacji [MWh]', en: 'Capacity after degradation [MWh]' },
@@ -1098,10 +1124,10 @@ const translations = {
   'leg-bilzap': { pl: 'Zapotrzebowanie', en: 'Demand' },
   'leg-biloze': { pl: 'OZE łącznie', en: 'Total RES' },
   'leg-bilsiec': { pl: 'Pobór z sieci', en: 'Grid draw' },
-  'leg-bilnad': { pl: 'Nadwyżka OZE', en: 'RES Surplus' },
+  'leg-bilnad': {pl:"Eksport po MEE",en:"Export after BESS"},
   'mc-bilmaxsiec': { pl: "Szczyt godzinowy importu w roku", en: "Annual hourly import peak" },
   'mc-bilmee': { pl: 'Energia z MEE', en: 'Energy from BESS' },
-  'mc-bilnad': { pl: 'Nadwyżka OZE', en: 'RES Surplus' },
+  'mc-bilnad': {pl:"Nadwyżka przed eksportem/ograniczeniem",en:"Surplus before export/curtailment"},
   'mc-bilpokrycie': { pl: "Pokrycie odbiorców przez OZE", en: "Load coverage by RES" },
   'mc-biltygsiec': { pl: 'Energia z sieci tyg.', en: 'Weekly grid energy' },
   'mc-biltygkoszt': { pl: 'Koszt sieci tyg.', en: 'Weekly grid cost' },
@@ -1110,8 +1136,8 @@ const translations = {
   'th-godz': { pl: 'Godz.', en: 'Hour' },
   'th-zap': { pl: 'Zapotrzebowanie [MW]', en: 'Demand [MW]' },
   'th-zsieci': { pl: 'Z sieci [MW]', en: 'From grid [MW]' },
-  'th-nadwyzka': { pl: 'Nadwyżka [MW]', en: 'Surplus [MW]' },
-  'th-koszt-pln': { pl: 'Koszt [PLN]', en: 'Cost [PLN]' },
+  'th-nadwyzka': {pl:"Nadwyżka przed decyzją [MW]",en:"Surplus before policy [MW]"},
+  'th-koszt-pln': {pl:"Śr. koszt netto tej godziny [PLN]",en:"Mean net cost for this hour [PLN]"},
 
   'inv-title': { pl: 'Analiza inwestycji', en: 'Investment Analysis' },
   'tab-invcalc': { pl: 'Kalkulator inwestycji', en: 'Investment Calculator' },
@@ -1155,7 +1181,7 @@ const translations = {
   'leg-prog': { pl: 'Próg rentowności', en: 'Break-even point' },
   'szczeg-przep': { pl: 'Szczegółowe przepływy roczne', en: 'Detailed yearly cash flows' },
   'th-rok': { pl: 'Rok', en: 'Year' },
-  'th-cenaen': { pl: 'Cena energii [PLN/MWh]', en: 'Energy price [PLN/MWh]' },
+  'th-cenaen': {pl:"Średnia czasowa ceny zakupu [PLN/MWh]",en:"Time-mean purchase price [PLN/MWh]"},
   'th-oszczrok': { pl: 'Oszczędność roczna [PLN]', en: 'Yearly savings [PLN]' },
   'th-przeplyw': { pl: 'Przepływ [PLN]', en: 'Cash flow [PLN]' },
   'th-skumulowany': { pl: 'Skumulowany [PLN]', en: 'Cumulative [PLN]' },
@@ -1434,7 +1460,10 @@ function refreshTimeDescription() {
   setText('btn_weather_fetch',t('Pobierz pogodę dla roku ','Fetch weather for ')+a.year);
 }
 function simulationBlocker() {
+  const unitError=UnitInputs.blocker();if(unitError)return unitError;
   const a=getTimeAxis();
+  if(EnergySettlement.usesDynamicPrices() && (!window.uploadedPrices8760 || window.uploadedPrices8760.length!==a.length || (g('price_source')&&window.pricesMeta?.key!==a.key)))
+    return t('Wybrano ceny DEMO — najpierw wygeneruj profil dla bieżącego roku.','DEMO prices selected — generate the profile for the current year first.');
   if(g('data_source').value==='csv' && (!window.importedDemand || window.importedDemand.key!==a.key || !window.uploadedProfile8760 || window.uploadedProfile8760.length!==a.length))
     return t('Wybierz kolumny i ustawienia CSV, a następnie kliknij „Sprawdź i zastosuj profil”. Obliczenia czekają na pełny, poprawny rok danych.',
       'Choose CSV columns and settings, then click “Validate and apply profile”. Calculations require a complete, valid year.');
@@ -1445,11 +1474,12 @@ function simulationBlocker() {
 }
 function clearSimulationResults(message) {
   lastSim=null;
+  if(g('btn_hourly_settlement'))g('btn_hourly_settlement').disabled=true;
   Object.values(charts).forEach(ch=>{try{ch.destroy();}catch(e){}});
   Object.keys(charts).forEach(k=>delete charts[k]);
   document.querySelectorAll('.mc-value').forEach(el=>el.textContent='—');
   ['tbl_zaklad_body','tbl_bilans_body','tbl_capex_body','tbl_cashflow_body','rep_params','rep_zaklad','rep_oze','rep_mee','rep_bilans','rep_inwest','rep_metoda'].forEach(id=>setText(id,message));
-  ['ins_cfg','ins_cmp1','ins_cmp2','ai_advisor_text','mee_balance_details','mee_connection_status','ins_mee1','ins_mee2','ins_mee3','ins_zak1','ins_zak2','ins_pv1','ins_pv2','ins_pv3','ins_fw1','ins_fw2','ins_fw3','ins_fw4','fw_status_cfg','fw_status_bar','ins_bil1'].forEach(id=>setText(id,''));
+  ['ins_cfg','ins_cmp1','ins_cmp2','ai_advisor_text','mee_balance_details','mee_connection_status','ins_mee1','ins_mee2','ins_mee3','ins_zak1','ins_zak2','ins_pv1','ins_pv2','ins_pv3','ins_fw1','ins_fw2','ins_fw3','ins_fw4','fw_status_cfg','fw_status_bar','ins_bil1','cost_source_summary','surplus_summary'].forEach(id=>setText(id,''));
   ['mee_balance_status','bil_storage_balance'].forEach(id=>{if(g(id)){g(id).className='ins warn';setText(id,t('Kontrola bilansu: oczekiwanie na dane. ','Balance check: waiting for data. ')+message);}});
   setText('hdr_pokrycie',t('Brak wyniku','No result'));setText('hdr_koszt','—');
   setText('app_data_status',message);g('app_data_status').className='ins warn';
@@ -1623,6 +1653,137 @@ function windEfficiency(ws) {
 }
 
 // Etap 3: wspólne agregaty wynikają wyłącznie z godzinowego wyniku symulacji.
+// Etap 4. Wszystkie obliczenia: MW, MWh i PLN/MWh; krok symulacji = 1 h.
+const EnergySettlement = (() => {
+  const sum=arr=>arr.reduce((a,b)=>a+b,0);
+  function usesDynamicPrices() {
+    return g('price_source')?g('price_source').value==='demo':!!window.uploadedPrices8760;
+  }
+  function options() {
+    const mode=g('surplus_mode')?.value||'free';
+    const limit=g('export_limit_mw')?Number(g('export_limit_mw').value):Infinity;
+    const fixedPrice=g('export_sell_price')?Number(g('export_sell_price').value):250;
+    const sellSource=g('export_price_source')?.value||'fixed';
+    if(!['free','curtail','sell'].includes(mode)||!['fixed','indexed'].includes(sellSource)||
+      Number.isNaN(limit)||limit<0||!Number.isFinite(fixedPrice))throw new Error('Nieprawidłowe ustawienia rozliczenia nadwyżek.');
+    return {mode,limit,fixedPrice,sellSource,allowNegative:g('export_allow_negative')?.checked||false};
+  }
+  function products(energy,prices) {
+    if(energy.length!==prices.length)throw new Error('Liczba godzin energii i cen musi być taka sama.');
+    const out=new Float64Array(energy.length);
+    for(let i=0;i<out.length;i++) {
+      if(!Number.isFinite(energy[i])||energy[i]<0||!Number.isFinite(prices[i]))throw new Error('Niepoprawna energia lub cena w godzinie '+i+'.');
+      out[i]=energy[i]*prices[i]; // MW × 1 h × PLN/MWh = PLN
+      if(!Number.isFinite(out[i]))throw new Error('Koszt przekracza zakres liczbowy.');
+    }
+    return out;
+  }
+  function attach(sim) {
+    const n=sim.timeAxis.length,o=sim.config.settlement||options();
+    sim.exportArr=new Float64Array(n);sim.curtailedArr=new Float64Array(n);
+    sim.actualPVArr=new Float64Array(n);sim.actualFWArr=new Float64Array(n);sim.actualRESArr=new Float64Array(n);
+    sim.exportPrices=new Float64Array(n);sim.unpaidExportArr=new Float64Array(n);
+    let maxResidual=0,negativeExportHours=0,previousSOC=0;
+    for(let i=0;i<n;i++) {
+      const price=o.sellSource==='indexed'?sim.prices[i]:o.fixedPrice;
+      let exported=o.mode==='curtail'?0:Math.min(sim.surplusArr[i],o.limit);
+      if(o.mode==='sell'&&price<0&&!o.allowNegative)exported=0;
+      sim.exportArr[i]=exported;
+      sim.curtailedArr[i]=Math.max(0,sim.surplusArr[i]-exported);
+      sim.exportPrices[i]=o.mode==='sell'?price:0;
+      if(o.mode==='free')sim.unpaidExportArr[i]=exported;
+      if(exported>0&&sim.exportPrices[i]<0)negativeExportHours++;
+      const share=sim.oze[i]>0?sim.pv[i]/sim.oze[i]:0;
+      const curtailedPV=sim.curtailedArr[i]*share;
+      sim.actualPVArr[i]=Math.max(0,sim.pv[i]-curtailedPV);
+      sim.actualFWArr[i]=Math.max(0,sim.fw[i]-(sim.curtailedArr[i]-curtailedPV));
+      sim.actualRESArr[i]=sim.actualPVArr[i]+sim.actualFWArr[i];
+      const residual=sim.actualRESArr[i]+sim.gridArr[i]-sim.dem[i]-exported-sim.lossArr[i]-(sim.socArr[i]-previousSOC);
+      previousSOC=sim.socArr[i];maxResidual=Math.max(maxResidual,Math.abs(residual));
+    }
+    sim.purchaseCostArr=products(sim.gridArr,sim.prices);
+    sim.exportRevenueArr=products(sim.exportArr,sim.exportPrices);
+    sim.netCostArr=Float64Array.from(sim.purchaseCostArr,(cost,i)=>cost-sim.exportRevenueArr[i]);
+    sim.noRESCostArr=products(sim.dem,sim.prices);
+    const purchaseCost=sum(sim.purchaseCostArr),exportRevenue=sum(sim.exportRevenueArr),netCost=sum(sim.netCostArr);
+    const baselineCost=sum(sim.noRESCostArr),actualGeneration=sum(sim.actualRESArr);
+    const finalSOC=sim.socArr[n-1];
+    const annualResidual=actualGeneration+sum(sim.gridArr)-sum(sim.dem)-sum(sim.exportArr)-sum(sim.lossArr)-finalSOC;
+    if(![purchaseCost,exportRevenue,netCost,baselineCost,annualResidual].every(Number.isFinite))throw new Error('Niepoprawny wynik rozliczenia rocznego.');
+    sim.settlement={purchaseCost,exportRevenue,netCost,baselineCost,savings:baselineCost-netCost,
+      exportEnergy:sum(sim.exportArr),curtailedEnergy:sum(sim.curtailedArr),unpaidExportEnergy:sum(sim.unpaidExportArr),
+      actualGeneration,negativeExportHours,mode:o.mode,options:o,priceKind:sim.config.priceKind||'tariff',
+      annualResidual,maxHourlyResidual:maxResidual,passed:Math.abs(annualResidual)<=1e-6&&maxResidual<=1e-8};
+    return sim.settlement;
+  }
+  return {usesDynamicPrices,options,products,attach};
+})();
+
+const UnitInputs = (() => {
+  const invalid=new Set();
+  const fields={
+    p_przyl:{kind:'power',max:200,label:['Moc przyłączeniowa','Connection capacity']},
+    pv_moc:{kind:'power',max:300,label:['Moc PV','PV capacity']},
+    fw_moc:{kind:'power',max:150,label:['Moc wiatru','Wind capacity']},
+    mee_mw:{kind:'power',max:100,label:['Moc MEE po stronie AC','BESS AC power']},
+    mee_kwh:{kind:'energy',max:200,label:['Pojemność MEE','BESS capacity']},
+    c_szczyt:{kind:'price',label:['Cena dzienna 6–21 / próg drogi EMS','Day price 6–21 / EMS high threshold']},
+    c_noc_pl:{kind:'price',label:['Cena nocna 21–6 / próg tani EMS','Night price 21–6 / EMS low threshold']},
+    export_limit_mw:{kind:'power',max:1000,label:['Założony limit oddawania do sieci','Assumed grid export limit']},
+    export_sell_price:{kind:'price',label:['Stała cena sprzedaży','Fixed selling price']}
+  };
+  const displays={p_przyl:'p_przyl_v',pv_moc:'pv_v',fw_moc:'fw_v',mee_mw:'mee_mw_v',mee_kwh:'mee_kwh_v',c_szczyt:'c_szczyt_v',c_noc_pl:'c_noc_v'};
+  function unit(kind) {
+    return g(kind+'_unit')?.value||(kind==='power'?'MW':kind==='energy'?'MWh':'PLN/MWh');
+  }
+  function factor(kind) {const u=unit(kind);return kind==='price'?(u==='PLN/kWh'?1000:1):((u==='kW'||u==='kWh')?0.001:1);}
+  function label(kind) {return unit(kind).replace('PLN/','zł/');}
+  function refresh() {
+    for(const [id,f] of Object.entries(fields)) {
+      const canonical=g(id),input=g('num_'+id),slider=g('slider_'+id);if(!canonical||!input)continue;
+      const v=Number(canonical.value)/factor(f.kind);
+      if(!invalid.has(id))input.value=String(Number(v.toPrecision(13)));
+      input.step='any';
+      if(f.kind!=='price') {input.min='0';input.max=String(f.max/factor(f.kind));}
+      if(slider) {slider.min='0';slider.max=String(f.max/factor(f.kind));slider.step=String(.000001/factor(f.kind));slider.value=String(v);}
+      input.setAttribute('aria-label',t(...f.label)+' ['+label(f.kind)+']');
+      if(slider)slider.setAttribute('aria-label',t(...f.label)+' ['+label(f.kind)+']');
+      setText('label_'+id,t(...f.label)+' ['+label(f.kind)+']');
+      if(displays[id])setText(displays[id],invalid.has(id)?'—':fmtD(v,f.kind==='price'?(unit('price')==='PLN/kWh'?6:2):3)+' '+label(f.kind));
+    }
+  }
+  function commit(id,fromSlider=false) {
+    const f=fields[id],input=g((fromSlider?'slider_':'num_')+id);
+    const value=Number(input.value),canonical=value*factor(f.kind);
+    if(input.value.trim()===''||!Number.isFinite(canonical)||(f.kind!=='price'&&(canonical<0||canonical>f.max))) {
+      invalid.add(id);clearSimulationResults(t('Popraw wartość pola: ','Correct this field: ')+t(...f.label));return;
+    }
+    invalid.delete(id);g(id).value=String(canonical);refresh();upd();
+  }
+  function blocker(){
+    const id=Array.from(invalid).find(id=>!(id==='export_sell_price'&&(g('surplus_mode')?.value!=='sell'||g('export_price_source')?.value!=='fixed'))&&!(id==='export_limit_mw'&&g('surplus_mode')?.value==='curtail'));
+    return id?t('Popraw nieprawidłowe pole: ','Correct the invalid field: ')+t(...fields[id].label):'';
+  }
+  function priceForDisplay(value){return value/factor('price');}
+  return {fields,refresh,commit,blocker,unit,label,priceForDisplay};
+})();
+
+function changeDisplayUnits(){UnitInputs.refresh();upd();}
+function money(value){return fmtD(value,value!==0&&Math.abs(value)<.01?6:2);}
+function priceSourceLabel(sim) {return sim.config.priceKind==='synthetic-demo'?t('DEMO — ceny godzinowe syntetyczne','DEMO — synthetic hourly prices'):t('Taryfa dwustrefowa','Two-rate tariff');}
+function surplusModeLabel(mode) {return ({free:t('Oddawanie bez zapłaty','Unpaid grid export'),curtail:t('Ograniczanie niewykorzystanej produkcji','Unused production curtailed'),sell:t('Sprzedaż nadwyżek','Surplus sales')})[mode];}
+function changePriceSource(){refreshPriceControls();upd();}
+function refreshPriceControls() {
+  const demo=EnergySettlement.usesDynamicPrices();
+  setText('price_source_status',demo?t('DEMO: syntetyczny profil cen, nie notowania PSE. Te same ceny godzinowe wpływają na EMS i rachunek. Pola dzień/noc określają teraz progi EMS i bazę następnego generowania; nie zmieniają już załadowanego profilu.',
+    'DEMO: synthetic prices, not PSE market quotes. The same hourly prices drive EMS and billing. Day/night fields set EMS thresholds and the next generation base; they do not change the already loaded profile.'):t('Rachunek korzysta z ceny dziennej 6–21 i nocnej 21–6, według czasu analizy.','Billing uses day 6–21 and night 21–6 prices in the analysis clock.'));
+  g('price_source_status').className=demo?'ins warn':'ins info';
+  const sell=g('surplus_mode').value==='sell';g('surplus_sell_options').hidden=!sell;
+  g('num_export_limit_mw').disabled=g('surplus_mode').value==='curtail';
+  g('num_export_sell_price').disabled=!sell||g('export_price_source').value!=='fixed';
+}
+function changeSurplusPolicy(){refreshPriceControls();upd();}
+
 const SimulationResults = (() => {
   const sum = arr => arr.reduce((a,b)=>a+b,0);
   const seasonMonths = {rok:null,lato:[5,6,7],wiosna:[2,3,4,8,9,10],zima:[11,0,1]};
@@ -1638,11 +1799,6 @@ const SimulationResults = (() => {
     let value=-Infinity,index=-1;
     for(let i=0;i<arr.length;i++)if(arr[i]>value){value=arr[i];index=i;}
     return {value:index>=0?value:0,index,time:index>=0?EnergyData.label(axis.epochs[index],axis.zone):'—'};
-  }
-  function fixedTariffCost(sim,arr=sim.gridArr) {
-    // Etap ekonomiczny pozostaje do naprawy: tu jawna wycena dwustrefowa, nie ceny dynamiczne.
-    const {cS,cN}=sim.config;let cost=0;
-    for(let i=0;i<arr.length;i++){const h=sim.timeAxis.hours[i];cost+=arr[i]*(h>=6&&h<21?cS:cN);}return cost;
   }
   function summarize(sim) {
     const annual={};
@@ -1665,7 +1821,7 @@ const SimulationResults = (() => {
       pvCF:ratio(annual.pv,sim.config.pvMW*a.length),windCF:ratio(annual.wind,sim.config.fwMW*a.length),
       pvLossPct:ratio(annual.pvGross-annual.pv,annual.pvGross),positivePVHoursPerDay:positivePVHours/a.days,
       loadFactorPct:ratio(annual.demand,peaks.demand.value*a.length),cyclesYear,cyclesDay:cyclesYear/a.days,
-      fixedGridCost:fixedTariffCost(sim),fixedNoRESCost:fixedTariffCost(sim,sim.dem),
+      cost:sim.settlement,
       annualRESResidual:annual.res-annual.resToLoads-annual.surplus-annual.lossRES-finalSOCRES,
       annualGridResidual:annual.grid-annual.gridToLoads-annual.lossGrid-finalSOCGrid,
       annualLoadResidual:annual.demand-annual.resToLoads-annual.gridToLoads};
@@ -1686,6 +1842,7 @@ const SimulationResults = (() => {
       no.balanceResidualArr[i]=sim.oze[i]+no.gridArr[i]-sim.dem[i]-no.surplusArr[i];
     }
     no.equivalentCycles=0;
+    EnergySettlement.attach(no);
     no.metrics=summarize(no);
     const annualResidual=no.metrics.annual.res+no.metrics.annual.grid-no.metrics.annual.demand-no.metrics.annual.surplus;
     no.balance={...sim.balance,chargeAC:0,dischargeAC:0,chargeRES:0,chargeGrid:0,chargeLoss:0,dischargeLoss:0,losses:0,
@@ -1695,10 +1852,10 @@ const SimulationResults = (() => {
       connectionExcessHours:no.connectionExcessArr.filter(v=>v>1e-8).length,
       maxConnectionExcess:no.connectionExcessArr.reduce((m,v)=>Math.max(m,v),0)};
     no.balance.failedHours=no.balanceResidualArr.filter(v=>Math.abs(v)>1e-8).length;
-    no.balance.passed=no.balance.failedHours===0 && Math.abs(annualResidual)<=1e-6;
+    no.balance.passed=no.balance.failedHours===0 && Math.abs(annualResidual)<=1e-6 && no.settlement.passed;
     return no;
   }
-  return {sum,daily,peak,fixedTariffCost,summarize,withoutStorage};
+  return {sum,daily,peak,summarize,withoutStorage};
 })();
 
 function generateWindProduction(fwMW,avgWind,variability) {
@@ -1722,7 +1879,7 @@ function generateWindProduction(fwMW,avgWind,variability) {
   if(theoreticalAEP===0)power.fill(0);
   else if(simulatedAEP>0) {
     correction=theoreticalAEP/simulatedAEP;
-    for(let i=0;i<n;i++){const p=power[i]*correction;if(p>fwMW)clippedHours++;power[i]=Number(Math.min(fwMW,p).toFixed(3));}
+    for(let i=0;i<n;i++){const p=power[i]*correction;if(p>fwMW)clippedHours++;power[i]=Math.min(fwMW,p);}
   }
   const curveSpeed=Array.from({length:52},(_,i)=>i*.5),curvePower=curveSpeed.map(v=>windEfficiency(v)*fwMW);
   return {power,meta:{k,lambda,avgWind,variability,theoreticalAEP,actualAEP:SimulationResults.sum(power),
@@ -1764,7 +1921,7 @@ function demandProfile(tryb, pp, pn, pd, dayScale=1.0) {
       else if (h<19) pct = 0.70;
       else pct = pd/100*0.8;
     }
-    return parseFloat((Math.min(pct,1)*pp*dayScale).toFixed(3));
+    return Math.min(pct,1)*pp*dayScale;
   });
 }
 
@@ -1817,6 +1974,7 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
   const blocker=simulationBlocker();if(blocker)throw new Error(blocker);
   const useCSV=g('data_source').value==='csv';
   const usePVAPI=g('pv_data_source').value==='api';
+  const useDynamicPrices=EnergySettlement.usesDynamicPrices();
   const demandDays=[1,0.8,0.3].map(scale=>demandProfile(tryb,pp,pn,pd,scale));
   const etaCharge = Math.sqrt(meeEff / 100);
   const etaDischarge = etaCharge;
@@ -1861,7 +2019,7 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     hourlyToleranceMWh: 1e-8, annualToleranceMWh: 1e-6 };
   out.balance = balance;
   out.timeAxis = timeAxis;
-  out.config={pvMW,fwMW,meeMWh,meeMW,meeEff,pp,pn,pd,invEff,lossEff,tryb,emsMode,cS,cN,pvSource:usePVAPI?'api':'manual'}; 
+  out.config={pvMW,fwMW,meeMWh,meeMW,meeEff,pp,pn,pd,invEff,lossEff,tryb,emsMode,cS,cN,pvSource:usePVAPI?'api':'manual',settlement:EnergySettlement.options(),priceKind:useDynamicPrices?'synthetic-demo':'tariff'}; 
   // Uproszczony model astronomiczny (52°N)
   const lat = 52.0 * (Math.PI / 180); 
   const pvFactor = (invEff / 100) * (1 - lossEff / 100);
@@ -1908,11 +2066,11 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
 
     // 4. CENY ENERGII
     const isCheapHour = (hourOfDay < 6 || hourOfDay >= 21);
-    out.prices[h] = window.uploadedPrices8760 ? window.uploadedPrices8760[h] : (isCheapHour ? cN : cS);
+    out.prices[h] = useDynamicPrices ? window.uploadedPrices8760[h] : (isCheapHour ? cN : cS);
 
     const currentPrice = out.prices[h];
-    const isPriceCheap = window.uploadedPrices8760 ? (currentPrice <= cN) : isCheapHour;
-    const isPriceExpensive = window.uploadedPrices8760 ? (currentPrice >= cS) : !isCheapHour;
+    const isPriceCheap = useDynamicPrices ? (currentPrice <= cN) : isCheapHour;
+    const isPriceExpensive = useDynamicPrices ? (currentPrice >= cS) : !isCheapHour;
 
     const step = batteryHour(soc, meeMWh, meeMW, meeEff, out.dem[h], out.oze[h], pp,
       emsMode, isPriceCheap, isPriceExpensive);
@@ -1963,6 +2121,9 @@ function simulate8760(pvMW, fwMW, fwW, fwV, meeMWh, meeMW, meeEff, pp, pn, pd, i
     Math.abs(balance.annualResidual) <= balance.annualToleranceMWh &&
     Math.abs(balance.batteryResidual) <= balance.annualToleranceMWh;
   out.equivalentCycles = meeMWh > 0 ? balance.dischargeAC / etaDischarge / meeMWh : 0;
+  EnergySettlement.attach(out);
+  balance.actualProductionResidual=out.settlement.annualResidual;
+  balance.passed=balance.passed&&out.settlement.passed;
   out.metrics=SimulationResults.summarize(out);
   balance.annualRESResidual=out.metrics.annualRESResidual;
   balance.annualGridResidual=out.metrics.annualGridResidual;
@@ -2013,10 +2174,6 @@ function renderStorageBalance(sim) {
     b.connectionExcessHours+' / '+b.demandExcessHours + t('; maks. przekroczenie: ', '; maximum excess: ') +
     fmtD(b.maxConnectionExcess,3)+' / '+fmtD(b.maxDemandExcess,3)+' MW. ' +
     t('Zapotrzebowanie nie jest obcinane; ładowanie z sieci korzysta tylko z wolnej mocy przyłącza.', 'Demand is not clipped; grid charging only uses available connection headroom.');
-}
-
-function calcCost(arr, cS, cN) {
-  return arr.reduce((a,v,h) => a + v * ((h>=6&&h<21) ? cS : cN), 0);
 }
 
 // ============================================================
@@ -2105,6 +2262,7 @@ window.currentV2View = 'day';
 
 const seasonLabel = value => ({rok:t('Cały rok','Whole year'),lato:t('Lato (VI–VIII)','Summer (Jun–Aug)'),
   wiosna:t('Wiosna/jesień (III–V, IX–XI)','Spring/autumn (Mar–May, Sep–Nov)'),zima:t('Zima (XII–II)','Winter (Dec–Feb)')}[value]);
+function powerText(value){return fmtD(value,value!==0&&Math.abs(value)<.01?6:2);}
 const pctNumber = (value,d=1) => value===null?'—':fmtD(value,d);
 const pctLabel = value => value===null?'—':fmtD(value,1)+'%';
 const monthLabels = () => t(['Sty','Lut','Mar','Kwi','Maj','Cze','Lip','Sie','Wrz','Paź','Lis','Gru'],['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']);
@@ -2125,7 +2283,7 @@ function renderPVViews(state) {
     {label:t('PV przed stratami — średnia','PV before losses — mean'),data:gross.mean,borderColor:'#f4a535',borderDash:[4,2],pointRadius:0},
     {label:t('PV netto — średnia','Net PV — mean'),data:net.mean,borderColor:'#f7c068',pointRadius:0,backgroundColor:'rgba(244,165,53,0.12)',fill:true}
   ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:chartLegend()});
-  setText('pv_peak',fmtD(m.peaks.pv.value,2));setText('pv_e_netto',fmtD(m.daily.pv,3));
+  setText('pv_peak',powerText(m.peaks.pv.value));setText('pv_e_netto',fmtD(m.daily.pv,3));
   setText('pv_straty',pctNumber(m.pvLossPct));setText('pv_hours',fmtD(m.positivePVHoursPerDay,2));
   setText('ins_pv1',t('Widok: ','View: ')+seasonLabel(season)+t('. Średnia doba z godzin tego samego wyniku rocznego. Karty pokazują wskaźniki całego roku; szczyt: ','. Mean day from the same annual result. Cards show whole-year indicators; peak: ')+m.peaks.pv.time+'.');
   const seasons=['lato','wiosna','zima'],colors=['#f4a535','#3ecf8e','#4d9de0'];
@@ -2134,7 +2292,7 @@ function renderPVViews(state) {
     {scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:chartLegend()});
   setText('ins_pv2',t('Sezony są filtrami miesięcy w tym samym roku. Nie zmieniają produkcji rocznej ani bilansu.', 'Seasons filter months of the same year. They do not change annual production or the balance.'));
   const monthly=aggregate8760.toMonthlySum(r.pv);
-  mkChart('c_pv_miesiace','bar',{labels:monthLabels(),datasets:[{label:t('PV netto','Net PV'),data:monthly,backgroundColor:'rgba(244,165,53,0.65)',borderRadius:4}]},
+  mkChart('c_pv_miesiace','bar',{labels:monthLabels(),datasets:[{label:t('Dostępne PV netto','Available net PV'),data:monthly,backgroundColor:'rgba(244,165,53,0.65)',borderRadius:4},{label:t('PV po ograniczeniu','PV after curtailment'),data:aggregate8760.toMonthlySum(r.actualPVArr),backgroundColor:'rgba(62,207,142,.65)',borderRadius:4}]},
     {scales:{y:{beginAtZero:true,title:{display:true,text:'MWh'}}}});
   setText('pv_rok',fmtD(m.annual.pv,3));setText('pv_cf',pctNumber(m.pvCF));setText('pv_wartosc',fmtD(m.annual.pv/a.length,3));
   setText('ins_pv3',t('Suma miesięcy = suma godzin roku: ','Sum of months = sum of annual hours: ')+fmtD(m.annual.pv,3)+' MWh. '+
@@ -2171,7 +2329,7 @@ function renderWindViews(state) {
   ]},{scales:{x:{title:{display:true,text:t('Środek koszyka [m/s]; ostatni: ogon ≥24,5','Bin centre [m/s]; last: tail ≥24.5')}},y:{beginAtZero:true,title:{display:true,text:'%'}},y2:{beginAtZero:true,position:'right',title:{display:true,text:'MW'},grid:{drawOnChartArea:false}}},plugins:chartLegend()});
   setText('ins_fw3',t('Rozkład referencyjny generatora: k=2, λ=średnia×1,128. Koszyki mają szerokość 1 m/s; ostatni obejmuje ogon ≥24,5 m/s i ma moc referencyjną 0. Cel AEP: ',
     'Generator reference distribution: k=2, λ=mean×1.128. Bins span 1 m/s; the last includes the tail ≥24.5 m/s and uses zero reference power. Target AEP: ')+fmtD(w.theoreticalAEP,3)+
-    t(' MWh; suma profilu po skalowaniu, ograniczeniu i zaokrągleniu: ',' MWh; profile sum after scaling, capping and rounding: ')+fmtD(m.annual.wind,3)+
+    t(' MWh; suma profilu po skalowaniu, ograniczeniu przy zachowaniu precyzji: ',' MWh; profile sum after scaling and capping: ')+fmtD(m.annual.wind,3)+
     t(' MWh. Do bilansu trafia wyłącznie suma profilu.',' MWh. Only the profile sum enters the balance.'));
   const seasons=['rok','lato','wiosna','zima'],colors=['#3ecf8e','#f4a535','#4d9de0','#9b87f5'];
   mkChart('c_fw_porownanie','line',{labels,datasets:seasons.map((s,i)=>({label:seasonLabel(s),data:SimulationResults.daily(r.fw,a,s).mean,borderColor:colors[i],pointRadius:0}))},
@@ -2182,19 +2340,20 @@ function renderWindViews(state) {
 function renderBalanceViews(state) {
   const r=state.S_8760,m=r.metrics,S=state.S,labels=Array.from({length:24},(_,i)=>i+':00');
   const styles=[['dem',t('Odbiorcy','Loads'),'#4d9de0'],['oze','OZE','#9b87f5'],['gridArr',t('Sieć — cały import','Grid — total import'),'#e05a5a'],
-    ['surplusArr',t('Nadwyżka','Surplus'),'#3ecf8e'],['chargeArr',t('Ładowanie MEE','BESS charging'),'#f4a535'],['dischargeArr',t('Oddawanie MEE','BESS delivery'),'#7ab8ec']];
+    ['exportArr',t('Eksport','Export'),'#3ecf8e'],['curtailedArr',t('Ograniczenie produkcji','Curtailment'),'#9896a0'],['chargeArr',t('Ładowanie MEE','BESS charging'),'#f4a535'],['dischargeArr',t('Oddawanie MEE','BESS delivery'),'#7ab8ec']];
   mkChart('c_bil_dobowy','line',{labels,datasets:styles.map(([key,label,color])=>({label,data:aggregate8760.toAverageDay(r[key]),borderColor:color,pointRadius:0,borderDash:key.includes('charge')?[4,3]:[]}))},
     {scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:chartLegend()});
-  setText('bil_max_siec',fmtD(m.peaks.grid.value,2));setText('bil_mee_e',fmtD(m.daily.discharge,3));setText('bil_nadwyzka',fmtD(m.daily.surplus,3));setText('bil_pokrycie',pctNumber(m.coveragePct));
-  setText('ins_bil1',t('Średnia doba z całego roku. Bilans AC: OZE + import + oddawanie MEE = odbiorcy + ładowanie MEE + nadwyżka. Roczny szczyt importu: ',
-    'Mean day of the whole year. AC balance: RES + import + BESS delivery = loads + BESS charging + surplus. Annual import peak: ')+m.peaks.grid.time+'.');
+  setText('bil_max_siec',powerText(m.peaks.grid.value));setText('bil_mee_e',fmtD(m.daily.discharge,3));setText('bil_nadwyzka',fmtD(m.daily.surplus,3));setText('bil_pokrycie',pctNumber(m.coveragePct));
+  setText('ins_bil1',t('Średnia doba z całego roku. Bilans AC: dostępne OZE + import + oddawanie MEE = odbiorcy + ładowanie MEE + eksport + ograniczenie. Roczny szczyt importu: ',
+    'Mean day of the whole year. AC balance: available RES + import + BESS delivery = loads + BESS charging + export + curtailment. Annual import peak: ')+m.peaks.grid.time+'.');
   mkChart('c_bil_tygodniowy','bar',{labels:dayLabels(),datasets:styles.map(([key,label,color])=>({label,data:aggregate8760.toAverageWeek(r[key]),backgroundColor:color}))},
     {scales:{y:{beginAtZero:true,title:{display:true,text:t('MWh na średni dzień tygodnia','MWh per mean weekday')}}},plugins:chartLegend()});
   // Średni tydzień = roczna suma / liczba dni × 7, a nie siedem równo ważonych średnich dni tygodnia.
   setText('bil_tyg_siec',fmtD(m.annual.grid/r.timeAxis.days*7,3));
-  setText('bil_tyg_koszt',fmtD(m.fixedGridCost/r.timeAxis.days*7,0));
-  setText('bil_tyg_oszcz',fmtD((m.fixedNoRESCost-m.fixedGridCost)/r.timeAxis.days*7,0));
-  g('tbl_bilans_body').innerHTML=Array.from({length:24},(_,h)=>`<tr><td>${h}:00</td><td>${fmtD(S.dem[h],3)}</td><td>${fmtD(S.pv[h],3)}</td><td>${fmtD(S.fw[h],3)}</td><td>${fmtD(S.meePow[h],3)}</td><td>${fmtD(S.gridArr[h],3)}</td><td>${fmtD(S.surplusArr[h],3)}</td><td>${fmtD(S.gridArr[h]*(h>=6&&h<21?state.cS:state.cN),0)}</td></tr>`).join('');
+  setText('bil_tyg_koszt',money(m.cost.netCost/r.timeAxis.days*7));
+  setText('bil_tyg_oszcz',money((m.cost.baselineCost-m.cost.netCost)/r.timeAxis.days*7));
+  const dailyNetCosts=aggregate8760.toAverageDay(r.netCostArr);
+  g('tbl_bilans_body').innerHTML=Array.from({length:24},(_,h)=>`<tr><td>${h}:00</td><td>${fmtD(S.dem[h],3)}</td><td>${fmtD(S.pv[h],3)}</td><td>${fmtD(S.fw[h],3)}</td><td>${fmtD(S.meePow[h],3)}</td><td>${fmtD(S.gridArr[h],3)}</td><td>${fmtD(S.surplusArr[h],3)}</td><td>${money(dailyNetCosts[h])}</td></tr>`).join('');
   if(isVisible('bilans_3'))renderV2();
 }
 
@@ -2205,22 +2364,22 @@ function renderV2(type) {
   if(!lastSim)return;
   const r=lastSim.S_8760,agg=view==='month'?aggregate8760.toMonthlySum:view==='week'?aggregate8760.toAverageWeek:aggregate8760.toAverageDay;
   const labels=view==='month'?monthLabels():view==='week'?dayLabels():Array.from({length:24},(_,i)=>i+':00');
-  const parts=[['dem',t('Odbiorcy','Loads'),'#4d9de0'],['oze','OZE','#9b87f5'],['gridArr',t('Import','Import'),'#e05a5a'],['surplusArr',t('Nadwyżka','Surplus'),'#3ecf8e'],['chargeArr',t('Ładowanie MEE','BESS charging'),'#f4a535'],['dischargeArr',t('Oddawanie MEE','BESS delivery'),'#7ab8ec']];
+  const parts=[['dem',t('Odbiorcy','Loads'),'#4d9de0'],['oze','OZE','#9b87f5'],['gridArr',t('Import','Import'),'#e05a5a'],['exportArr',t('Eksport','Export'),'#3ecf8e'],['curtailedArr',t('Ograniczenie produkcji','Curtailment'),'#9896a0'],['chargeArr',t('Ładowanie MEE','BESS charging'),'#f4a535'],['dischargeArr',t('Oddawanie MEE','BESS delivery'),'#7ab8ec']];
   mkChart('c_v2_chart','bar',{labels,datasets:parts.map(([key,label,color])=>({label,data:agg(r[key]),backgroundColor:color}))},
     {scales:{y:{beginAtZero:true,title:{display:true,text:view==='day'?'MW':view==='month'?'MWh':t('MWh na średni dzień tygodnia','MWh per mean weekday')}}},plugins:chartLegend()});
 }
 
 function renderStorageViews(state) {
   const r=state.S_8760,m=r.metrics,no=state.S_without,labels=Array.from({length:24},(_,i)=>i+':00');
-  const costDifference=no.metrics.fixedGridCost-m.fixedGridCost;
+  const costDifference=no.metrics.cost.netCost-m.cost.netCost;
   mkChart('c_mee_dobowy','line',{labels,datasets:[
     {label:'SOC [MWh]',data:state.S.socArr,borderColor:'#9b87f5',pointRadius:0},
     {label:t('Ładowanie AC [MW]','AC charging [MW]'),data:aggregate8760.toAverageDay(r.chargeArr),borderColor:'#3ecf8e',pointRadius:0},
     {label:t('Oddawanie AC [MW] (−)','AC delivery [MW] (−)'),data:aggregate8760.toAverageDay(r.dischargeArr).map(v=>-v),borderColor:'#4d9de0',pointRadius:0},
-    {label:t('Cena ÷10','Price ÷10'),data:aggregate8760.toAverageDay(r.prices).map(v=>v/10),borderColor:'#e05a5a',pointRadius:0,borderDash:[4,3]}
-  ]},{scales:{y:{title:{display:true,text:'MWh / MW; PLN/MWh ÷10'}}},plugins:chartLegend()});
+    {label:t('Cena zakupu','Purchase price')+' ['+UnitInputs.label('price')+']',data:aggregate8760.toAverageDay(r.prices).map(v=>UnitInputs.priceForDisplay(v)),borderColor:'#e05a5a',pointRadius:0,borderDash:[4,3],yAxisID:'yPrice'}
+  ]},{scales:{y:{title:{display:true,text:'MWh / MW'}},yPrice:{position:'right',title:{display:true,text:UnitInputs.label('price')},grid:{drawOnChartArea:false}}},plugins:chartLegend()});
   setText('mee_e_dis',fmtD(m.daily.discharge,3));setText('mee_cycles',fmtD(m.cyclesDay,3));
-  setText('mee_sav_day',fmtD(costDifference/r.timeAxis.days,0));setText('mee_sav_rok',fmtD(costDifference,0));
+  setText('mee_sav_day',money(costDifference/r.timeAxis.days));setText('mee_sav_rok',money(costDifference));
   setText('ins_mee1',t('Cykle równoważne rozładowania = energia pobrana z SOC / pojemność nominalna. Rocznie: ',
     'Equivalent discharge cycles = energy withdrawn from SOC / nominal capacity. Per year: ')+fmtD(m.cyclesYear,3)+'. '+
     t('Udział OZE w energii oddanej z MEE: ','RES share in BESS delivery: ')+pctLabel(m.annual.discharge>0?m.annual.dischargeRES/m.annual.discharge*100:null)+'.');
@@ -2228,11 +2387,11 @@ function renderStorageViews(state) {
     {label:t('Bez MEE — te same OZE','Without BESS — same RES'),data:aggregate8760.toAverageDay(no.gridArr),borderColor:'#4d9de0',pointRadius:0},
     {label:t('Z MEE','With BESS'),data:state.S.gridArr,borderColor:'#3ecf8e',pointRadius:0}
   ]},{scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:chartLegend()});
-  setText('mee_koszt_bez',fmtD(no.metrics.fixedGridCost/r.timeAxis.days,0));setText('mee_koszt_z',fmtD(m.fixedGridCost/r.timeAxis.days,0));
+  setText('mee_koszt_bez',money(no.metrics.cost.netCost/r.timeAxis.days));setText('mee_koszt_z',money(m.cost.netCost/r.timeAxis.days));
   const reduction=no.metrics.peaks.grid.value-m.peaks.grid.value;
-  setText('mee_peak_red',fmtD(reduction,2)+' ('+pctLabel(no.metrics.peaks.grid.value>0?reduction/no.metrics.peaks.grid.value*100:null)+')');
-  setText('ins_mee2',t('Porównanie zachowuje te same profile odbiorców, PV i wiatru. Szczyty to maksima z całego roku i mogą wypadać w różnych godzinach. Ujemna redukcja oznacza wzrost szczytu. Koszty: taryfa dwustrefowa; pełna ekonomika w kolejnym etapie.',
-    'The comparison preserves the same load, PV and wind profiles. Peaks are whole-year maxima and may occur at different times. A negative reduction means an increased peak. Costs use the fixed two-rate tariff; complete economics is a later stage.'));
+  setText('mee_peak_red',powerText(reduction)+' ('+pctLabel(no.metrics.peaks.grid.value>0?reduction/no.metrics.peaks.grid.value*100:null)+')');
+  setText('ins_mee2',t('Porównanie zachowuje te same profile odbiorców, PV i wiatru. Szczyty to maksima z całego roku i mogą wypadać w różnych godzinach. Ujemna redukcja oznacza wzrost szczytu. Koszty są sumą godzinowych zakupów minus przychód z eksportu; pełna ekonomika wieloletnia w kolejnym etapie.',
+    'The comparison preserves the same load, PV and wind profiles. Peaks are whole-year maxima and may occur at different times. A negative reduction means an increased peak. Costs sum hourly purchases minus export revenue; complete multi-year economics is a later stage.'));
   const years=Array.from({length:21},(_,i)=>i);
   mkChart('c_mee_degradacja','line',{labels:years,datasets:[{label:t('Pojemność nominalna','Nominal capacity'),data:years.map(()=>state.meeK),borderColor:'#9b87f5',borderDash:[4,3],pointRadius:0},
     {label:t('Hipoteza degradacji','Degradation assumption'),data:years.map(y=>state.meeK*Math.pow(1-state.meeDeg/100,y)),borderColor:'#e05a5a',pointRadius:0}]},
@@ -2243,7 +2402,7 @@ function renderStorageViews(state) {
 }
 
 function upd() {
-  try {refreshTimeDescription();const blocker=simulationBlocker();if(blocker){clearSimulationResults(blocker);return;}}
+  try {UnitInputs.refresh();refreshPriceControls();refreshTimeDescription();const blocker=simulationBlocker();if(blocker){clearSimulationResults(blocker);return;}}
   catch(e){clearSimulationResults(e.message);return;}
   const pp=iv('p_przyl'),pn=iv('p_noc'),pd=iv('p_dzien'),pvM=iv('pv_moc'),invEff=iv('pv_inv'),lossEff=iv('pv_loss');
   const fwM=iv('fw_moc'),fwW=iv('fw_wind'),fwV=iv('fw_var'),meeK=iv('mee_kwh'),meeP=iv('mee_mw'),meeEff=iv('mee_eff'),meeDeg=iv('mee_deg');
@@ -2251,7 +2410,7 @@ function upd() {
   const vals={p_przyl_v:pp+' MW',p_noc_v:pn+'%',p_dzien_v:pd+'%',pv_v:pvM+' MW',pv_inv_v:invEff+'%',pv_loss_v:lossEff+'%',
     fw_v:fwM+' MW',fw_wind_v:fwW+' m/s',fw_var_v:fwV+'%',mee_kwh_v:meeK+' MWh',mee_mw_v:meeP+' MW',mee_eff_v:meeEff+'%',mee_deg_v:meeDeg+'%',
     c_szczyt_v:cS,c_noc_v:cN,c_wzrost_v:cWzrost+'%'};
-  Object.entries(vals).forEach(([id,v])=>setText(id,v));syncSeasonButtons();
+  Object.entries(vals).forEach(([id,v])=>setText(id,v));UnitInputs.refresh();syncSeasonButtons();
   ['b3','b2','br'].forEach((id,i)=>{g(id).classList.toggle('active',['3','2','ramp'][i]===tryb);g(id).disabled=g('data_source').value==='csv';});
   let r;
   try {r=simulate8760(pvM,fwM,fwW,fwV,meeK,meeP,meeEff,pp,pn,pd,invEff,lossEff,tryb,emsMode,cS,cN);}
@@ -2263,9 +2422,9 @@ function upd() {
   setText('app_data_status',t('Wspólny wynik symulacji: ','Shared simulation result: ')+axisDescription(a));g('app_data_status').className='ins good';
   setText('hdr_pokrycie',t('Pokrycie OZE ','RES coverage ')+pctLabel(m.coveragePct));
   g('hdr_pokrycie').className='pill '+(m.coveragePct>60?'green':m.coveragePct>35?'blue':'amber');
-  setText('hdr_koszt',t('Koszt sieci (2 strefy): ','Grid cost (2 rates): ')+fmtD(m.fixedGridCost/a.days,0)+t(' PLN/dobę',' PLN/day'));
-  for(const [id,value] of Object.entries({cfg_zap:m.daily.demand,cfg_oze:m.daily.res,cfg_siec:m.daily.grid,cfg_koszt:m.fixedGridCost/a.days,
-    cfg_oszcz:(m.fixedNoRESCost-m.fixedGridCost)/a.days,cfg_fw_avg:m.annual.wind/a.length}))setText(id,fmtD(value,id.includes('koszt')||id.includes('oszcz')?0:3));
+  setText('hdr_koszt',t('Koszt netto: ','Net cost: ')+money(m.cost.netCost/a.days)+t(' PLN/dobę',' PLN/day')+(r.config.priceKind==='synthetic-demo'?' · DEMO':''));
+  for(const [id,value] of Object.entries({cfg_zap:m.daily.demand,cfg_oze:m.daily.res,cfg_siec:m.daily.grid,cfg_koszt:m.cost.netCost/a.days,
+    cfg_oszcz:(m.cost.baselineCost-m.cost.netCost)/a.days,cfg_fw_avg:m.annual.wind/a.length}))setText(id,id.includes('koszt')||id.includes('oszcz')?money(value):fmtD(value,3));
   setText('cfg_auto',pctNumber(m.selfConsumptionPct));
   setText('ins_cfg',t('Pokrycie zapotrzebowania przez OZE: ','Demand covered by RES: ')+pctLabel(m.coveragePct)+t('; autokonsumpcja użyteczna: ','; useful self-consumption: ')+pctLabel(m.selfConsumptionPct)+
     t('. Oba wskaźniki liczą energię dostarczoną odbiorcom. Straty i końcowy zapas nie są zużyciem odbiorców; energia z sieci przez MEE nie jest OZE.','. Both count energy delivered to loads. Losses and final storage stock are not load consumption; grid energy through BESS is not RES.'));
@@ -2274,15 +2433,17 @@ function upd() {
   mkChart('c_zak_dobowy','bar',{labels,datasets:[{label:t('Średnie zapotrzebowanie','Mean demand'),data:S.dem,backgroundColor:'rgba(77,157,224,.7)'},
     {label:t('Limit przyłącza','Connection limit'),data:Array(24).fill(pp),type:'line',borderColor:'#e05a5a',borderDash:[4,3],pointRadius:0}]},
     {scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:chartLegend()});
-  setText('zak_peak',fmtD(m.peaks.demand.value,2));setText('zak_mva',fmtD(m.peaks.demand.value*Math.sqrt(1+.4*.4),2));setText('zak_mvar',fmtD(m.peaks.demand.value*.4,2));setText('zak_energy',fmtD(m.daily.demand,3));
+  setText('zak_peak',powerText(m.peaks.demand.value));setText('zak_mva',fmtD(m.peaks.demand.value*Math.sqrt(1+.4*.4),2));setText('zak_mvar',fmtD(m.peaks.demand.value*.4,2));setText('zak_energy',fmtD(m.daily.demand,3));
   setText('ins_zak1',t('Wykres pokazuje średnią dobę, a szczyt jest maksimum godzinowym całego roku: ','The chart shows a mean day; the peak is the whole-year hourly maximum: ')+m.peaks.demand.time+'.');
   mkChart('c_zak_tygodniowy','bar',{labels:dayLabels(),datasets:[{label:t('Średnia energia dnia tygodnia','Mean weekday energy'),data:aggregate8760.toAverageWeek(r.dem),backgroundColor:'rgba(77,157,224,.7)'}]},
     {scales:{y:{beginAtZero:true,title:{display:true,text:'MWh'}}}});
-  setText('zak_tyg_e',fmtD(m.annual.demand/a.days*7,3));setText('zak_rok_e',fmtD(m.annual.demand,3));setText('zak_rok_e_real',fmtD(m.annual.demand,3));setText('zak_rok_koszt',fmtD(m.fixedNoRESCost,0));
+  setText('zak_tyg_e',fmtD(m.annual.demand/a.days*7,3));setText('zak_rok_e',fmtD(m.annual.demand,3));setText('zak_rok_e_real',fmtD(m.annual.demand,3));setText('zak_rok_koszt',money(m.cost.baselineCost));
   setText('ins_zak2',t('Roczna energia to suma godzin. Średni tydzień = suma roczna / liczba dni × 7. Kalendarzowe dni tygodnia mają różne liczności.','Annual energy is the sum of hours. Mean week = annual sum / days × 7. Calendar weekdays have different counts.'));
   const activeName=g('data_source').value==='csv'?t('Wczytany plik CSV','Uploaded CSV'):t('Aktywny profil modelowy','Active model profile');
-  g('tbl_zaklad_body').innerHTML='<tr>'+[activeName,fmtD(m.daily.demand,3),fmtD(m.peaks.demand.value,2),fmtD(m.minDemand,2),pctNumber(m.loadFactorPct),fmtD(m.fixedNoRESCost/a.days,0)].map(v=>'<td>'+escapeText(v)+'</td>').join('')+'</tr>';
+  g('tbl_zaklad_body').innerHTML='<tr>'+[activeName,fmtD(m.daily.demand,3),powerText(m.peaks.demand.value),fmtD(m.minDemand,2),pctNumber(m.loadFactorPct),money(m.cost.baselineCost/a.days)].map(v=>'<td>'+escapeText(v)+'</td>').join('')+'</tr>';
   renderPVViews(lastSim);renderWindViews(lastSim);renderStorageViews(lastSim);renderBalanceViews(lastSim);
+  g('btn_hourly_settlement').disabled=false;
+  renderSettlementViews(lastSim);
   calcInv();buildReport();
 }
 
@@ -2295,6 +2456,7 @@ function calcInv() {
   const { S, pp, pn, pd, pvM, fwM, fwW, fwV, meeK, meeP, meeEff, sezon, tryb, cS, cN, cWzrost, invEff, lossEff } = lastSim;
   const emsMode = g('ems_mode') ? g('ems_mode').value : 'auto';
   const daysInYear=getTimeAxis().days;
+  const avgPurchasePrice=SimulationResults.sum(lastSim.S_8760.prices)/lastSim.S_8760.prices.length;
   
   const addPV  = parseFloat(g('inv_pv_mw')?.value||0)||0;
   const addFW  = parseFloat(g('inv_fw_mw')?.value||0)||0;
@@ -2315,7 +2477,7 @@ function calcInv() {
   const capexNet       = capexTotal * (1 - dotacja/100);
   const dotacjaKwota   = capexTotal * dotacja/100;
 
-  const costGrid = calcCost(S.gridArr, cS, cN);
+  const costGrid = lastSim.S_8760.settlement.netCost;
   
   // --- NOWY LOGICZNY RDZEŃ: Prawdziwa symulacja dodanych mocy ---
   const S_cust_8760 = simulate8760(
@@ -2328,23 +2490,23 @@ function calcInv() {
   );
   
   // Koszt i oszczędności dla ręcznie wpisanej inwestycji (podstawa KPI: SPBT, NPV, IRR)
-  const c_cust = Math.round(calcCost(aggregate8760.toAverageDay(S_cust_8760.gridArr), cS, cN));
-  const savDay = Math.max(0, costGrid - c_cust); 
-  const savRok = Math.round(savDay * daysInYear);
+  const c_cust = S_cust_8760.settlement.netCost;
+  const savDay = (costGrid - c_cust)/daysInYear; 
+  const savRok = costGrid - c_cust;
   
   // --- Warianty sztywne do pobocznego wykresu porównawczego (zostawiamy dla grafiki) ---
   const S1_8760 = simulate8760(pvM*1.25, fwM, fwW, fwV, meeK, meeP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS, cN);
   const S2_8760 = simulate8760(pvM, fwM*1.25, fwW, fwV, meeK, meeP, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS, cN);
-  const S3_8760 = simulate8760(pvM, fwM, fwW, fwV, meeK*1.5, Math.min(meeP*1.3,12), meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS, cN);
+  const S3_8760 = simulate8760(pvM, fwM, fwW, fwV, meeK*1.5, meeP*1.3, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS, cN);
   
-  const c0 = Math.round(costGrid);
-  const c1 = Math.round(calcCost(aggregate8760.toAverageDay(S1_8760.gridArr), cS, cN));
-  const c2 = Math.round(calcCost(aggregate8760.toAverageDay(S2_8760.gridArr), cS, cN));
-  const c3 = Math.round(calcCost(aggregate8760.toAverageDay(S3_8760.gridArr), cS, cN));
+  const c0 = costGrid/daysInYear;
+  const c1 = S1_8760.settlement.netCost/daysInYear;
+  const c2 = S2_8760.settlement.netCost/daysInYear;
+  const c3 = S3_8760.settlement.netCost/daysInYear;
   
-  const sav1 = Math.max(0, c0 - c1);
-  const sav2 = Math.max(0, c0 - c2);
-  const sav3 = Math.max(0, c0 - c3);
+  const sav1 = c0 - c1;
+  const sav2 = c0 - c2;
+  const sav3 = c0 - c3;
 
   const spbt = savRok > 0 ? +(capexNet*1000 / savRok).toFixed(1) : 99;
 
@@ -2372,10 +2534,10 @@ function calcInv() {
 
     // BŁYSKAWICZNA SYMULACJA DLA DANEGO ROKU
     const S_y = simulate8760(pvM + addPV, fwM + addFW, fwW, fwV, cap_y, basePow, meeEff, pp, pn, pd, invEff, lossEff, tryb, emsMode, cS, cN);
-    const c_y = Math.round(calcCost(aggregate8760.toAverageDay(S_y.gridArr), cS, cN));
+    const c_y = S_y.settlement.netCost;
     
     // Prawdziwa oszczędność w roku Y z uwzględnieniem spalonej pojemności baterii
-    const savRok_y = Math.max(0, costGrid - c_y) * daysInYear;
+    const savRok_y = costGrid - c_y;
     const cf = savRok_y * pf - opexPVGrunt*1000 - repCost;
     
     npv += cf / Math.pow(1 + discount/100, y);
@@ -2412,26 +2574,26 @@ function calcInv() {
   }
 
   if (g('inv_capex_total')) g('inv_capex_total').textContent = fmt(Math.round(capexNet));
-  if (g('inv_sav_rok'))     g('inv_sav_rok').textContent = fmt(savRok);
+  if (g('inv_sav_rok'))     g('inv_sav_rok').textContent = money(savRok);
   if (g('inv_spbt'))        g('inv_spbt').textContent = spbt < 99 ? fmtD(spbt,1) : '∞';
   if (g('inv_npv'))         g('inv_npv').textContent = fmt(Math.round(npv/1000));
   if (g('inv_irr'))         g('inv_irr').textContent = irrVal > 0 ? fmtD(irrVal,1) : '—';
   if (g('inv_dotacja_v'))   g('inv_dotacja_v').textContent = fmt(Math.round(dotacjaKwota));
 
   if (g('c_cmp_koszt')) {
-    g('cmp_pv_sav').textContent=fmt(sav1); g('cmp_fw_sav').textContent=fmt(sav2); g('cmp_mee_sav').textContent=fmt(sav3);
-    mkChart('c_cmp_koszt','bar',{labels:[t('Obecna', 'Current'),'+25% PV','+25% FW','+50% MEE'],datasets:[{label:t('Koszt sieci PLN/dobę', 'Grid cost PLN/day'),data:[c0,c1,c2,c3],backgroundColor:['rgba(136,135,128,0.6)','rgba(244,165,53,0.7)','rgba(62,207,142,0.7)','rgba(155,135,245,0.7)'],borderRadius:4}]},{scales:{y:{beginAtZero:false,title:{display:true,text:t('PLN/dobę', 'PLN/day')},ticks:{callback:v=>fmt(v)}}}});
+    g('cmp_pv_sav').textContent=money(sav1); g('cmp_fw_sav').textContent=money(sav2); g('cmp_mee_sav').textContent=money(sav3);
+    mkChart('c_cmp_koszt','bar',{labels:[t('Obecna', 'Current'),'+25% PV','+25% FW','+50% MEE'],datasets:[{label:t('Koszt netto PLN/dobę', 'Net cost PLN/day'),data:[c0,c1,c2,c3],backgroundColor:['rgba(136,135,128,0.6)','rgba(244,165,53,0.7)','rgba(62,207,142,0.7)','rgba(155,135,245,0.7)'],borderRadius:4}]},{scales:{y:{beginAtZero:false,title:{display:true,text:t('PLN/dobę', 'PLN/day')},ticks:{callback:v=>fmt(v)}}}});
     const savs=[sav1,sav2,sav3],bst=savs.indexOf(Math.max(...savs)),bnames=['+25% PV','+25% FW','+50% MEE'];
     const ins=g('ins_cmp1'); ins.className=savs[bst]>0?'ins good':'ins warn';
     ins.textContent=savs[bst]>0?t(
-      `Najlepsza inwestycja: ${bnames[bst]} — oszczędności ${fmt(savs[bst])} PLN/dobę = ${fmt(savs[bst]*daysInYear)} PLN/rok.`,
-      `Best investment: ${bnames[bst]} — savings ${fmt(savs[bst])} PLN/day = ${fmt(savs[bst]*daysInYear)} PLN/year.`
+      `Największa redukcja kosztu w porównaniu: ${bnames[bst]} — oszczędności ${fmt(savs[bst])} PLN/dobę = ${fmt(savs[bst]*daysInYear)} PLN/rok.`,
+      `Largest cost reduction in this comparison: ${bnames[bst]} — savings ${fmt(savs[bst])} PLN/day = ${fmt(savs[bst]*daysInYear)} PLN/year.`
     ) : t(
-      'Obecna konfiguracja jest już dobrze zoptymalizowana — oszczędności z rozbudowy są minimalne.',
-      'Current configuration is already well optimized — savings from expansion are minimal.'
+      'Warianty nie obniżają kosztu energii. Ujemne oszczędności oznaczają wzrost kosztu; nie jest to dowód optymalności obecnego układu.',
+      'The variants do not reduce energy cost. Negative savings mean increased costs, not proof that the current system is optimal.'
     );
     
-    const cPV=Math.round(pvM*0.25*3500),cFW=Math.round(fwM*0.25*5000),cMEE=Math.round(meeK*0.5*900);
+    const cPV=Math.round(pvM*0.25*3500),cFW=Math.round(fwM*0.25*5000),cMEE=Math.round(meeK*0.5*900+meeP*0.3*200);
     const rPV=sav1>0?+(cPV/(sav1*(daysInYear/1000))).toFixed(1):99,rFW=sav2>0?+(cFW/(sav2*(daysInYear/1000))).toFixed(1):99,rMEE=sav3>0?+(cMEE/(sav3*(daysInYear/1000))).toFixed(1):99;
     mkChart('c_cmp_roi','bar',{labels:['+25% PV','+25% FW','+50% MEE'],datasets:[
       {label:t('CAPEX [tys. PLN]', 'CAPEX [k PLN]'),data:[cPV,cFW,cMEE],backgroundColor:'rgba(77,157,224,0.6)',borderRadius:4,yAxisID:'y'},
@@ -2447,18 +2609,18 @@ function calcInv() {
   if (g('c_cashflow')) {
     const yearsLbl = Array.from({length:horizon+1},(_,i)=>i===0?t('Rok 0','Year 0'):t(`Rok ${i}`, `Year ${i}`));
     mkChart('c_cashflow','line',{labels:yearsLbl,datasets:[
-      {label:t('Skumulowane przepływy', 'Cumulative cash flows'),data:cfArr,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.08)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:cfArr.map(v=>v>=0?'#3ecf8e':'#e05a5a'),borderWidth:2},
+      {label:t('Skumulowane przepływy', 'Cumulative cash flows'),data:cfArr.map(v=>v/1000),borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.08)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:cfArr.map(v=>v>=0?'#3ecf8e':'#e05a5a'),borderWidth:2},
       {label:t('Próg rentowności', 'Break-even point'),data:Array(horizon+1).fill(0),borderColor:'rgba(77,157,224,0.3)',borderDash:[6,3],borderWidth:1,pointRadius:0,fill:false}
     ]},{scales:{y:{title:{display:true,text:t('tys. PLN', 'k PLN')}}}});
   }
 
   if (g('tbl_cashflow_body') && isVisible('inwest_3')) {
-    g('tbl_cashflow_body').innerHTML = `<tr><td class="td-mono">0 <small style="color:var(--text3)">(100%)</small></td><td class="td-mono">${cS}</td><td class="td-mono">—</td><td class="td-mono td-red">${fmt(Math.round(-capexNet*1000))}</td><td class="td-mono td-red">${fmt(Math.round(-capexNet*1000))}</td><td><span class="pill red">Inwestycja</span></td></tr>` + 
+    g('tbl_cashflow_body').innerHTML = `<tr><td class="td-mono">0 <small style="color:var(--text3)">(100%)</small></td><td class="td-mono">${fmtD(avgPurchasePrice,6)}</td><td class="td-mono">—</td><td class="td-mono td-red">${fmt(Math.round(-capexNet*1000))}</td><td class="td-mono td-red">${fmt(Math.round(-capexNet*1000))}</td><td><span class="pill red">Inwestycja</span></td></tr>` + 
     yearlyData.map(d => {
       const status = cfArr[d.y] >= 0 ? t('<span class="pill green">✓ Zwrot</span>', '<span class="pill green">✓ Payback</span>') : t('<span class="pill red">Inwestycja</span>', '<span class="pill red">Investment</span>');
-      const cena = Math.round(cS * d.pf);
+      const cena = fmtD(avgPurchasePrice*d.pf,6);
       const wymianaHTML = d.repCost > 0 ? `<br><small style="color:var(--red); font-weight:bold; font-size:11px;">- Wymiana MEE</small>` : '';
-      const savRoz = fmt(Math.round(d.savRok_y * d.pf));
+      const savRoz = money(d.savRok_y * d.pf);
       
       // Obliczanie realnego procentu pojemności
       const procCap = baseCap > 0 ? fmtD(d.cap_y/baseCap*100,1) : 100;
@@ -2475,14 +2637,14 @@ function calcInv() {
 // ============================================================
 // WIRTUALNY DORADCA AI (SYSTEM EKSPERCKI)
 // ============================================================
-function buildReport() {
+function buildReportCore() {
   if(!lastSim||!g('rep_params'))return;
   const state=lastSim,r=state.S_8760,m=r.metrics,a=r.timeAxis,no=state.S_without;
   const energy=v=>fmtD(v,3)+' MWh',daily=v=>fmtD(v,3)+t(' MWh/dobę',' MWh/day');
   const table=rows=>'<div class="tbl-wrap"><table><tbody>'+rows.map(([name,value])=>'<tr><td style="width:55%">'+escapeText(name)+'</td><td class="td-mono">'+escapeText(value)+'</td></tr>').join('')+'</tbody></table></div>';
-  const costDifference=no.metrics.fixedGridCost-m.fixedGridCost;
+  const costDifference=no.metrics.cost.netCost-m.cost.netCost;
   g('rep_params').innerHTML=table([
-    [t('Wersja','Version'),t('EnergoSym — etap 3','EnergoSym — stage 3')],
+    [t('Wersja','Version'),t('EnergoSym — etap 4','EnergoSym — stage 4')],
     [t('Rok / strefa / długość profilu','Year / zone / profile length'),axisDescription(a)],
     [t('Profil zużycia','Demand profile'),g('data_source').value==='csv'?t('CSV zweryfikowany','Validated CSV')+' · '+window.importedDemand.unit+' / '+window.importedDemand.minutes+' min':t('Model ręczny z kalendarzem','Manual model with calendar')],
     ...(g('data_source').value==='manual'?[
@@ -2490,31 +2652,31 @@ function buildReport() {
       [t('Parametry obciążenia noc / dzień','Night / daytime load parameters'),fmtD(state.pn,1)+' / '+fmtD(state.pd,1)+'%']
     ]:[]),
     [t('Źródło profilu PV','PV profile source'),r.config.pvSource==='api'?'Open-Meteo GHI':t('Uproszczony model astronomiczny 52°N','Simplified astronomical model at 52°N')],
-    [t('Moc przyłącza','Connection capacity'),fmtD(state.pp,2)+' MW'],
-    [t('PV / FW','PV / wind'),fmtD(state.pvM,2)+' / '+fmtD(state.fwM,2)+' MW'],
+    [t('Moc przyłącza','Connection capacity'),powerText(state.pp)+' MW'],
+    [t('PV / FW','PV / wind'),powerText(state.pvM)+' / '+powerText(state.fwM)+' MW'],
     [t('Sprawność falownika / pozostałe straty PV','Inverter efficiency / other PV losses'),fmtD(state.invEff,1)+' / '+fmtD(state.lossEff,1)+'%'],
     [t('Założona średnia wiatru / zmienność','Assumed mean wind / variability'),fmtD(state.fwW,1)+' m/s / '+fmtD(state.fwV,1)+'%'],
-    [t('Pojemność MEE / moc AC','BESS capacity / AC power'),fmtD(state.meeK,2)+' MWh / '+fmtD(state.meeP,2)+' MW'],
+    [t('Pojemność MEE / moc AC','BESS capacity / AC power'),fmtD(state.meeK,2)+' MWh / '+powerText(state.meeP)+' MW'],
     [t('Sprawność pełnego cyklu MEE','BESS round-trip efficiency'),fmtD(state.meeEff,1)+'%'],
-    [t('Ceny taryfy szczyt / noc','Peak / night tariff prices'),fmtD(state.cS,2)+' / '+fmtD(state.cN,2)+' PLN/MWh'],
+    [r.config.priceKind==='synthetic-demo'?t('Progi EMS / baza DEMO — dzień / noc','EMS thresholds / DEMO base — day / night'):t('Ceny taryfy szczyt / noc','Peak / night tariff prices'),fmtD(state.cS,2)+' / '+fmtD(state.cN,2)+' PLN/MWh'],
     [t('Strategia MEE','BESS strategy'),r.config.emsMode==='arbitrage'?t('Arbitraż','Arbitrage'):t('Autokonsumpcja','Self-consumption')]
   ]);
   g('rep_zaklad').innerHTML=table([
     [t('Zapotrzebowanie roczne — suma godzin','Annual demand — hourly sum'),energy(m.annual.demand)],
     [t('Średnia energia dobowa','Mean daily energy'),daily(m.daily.demand)],
-    [t('Roczny szczyt zapotrzebowania godzinowego','Annual hourly demand peak'),fmtD(m.peaks.demand.value,2)+' MW · '+m.peaks.demand.time],
+    [t('Roczny szczyt zapotrzebowania godzinowego','Annual hourly demand peak'),powerText(m.peaks.demand.value)+' MW · '+m.peaks.demand.time],
     [t('Minimum godzinowe w roku','Annual hourly minimum'),fmtD(m.minDemand,2)+' MW'],
     [t('Współczynnik obciążenia (średnia / szczyt)','Load factor (mean / peak)'),pctLabel(m.loadFactorPct)],
     [t('Szczyt pozorny — założone tgφ=0,4','Apparent peak — assumed tgφ=0.4'),fmtD(m.peaks.demand.value*Math.sqrt(1.16),2)+' MVA'],
     [t('Moc bierna przy szczycie — założenie','Reactive power at peak — assumption'),fmtD(m.peaks.demand.value*.4,2)+' MVAr']
   ]);
   g('rep_oze').innerHTML=table([
-    [t('PV rocznie — suma godzin','Annual PV — hourly sum'),energy(m.annual.pv)],
-    [t('FW rocznie — suma godzin','Annual wind — hourly sum'),energy(m.annual.wind)],
-    [t('OZE rocznie','Annual RES'),energy(m.annual.res)],
+    [t('Dostępna energia PV rocznie','Available annual PV energy'),energy(m.annual.pv)],
+    [t('Dostępna energia FW rocznie','Available annual wind energy'),energy(m.annual.wind)],
+    [t('Dostępna energia OZE rocznie','Available annual RES energy'),energy(m.annual.res)],
     [t('Średnia dobowa PV / FW','Mean daily PV / wind'),fmtD(m.daily.pv,3)+' / '+daily(m.daily.wind)],
     [t('CF PV / FW — wykorzystanie mocy','PV / wind CF — capacity utilisation'),pctLabel(m.pvCF)+' / '+pctLabel(m.windCF)],
-    [t('Roczny szczyt PV','Annual PV peak'),fmtD(m.peaks.pv.value,2)+' MW · '+m.peaks.pv.time],
+    [t('Roczny szczyt PV','Annual PV peak'),powerText(m.peaks.pv.value)+' MW · '+m.peaks.pv.time],
     [t('Cel AEP Weibulla / rzeczywista suma profilu FW','Weibull AEP target / actual wind profile sum'),fmtD(r.windModel.theoreticalAEP,3)+' / '+energy(m.annual.wind)],
     [t('Ograniczenie mocy / cut-out w generatorze FW','Power capping / cut-out in wind generator'),r.windModel.clippedHours+' / '+r.windModel.cutoutHours+t(' godzin',' hours')]
   ]);
@@ -2529,49 +2691,49 @@ function buildReport() {
     [t('OZE z magazynu do odbiorców','RES from BESS to loads'),energy(m.annual.dischargeRES)],
     [t('Energia sieciowa dostarczona odbiorcom (w tym przez MEE)','Grid-origin energy delivered to loads (including BESS)'),energy(m.annual.gridToLoads)],
     [t('Cały import z sieci (w tym ładowanie MEE)','Total grid import (including BESS charging)'),energy(m.annual.grid)],
-    [t('Nadwyżka OZE niezużyta i niemagazynowana','RES surplus not consumed or stored'),energy(m.annual.surplus)],
+    [t('Nadwyżka przed decyzją eksport/ograniczenie','Surplus before export/curtailment policy'),energy(m.annual.surplus)],
     [t('Pokrycie zapotrzebowania przez OZE','RES demand coverage'),pctLabel(m.coveragePct)],
     [t('Autokonsumpcja użyteczna OZE','Useful RES self-consumption'),pctLabel(m.selfConsumptionPct)],
     [t('OZE zatrzymane na miejscu (łącznie ze stratami i zapasem)','RES retained on site (including losses and stock)'),pctLabel(m.retainedRESPct)],
-    [t('Roczny szczyt importu z sieci','Annual grid import peak'),fmtD(m.peaks.grid.value,2)+' MW · '+m.peaks.grid.time],
+    [t('Roczny szczyt importu z sieci','Annual grid import peak'),powerText(m.peaks.grid.value)+' MW · '+m.peaks.grid.time],
     [t('Import roczny bez MEE / z MEE — te same OZE i odbiorcy','Annual import without / with BESS — same RES and loads'),fmtD(no.metrics.annual.grid,3)+' / '+energy(m.annual.grid)]
   ]);
   g('rep_inwest').innerHTML=table([
-    [t('Metoda wyceny — do dopracowania w etapie 4','Valuation method — to be refined in stage 4'),t('Taryfa dwustrefowa, bez pełnego rozliczenia cen dynamicznych','Fixed two-rate tariff, without full dynamic-price settlement')],
-    [t('Koszt roczny bez OZE','Annual cost without RES'),fmtD(m.fixedNoRESCost,0)+' PLN'],
-    [t('Koszt roczny z OZE, bez MEE','Annual cost with RES, without BESS'),fmtD(no.metrics.fixedGridCost,0)+' PLN'],
-    [t('Koszt roczny z OZE i MEE','Annual cost with RES and BESS'),fmtD(m.fixedGridCost,0)+' PLN'],
-    [t('Różnica kosztu bez MEE − z MEE','Cost difference without BESS − with BESS'),fmtD(costDifference,0)+' PLN']
+    [t('Rozliczenie energii — etap 4','Energy billing — stage 4'),t('Suma kosztów i przychodów godzinowych','Sum of hourly purchase costs and export revenues')],
+    [t('Koszt roczny bez OZE','Annual cost without RES'),money(m.cost.baselineCost)+' PLN'],
+    [t('Koszt roczny z OZE, bez MEE','Annual cost with RES, without BESS'),fmtD(no.metrics.cost.netCost,0)+' PLN'],
+    [t('Koszt roczny z OZE i MEE','Annual cost with RES and BESS'),fmtD(m.cost.netCost,0)+' PLN'],
+    [t('Różnica kosztu bez MEE − z MEE','Cost difference without BESS − with BESS'),money(costDifference)+' PLN']
   ]);
   g('rep_metoda').innerHTML=t(`
     <b>Wspólny wynik godzinowy:</b> wykresy, karty i raport używają tego samego profilu wybranego roku. Energie są sumami godzinnych mocy × 1 h. Zaokrąglenia dotyczą wyłącznie prezentacji.<br>
     <b>Średnie i szczyty:</b> średnia doba = suma energii danej godziny zegarowej / liczba dni. Sezony filtrują miesiące: lato VI–VIII, zima XII–II, wiosna/jesień III–V i IX–XI. Średni dzień tygodnia uwzględnia faktyczną liczbę takich dni. Średni tydzień = roczna energia / dni × 7. Szczyty są maksimami z całego szeregu godzinowego, z datą i przesunięciem UTC; nie są szczytami 15-minutowymi.<br>
     <b>PV:</b> w modelu ręcznym P_brutto = moc PV × max(0, sin wysokości Słońca)^1,1 dla 52°N, z uproszczonym południem o 12:00 czasu analizy. Brak modelu chmur, temperatury, orientacji i nachylenia paneli. W trybie API: P_brutto = moc PV × GHI/1000. Jest to uproszczenie dla promieniowania poziomego. Netto = brutto × sprawność falownika × (1 − straty). Sezon nie zmienia produkcji. Wykres miesięczny sumuje ten sam profil netto.<br>
-    <b>Wiatr:</b> referencyjna krzywa ma P=0 poniżej 3 i od 25 m/s, potęgową część (v−3)^2,2 / 11^2,2 od 3 do 14 m/s i moc nominalną od 14 do 25 m/s. Rozkład Weibulla ma k=2, λ=v_śr×1,128; AEP referencyjne jest przybliżeniem koszykowym. Syntetyczny szereg uwzględnia modulację dobową, sezonową i dwie sinusoidy. Jest skalowany do celu AEP, ograniczany do mocy nominalnej i zaokrąglany do 0,001 MW. Dlatego suma profilu może różnić się od celu AEP. Bilans używa wyłącznie sumy profilu. Cut-out odnosi się do godzinowego wiatru generatora, nie do zadanej średniej rocznej. Krzywa i rozkład są diagnostyką modelu; nie są drugim profilem produkcji ani pomiarem pogody.<br>
-    <b>Magazyn:</b> moc jest po stronie AC, η_ł=η_roz=√η_RT, początkowy SOC=0. Ładowanie z sieci respektuje wolną moc przyłącza. Nie obcina się zapotrzebowania przekraczającego przyłącze. Nadwyżka to energia po ładowaniu, bez modelowania jej sprzedaży. Pochodzenie energii w SOC jest śledzone osobno dla OZE i sieci; przy rozładowaniu przyjęto proporcjonalne wymieszanie. Straty i końcowy SOC zachowują to pochodzenie.<br>
-    <b>Definicje:</b> energia OZE dostarczona odbiorcom = OZE bezpośrednio + rozładowanie MEE pochodzenia OZE. Autokonsumpcja użyteczna = ta energia / produkcja OZE. Pokrycie zapotrzebowania OZE = ta energia / zapotrzebowanie odbiorców. OZE zatrzymane na miejscu = (bezpośrednie OZE + ładowanie z OZE) / produkcja OZE; ta osobna miara obejmuje straty i zapas końcowy. Energia z sieci przechodząca przez MEE nie jest OZE. Cykle równoważne rozładowania = (energia AC oddana z MEE / η_roz) / nominalna pojemność; średnia dobowa = cykle roczne / dni. Nie są to zliczone pełne zdarzenia ładowania. Brak mianownika oznacza „—”; brak magazynu oznacza 0 cykli. CF = produkcja roczna / (moc nominalna × godziny roku), a nie sprawność.<br>
+    <b>Wiatr:</b> referencyjna krzywa ma P=0 poniżej 3 i od 25 m/s, potęgową część (v−3)^2,2 / 11^2,2 od 3 do 14 m/s i moc nominalną od 14 do 25 m/s. Rozkład Weibulla ma k=2, λ=v_śr×1,128; AEP referencyjne jest przybliżeniem koszykowym. Syntetyczny szereg uwzględnia modulację dobową, sezonową i dwie sinusoidy. Jest skalowany do celu AEP, ograniczany do mocy nominalnej bez zaokrąglania małych instalacji do 0,001 MW. Dlatego suma profilu może różnić się od celu AEP. Bilans używa wyłącznie sumy profilu. Cut-out odnosi się do godzinowego wiatru generatora, nie do zadanej średniej rocznej. Krzywa i rozkład są diagnostyką modelu; nie są drugim profilem produkcji ani pomiarem pogody.<br>
+    <b>Magazyn:</b> moc jest po stronie AC, η_ł=η_roz=√η_RT, początkowy SOC=0. Ładowanie z sieci respektuje wolną moc przyłącza. Nie obcina się zapotrzebowania przekraczającego przyłącze. Nadwyżka po ładowaniu jest dzielona na eksport i ograniczenie według ustawień etapu 4. Pochodzenie energii w SOC jest śledzone osobno dla OZE i sieci; przy rozładowaniu przyjęto proporcjonalne wymieszanie. Straty i końcowy SOC zachowują to pochodzenie.<br>
+    <b>Definicje:</b> energia OZE dostarczona odbiorcom = OZE bezpośrednio + rozładowanie MEE pochodzenia OZE. Autokonsumpcja użyteczna = ta energia / produkcja OZE. Pokrycie zapotrzebowania OZE = ta energia / zapotrzebowanie odbiorców. OZE zatrzymane na miejscu = (bezpośrednie OZE + ładowanie z OZE) / produkcja OZE; ta osobna miara obejmuje straty i zapas końcowy. Energia z sieci przechodząca przez MEE nie jest OZE. Cykle równoważne rozładowania = (energia AC oddana z MEE / η_roz) / nominalna pojemność; średnia dobowa = cykle roczne / dni. Nie są to zliczone pełne zdarzenia ładowania. Brak mianownika oznacza „—”; brak magazynu oznacza 0 cykli. CF dostępnego profilu = dostępna energia roczna / (moc nominalna × godziny roku), a nie sprawność.<br>
     <b>Kontrola energii:</b> OZE + import = odbiorcy + nadwyżka + straty MEE + końcowy SOC. Dodatkowo sprawdzane są bilanse pochodzenia OZE i sieci. Wariant bez MEE zachowuje dokładnie te same szeregi odbiorców, PV i wiatru; zeruje wyłącznie magazyn. Różnica rocznych maksimów importu może dotyczyć różnych godzin; wartość ujemna oznacza wzrost szczytu.<br>
     <b>Czas:</b> ${escapeText(axisDescription(a))}. Oś obliczeń ma kolejne godziny UTC i granice roku w wybranej strefie. Rok przestępny zachowuje 29 lutego; zmiany czasu są uwzględniane. Dane 15-minutowe są agregowane energetycznie do godzin. Z CSV nie odtwarza się szczytów krótszych niż godzina.<br>
-    <b>Pozostałe założenia:</b> S=P√(1+tg²φ), Q=P·tgφ, przy stałym, przyjętym tgφ=0,4; nie jest to pomiar ani ocena opłat. Wykres degradacji jest założeniem wykładniczym, nie dodatkowym wynikiem bieżącego roku. Ceny demo są syntetyczne. Koszty, CAPEX, NPV, IRR i SPBT wymagają etapu ekonomicznego; etap 3 nie potwierdza opłacalności inwestycji.<br>
-    Wersja: etap 3 — jeden profil i spójne wyniki.
+    <b>Pozostałe założenia:</b> S=P√(1+tg²φ), Q=P·tgφ, przy stałym, przyjętym tgφ=0,4; nie jest to pomiar ani ocena opłat. Wykres degradacji jest założeniem wykładniczym, nie dodatkowym wynikiem bieżącego roku. Ceny demo są syntetyczne. Rozliczenie energii jest opisane w etapie 4 poniżej. CAPEX, NPV, IRR i SPBT nadal wymagają osobnej weryfikacji.<br>
+    Wersja: etap 4 — rozliczenie godzinowe energii.
   `,`
     <b>Shared hourly result:</b> charts, cards and report use the same year profile. Energy is the sum of hourly power × 1 h; rounding is for display only.<br>
     <b>Means and peaks:</b> mean day = energy for each local clock hour / calendar days. Summer: Jun–Aug; winter: Dec–Feb; spring/autumn: Mar–May and Sep–Nov. Weekday means use actual weekday counts; mean week = annual energy / days × 7. Peaks use the whole hourly series and show timestamps with UTC offsets, not 15-minute peaks.<br>
     <b>PV:</b> manual gross power = capacity × positive sine of solar altitude^1.1 at 52°N, with simplified noon at 12:00 in the analysis clock. Clouds, temperature, orientation and tilt are not modelled. API gross power = capacity × GHI/1000, a horizontal-irradiance approximation. Net power applies inverter efficiency and other losses. Seasonal views only filter months; monthly production sums the same net series.<br>
-    <b>Wind:</b> reference power is zero below 3 and from 25 m/s, follows (v−3)^2.2/11^2.2 between 3 and 14 m/s, and is nominal from 14 to 25 m/s. Weibull k=2 and λ=mean×1.128 define an approximate binned AEP target. The synthetic series uses daily and seasonal modulation plus two sine terms, is scaled to the target, capped at nominal power and rounded to 0.001 MW. Its sum may differ from the target. Only the series enters the energy balance. Cut-out applies to hourly generator wind, not assumed annual mean wind. The curve and distribution diagnose this model, not separate production or measured weather.<br>
-    <b>BESS:</b> AC power; charge and discharge efficiency = √round-trip efficiency. Initial SOC=0. Grid charging respects connection headroom; demand is not clipped. Surplus is after charging, without sale modelling. RES/grid origins are tracked in SOC with proportional mixing on discharge, including source losses and final stock.<br>
-    <b>Definitions:</b> useful RES delivered to loads = direct RES + RES-origin BESS delivery. Useful self-consumption divides it by RES generation; RES demand coverage divides it by load demand. RES retained on site = (direct RES + RES charging) / generation and includes losses and final stock. Grid-origin BESS delivery is not RES. Equivalent discharge cycles = (AC discharge / discharge efficiency) / nominal capacity; daily mean = annual cycles / days. They are not counts of completed charge events. An undefined denominator shows “—”; no battery means zero cycles. CF = annual energy / (capacity × year hours), not efficiency.<br>
+    <b>Wind:</b> reference power is zero below 3 and from 25 m/s, follows (v−3)^2.2/11^2.2 between 3 and 14 m/s, and is nominal from 14 to 25 m/s. Weibull k=2 and λ=mean×1.128 define an approximate binned AEP target. The synthetic series uses daily and seasonal modulation plus two sine terms, is scaled to the target, capped at nominal power without rounding small systems to 0.001 MW. Its sum may differ from the target. Only the series enters the energy balance. Cut-out applies to hourly generator wind, not assumed annual mean wind. The curve and distribution diagnose this model, not separate production or measured weather.<br>
+    <b>BESS:</b> AC power; charge and discharge efficiency = √round-trip efficiency. Initial SOC=0. Grid charging respects connection headroom; demand is not clipped. Surplus after charging is split into export and curtailment by stage 4 settings. RES/grid origins are tracked in SOC with proportional mixing on discharge, including source losses and final stock.<br>
+    <b>Definitions:</b> useful RES delivered to loads = direct RES + RES-origin BESS delivery. Useful self-consumption divides it by RES generation; RES demand coverage divides it by load demand. RES retained on site = (direct RES + RES charging) / generation and includes losses and final stock. Grid-origin BESS delivery is not RES. Equivalent discharge cycles = (AC discharge / discharge efficiency) / nominal capacity; daily mean = annual cycles / days. They are not counts of completed charge events. An undefined denominator shows “—”; no battery means zero cycles. Available-profile CF = available annual energy / (capacity × year hours), not efficiency.<br>
     <b>Balance:</b> RES + import = loads + surplus + BESS losses + final SOC. Source balances are also checked. The no-BESS case preserves the exact same load, PV and wind series. Peak reductions compare annual maxima, potentially at different times; negative means an increase.<br>
     <b>Time:</b> ${escapeText(axisDescription(a))}. Successive UTC hours, year boundaries in the selected zone, leap day and DST retained. Quarter-hour data are energy-aggregated to hourly values.<br>
-    <b>Other assumptions:</b> S=P√(1+tan²φ), Q=P·tanφ with assumed tanφ=0.4; no reactive-power measurement or fee assessment. Degradation is an exponential assumption. Demo prices are synthetic. Costs, CAPEX, NPV, IRR and SPBT require the economics stage.<br>
-    Version: stage 3 — one profile and consistent results.
+    <b>Other assumptions:</b> S=P√(1+tan²φ), Q=P·tanφ with assumed tanφ=0.4; no reactive-power measurement or fee assessment. Degradation is an exponential assumption. Demo prices are synthetic. Energy billing is described in stage 4 below. CAPEX, NPV, IRR and SPBT still require dedicated verification.<br>
+    Version: stage 4 — hourly energy settlement.
   `);
   const labels=Array.from({length:24},(_,i)=>i+':00'),opts={scales:{y:{beginAtZero:true,title:{display:true,text:'MW'}}},plugins:chartLegend()};
   mkChart('rpt_c1','bar',{labels,datasets:[{label:t('Odbiorcy — średnia','Loads — mean'),data:state.S.dem,backgroundColor:'#4d9de0'}]},opts);
   mkChart('rpt_c2','line',{labels,datasets:[['pv','PV','#f4a535'],['fw','FW','#3ecf8e'],['oze','OZE','#9b87f5']].map(([key,label,color])=>({label,data:state.S[key],borderColor:color,pointRadius:0}))},opts);
   mkChart('rpt_c3','line',{labels,datasets:[{label:'SOC [MWh]',data:state.S.socArr,borderColor:'#9b87f5',pointRadius:0},
     {label:t('Moc MEE AC [MW]','BESS AC power [MW]'),data:state.S.meePow,borderColor:'#3ecf8e',pointRadius:0}]},{scales:{y:{title:{display:true,text:'MWh / MW'}}},plugins:chartLegend()});
-  mkChart('rpt_c4','line',{labels,datasets:[['dem',t('Odbiorcy','Loads'),'#4d9de0'],['oze','OZE','#9b87f5'],['gridArr',t('Import','Import'),'#e05a5a'],['surplusArr',t('Nadwyżka','Surplus'),'#3ecf8e'],['chargeArr',t('Ładowanie MEE','BESS charging'),'#f4a535'],['dischargeArr',t('Oddawanie MEE','BESS delivery'),'#7ab8ec']].map(([key,label,color])=>({label,data:aggregate8760.toAverageDay(r[key]),borderColor:color,pointRadius:0}))},opts);
+  mkChart('rpt_c4','line',{labels,datasets:[['dem',t('Odbiorcy','Loads'),'#4d9de0'],['oze','OZE','#9b87f5'],['gridArr',t('Import','Import'),'#e05a5a'],['exportArr',t('Eksport','Export'),'#3ecf8e'],['curtailedArr',t('Ograniczenie produkcji','Curtailment'),'#9896a0'],['chargeArr',t('Ładowanie MEE','BESS charging'),'#f4a535'],['dischargeArr',t('Oddawanie MEE','BESS delivery'),'#7ab8ec']].map(([key,label,color])=>({label,data:aggregate8760.toAverageDay(r[key]),borderColor:color,pointRadius:0}))},opts);
 }
 
 function generateAIAdvice() {
@@ -2583,6 +2745,109 @@ function generateAIAdvice() {
     t('Wskaźniki roczne nie oznaczają niezależności od sieci w każdej godzinie. Dobór rozbudowy wymaga analizy chronologii i kosztów, nie tylko sumy nadwyżek.',
       'Annual indicators do not imply grid independence in every hour. Sizing an expansion requires chronology and cost analysis, not just total surplus.');
   setText('ai_advisor_text',text);
+}
+
+
+function renderSettlementViews(state) {
+  const r=state.S_8760,c=r.settlement,no=state.S_without.settlement,a=r.timeAxis;
+  const storageSavings=no.netCost-c.netCost;
+  for(const [id,value] of Object.entries({cost_purchase_year:c.purchaseCost,cost_revenue_year:c.exportRevenue,cost_net_year:c.netCost,cost_storage_year:storageSavings}))setText(id,money(value));
+  setText('energy_export_year',fmtD(c.exportEnergy,3));setText('energy_curtail_year',fmtD(c.curtailedEnergy,3));setText('energy_actual_year',fmtD(c.actualGeneration,3));
+  setText('cost_source_summary',priceSourceLabel(r)+' · '+surplusModeLabel(c.mode)+'. '+
+    t('Koszt netto = zakup − przychód ze sprzedaży. Oszczędność MEE = koszt netto bez MEE − koszt netto z MEE. Wartość ujemna oznacza zwiększenie kosztów.',
+    'Net cost = purchases − export revenue. BESS savings = net cost without BESS − net cost with BESS. Negative savings mean increased costs.'));
+  g('cost_source_summary').className=r.config.priceKind==='synthetic-demo'?'ins warn':'ins info';
+  setText('surplus_summary',t('Dostępne OZE: ','Available RES: ')+fmtD(r.metrics.annual.res,3)+t(' MWh; faktycznie wyprodukowane po ograniczeniach: ',' MWh; actually produced after curtailment: ')+fmtD(c.actualGeneration,3)+
+    t(' MWh. Nadwyżka po MEE = eksport + ograniczenie. Wybrany wariant: ',' MWh. Surplus after BESS = export + curtailment. Selected policy: ')+surplusModeLabel(c.mode)+'. '+
+    (c.mode==='sell'?(c.options.sellSource==='indexed'?t('Cena sprzedaży równa godzinowej cenie zakupu — założenie modelowe.','Export price equals hourly purchase price — a model assumption.'):t('Stała cena sprzedaży: ','Fixed export price: ')+fmtD(UnitInputs.priceForDisplay(c.options.fixedPrice),6)+' '+UnitInputs.label('price')+'. ')+
+      (c.options.allowNegative?t('Sprzedaż przy cenie ujemnej jest dozwolona i zwiększa koszty.','Negative-price export is allowed and increases costs.'):t('Przy ujemnej cenie sprzedaży niewykorzystana produkcja jest ograniczana.','At a negative export price, unused production is curtailed.')):
+      c.mode==='free'?t('Eksport nie przynosi przychodu. Nadwyżka ponad limit eksportu jest ograniczana.','Export earns no revenue. Surplus above the export limit is curtailed.'):t('Cała niewykorzystana nadwyżka jest ograniczana; eksport i przychód wynoszą zero.','All unused surplus is curtailed; export and revenue are zero.')));
+  const monthly=key=>aggregate8760.toMonthlySum(r[key]);
+  mkChart('c_settlement_monthly','bar',{labels:monthLabels(),datasets:[
+    {label:t('Zakup','Purchases'),data:monthly('purchaseCostArr'),backgroundColor:'#e05a5a'},
+    {label:t('Przychód sprzedaży','Export revenue'),data:monthly('exportRevenueArr'),backgroundColor:'#3ecf8e'},
+    {label:t('Koszt netto','Net cost'),data:monthly('netCostArr'),backgroundColor:'#4d9de0'}
+  ]},{scales:{y:{title:{display:true,text:'PLN'}}},plugins:chartLegend()});
+  if(r.config.priceKind==='synthetic-demo') {
+    setText('pse_status','DEMO · '+a.year+' · '+a.length+t(' cen godzinowych. Średnia: ',' hourly prices. Mean: ')+fmtD(UnitInputs.priceForDisplay(SimulationResults.sum(r.prices)/a.length),6)+' '+UnitInputs.label('price')+t('. Profil syntetyczny — bez pobierania danych z PSE.','. Synthetic profile — no PSE data fetched.'));
+    g('pse_status').className='ins warn';
+    g('pse_chart_wrapper').style.display='block';
+    mkChart('c_pse_prices','line',{labels:Array.from({length:168},(_,i)=>i),datasets:[{label:'DEMO',data:Array.from(r.prices.slice(0,168),v=>UnitInputs.priceForDisplay(v)),borderColor:'#f4a535',pointRadius:0}]},
+      {scales:{x:{display:false},y:{title:{display:true,text:UnitInputs.label('price')}}}});
+  } else g('pse_chart_wrapper').style.display='none';
+  setText('ins_pv3',g('ins_pv3').textContent+' '+t('Faktyczna produkcja PV po ograniczeniu: ','Actual PV production after curtailment: ')+fmtD(SimulationResults.sum(r.actualPVArr),3)+' MWh.');
+  setText('ins_fw1',g('ins_fw1').textContent+' '+t('Profile przedstawiają dostępny potencjał FW. Po ograniczeniu produkcji pozostaje: ','Profiles show available wind potential. Production after curtailment: ')+fmtD(SimulationResults.sum(r.actualFWArr),3)+' MWh.');
+  setText('hdr_koszt',t('Koszt netto: ','Net cost: ')+money(c.netCost/a.days)+t(' PLN/dobę',' PLN/day')+(r.config.priceKind==='synthetic-demo'?' · DEMO':''));
+}
+
+function renderSettlementReport(state) {
+  const r=state.S_8760,c=r.settlement,no=state.S_without.settlement;
+  const table=rows=>'<div class="tbl-wrap"><table><tbody>'+rows.map(([k,v])=>'<tr><td>'+escapeText(k)+'</td><td class="td-mono">'+escapeText(v)+'</td></tr>').join('')+'</tbody></table></div>';
+  const energy=v=>fmtD(v,3)+' MWh';
+  g('rep_inwest').innerHTML=table([
+    [t('Źródło cen zakupu','Purchase price source'),priceSourceLabel(r)],
+    [t('Polityka nadwyżek','Surplus policy'),surplusModeLabel(c.mode)],
+    [t('Limit eksportu — założenie','Export limit — assumption'),Number.isFinite(c.options.limit)?fmtD(c.options.limit,6)+' MW':t('Bez limitu','Unlimited')],
+    [t('Cena sprzedaży','Export price'),c.mode!=='sell'?t('Brak przychodu','No revenue'):c.options.sellSource==='indexed'?t('Godzinowa, taka jak cena zakupu','Hourly, same as purchase price'):fmtD(c.options.fixedPrice,6)+' PLN/MWh'],
+    [t('Zakup z sieci — suma godzin','Grid purchases — hourly sum'),money(c.purchaseCost)+' PLN'],
+    [t('Przychód ze sprzedaży — suma godzin','Export revenue — hourly sum'),money(c.exportRevenue)+' PLN'],
+    [t('Koszt netto roku','Annual net cost'),money(c.netCost)+' PLN'],
+    [t('Koszt bez OZE i MEE — ten sam profil odbiorców i cen','Cost without RES and BESS — same loads and prices'),money(c.baselineCost)+' PLN'],
+    [t('Oszczędność układu względem braku OZE i MEE','System savings versus no RES and BESS'),money(c.savings)+' PLN'],
+    [t('Koszt netto z OZE, bez MEE','Net cost with RES, without BESS'),money(no.netCost)+' PLN'],
+    [t('Oszczędność MEE: bez MEE − z MEE','BESS savings: without BESS − with BESS'),money(no.netCost-c.netCost)+' PLN'],
+    [t('Godziny odpłatnego oddawania przy cenie ujemnej','Hours of permitted negative-price export'),c.negativeExportHours]
+  ]);
+  g('rep_bilans').innerHTML+=table([
+    [t('Eksport po MEE','Grid export after BESS'),energy(c.exportEnergy)],
+    [t('W tym eksport bez wynagrodzenia','Of which unpaid export'),energy(c.unpaidExportEnergy)],
+    [t('Ograniczony potencjał OZE','Curtailed RES potential'),energy(c.curtailedEnergy)],
+    [t('Faktyczna produkcja OZE po ograniczeniach','Actual RES production after curtailment'),energy(c.actualGeneration)],
+    [t('Błąd bilansu faktycznej produkcji: roczny / maks. godzinowy','Actual-production balance error: annual / max hourly'),c.annualResidual.toExponential(3)+' / '+c.maxHourlyResidual.toExponential(3)+' MWh']
+  ]);
+  g('rep_oze').innerHTML+=table([
+    [t('PV faktycznie wyprodukowane po ograniczeniach','Actual PV production after curtailment'),energy(SimulationResults.sum(r.actualPVArr))],
+    [t('FW faktycznie wyprodukowane po ograniczeniach','Actual wind production after curtailment'),energy(SimulationResults.sum(r.actualFWArr))]
+  ]);
+  g('rep_metoda').innerHTML+=t(`
+    <br><b>Etap 4 — rachunek godzinowy:</b> koszt zakupu w godzinie = import [MW] × 1 h × cena zakupu [PLN/MWh]. Przychód = eksport [MWh] × cena sprzedaży [PLN/MWh], tylko w wariancie sprzedaży. Koszt netto = zakup − przychód; wszystkie pozycje roczne są sumami godzin. Nie mnoży się średniego poboru przez średnią cenę. Ujemne ceny, koszty, przychody i oszczędności zachowują znak. Taki sam rachunek stosuje się w wariantach bez MEE i w porównaniach rozbudowy.<br>
+    <b>Nadwyżki:</b> wybór użytkownika to oddawanie bez zapłaty, ograniczanie produkcji lub sprzedaż. Eksport ma ustawiony limit mocy. Część niewyeksportowana jest ograniczana. Przy sprzedaży cena jest stała albo równa godzinowej cenie zakupu (jawne uproszczenie, nie reguła rozliczeń rynkowych). Sprzedaż przy cenie ujemnej wymaga osobnego zaznaczenia; w przeciwnym razie produkcja jest ograniczana. Ograniczenia PV i FW dzieli się proporcjonalnie do dostępnej mocy w danej godzinie. Energia nie znika: dostępne OZE = faktyczna produkcja + ograniczenie. Faktyczna produkcja + import = odbiorcy + eksport + straty MEE + zmiana SOC.<br>
+    <b>Wykresy i wskaźniki:</b> dotychczasowe profile PV/FW/OZE i ich CF opisują dostępny potencjał przed ograniczeniami, wspólny dla porównywanych wariantów. Faktyczna produkcja po ograniczeniach jest wykazana osobno. Autokonsumpcja użyteczna jest odniesiona do dostępnej energii OZE. Oszczędność MEE uwzględnia zakup energii na ładowanie, straty i zmianę przychodu z eksportu; końcowy SOC pozostaje energią, nie otrzymuje fikcyjnej zapłaty.<br>
+    <b>Jednostki:</b> przełączniki w Parametrach ogólnych przeliczają zapis parametrów bez zmiany instalacji. 1 MW = 1000 kW; 1 MWh = 1000 kWh; 1 PLN/kWh = 1000 PLN/MWh. W obliczeniach pozostają MW, MWh i PLN/MWh. Wykresy energii i raport mają jawnie podane jednostki.<br>
+    <b>Zakres kosztów:</b> model rozlicza wyłącznie energię według wpisanych/wybranych cen, bez dodawania podatków, opłat stałych, mocowych ani dystrybucyjnych. Generator cen jest DEMO, nie pobiera danych PSE. EMS realizuje zadaną regułę, nie gwarantuje maksymalnego zysku. Wieloletni model NPV/IRR/SPBT nadal wymaga osobnego etapu weryfikacji.
+  `,`
+    <br><b>Stage 4 — hourly billing:</b> purchases = hourly import [MW] × 1 h × purchase price [PLN/MWh]. Revenue = export [MWh] × export price, in sales mode only. Net cost = purchases − revenue; annual values sum the hourly products. Mean power is never multiplied by mean price. Negative values retain their sign. The same method is used in no-BESS and expansion cases.<br>
+    <b>Surplus:</b> unpaid export, curtailment or sales; exports have an explicit power limit, with the rest curtailed. Sales use a fixed or purchase-indexed hourly price (an assumption, not a market settlement rule). Negative-price sales require explicit selection; otherwise unused production is curtailed. Curtailment is allocated proportionally to available PV/wind power. Available RES = actual generation + curtailment. Actual generation + import = loads + export + BESS losses + SOC change.<br>
+    <b>Charts:</b> PV/wind/RES profiles and CF show available potential before curtailment, shared across comparison cases. Actual generation is reported separately. Useful self-consumption divides by available RES energy. BESS savings include charging purchases, losses and changed export revenue; final SOC receives no fictional payment.<br>
+    <b>Units:</b> input switches preserve physical values. 1 MW = 1000 kW; 1 MWh = 1000 kWh; 1 PLN/kWh = 1000 PLN/MWh. Calculations remain in MW, MWh and PLN/MWh.<br>
+    <b>Scope:</b> energy-only charges using the selected prices; no taxes or fixed, capacity or distribution charges are added. Price generation is DEMO and fetches no PSE data. EMS is rule-based, not a profit optimiser. Multi-year NPV/IRR/SPBT still need their dedicated verification stage.
+  `);
+}
+function buildReport(){buildReportCore();if(lastSim)renderSettlementReport(lastSim);}
+
+function generateDemoPrices() {
+  const a=getTimeAxis(),revision=++priceRevision,cS=iv('c_szczyt'),cN=iv('c_noc_pl');
+  const prices=new Float64Array(a.length);
+  const shape=[.55,.50,.48,.46,.48,.55,.75,.90,1.05,1.10,1.08,1.05,1,.98,.97,.98,1.05,1.12,1.15,1.10,1,.85,.70,.60];
+  for(let i=0;i<a.length;i++) {
+    const factor=shape[a.hours[i]]*(1+Math.sin(a.dayOfYear[i]/a.days*2*Math.PI+Math.PI)*.22)*(a.weekdays[i]>=5?.78:1);
+    const noise=(Math.sin(i*.37+1.2)*.06+Math.sin(i*1.3+3.7)*.04)*factor;
+    prices[i]=cN*.85+(cS*1.05-cN*.85)*Math.max(0,(factor+noise-.46)/.70);
+  }
+  if(revision!==priceRevision||a.key!==getTimeAxis().key)return;
+  window.uploadedPrices8760=prices;window.pricesMeta={key:a.key,kind:'synthetic-demo',baseDay:cS,baseNight:cN};g('price_source').value='demo';
+  const avg=SimulationResults.sum(prices)/a.length;
+  setText('pse_status','DEMO · '+a.year+' · '+a.length+t(' cen godzinowych. Średnia: ',' hourly prices. Mean: ')+fmtD(UnitInputs.priceForDisplay(avg),6)+' '+UnitInputs.label('price')+t('. Dane wygenerowane, bez połączenia z PSE.','. Generated data, no PSE connection.'));
+  g('pse_status').className='ins warn';setText('btn_pse_fetch',t('Wygeneruj ponownie DEMO','Regenerate DEMO'));refreshPriceControls();upd();
+}
+function fetchPSEData(){generateDemoPrices();} // Zgodność ze starym przyciskiem; nie wykonuje żądań PSE.
+
+function downloadHourlySettlement() {
+  if(!lastSim)return;
+  const r=lastSim.S_8760,no=lastSim.S_without,rows=['czas;import_MWh;cena_zakupu_PLN_MWh;koszt_zakupu_PLN;eksport_MWh;cena_sprzedazy_PLN_MWh;przychod_PLN;koszt_netto_PLN;ograniczenie_MWh;koszt_bez_MEE_PLN;oszczednosc_MEE_PLN;zrodlo_cen;polityka_nadwyzek'];
+  for(let i=0;i<r.timeAxis.length;i++)rows.push([EnergyData.label(r.timeAxis.epochs[i],r.timeAxis.zone),r.gridArr[i],r.prices[i],r.purchaseCostArr[i],r.exportArr[i],r.exportPrices[i],r.exportRevenueArr[i],r.netCostArr[i],r.curtailedArr[i],no.netCostArr[i],no.netCostArr[i]-r.netCostArr[i],r.config.priceKind==='synthetic-demo'?'DEMO_syntetyczne':'taryfa_dwustrefowa',r.settlement.mode].join(';'));
+  const url=URL.createObjectURL(new Blob(['\uFEFF'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'}));
+  const link=document.createElement('a');link.href=url;link.download='EnergoSym_rozliczenie_'+r.timeAxis.year+(r.config.priceKind==='synthetic-demo'?'_DEMO':'_taryfa')+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 
@@ -2641,85 +2906,6 @@ function initAccessibility() {
   document.querySelector('.nav-item.active')?.setAttribute('aria-current', 'page');
 }
 
-function fetchPSEData() {
-  const statusEl = g('pse_status');
-  const btn = g('btn_pse_fetch');
-  if (!statusEl || !btn) return;
-
-  statusEl.className = 'ins warn';
-  statusEl.innerHTML = t(
-    '⏳ Generuję syntetyczne ceny demonstracyjne dla wybranego roku…',
-    '⏳ Generating synthetic demo prices for the selected year…'
-  );
-  btn.disabled = true;
-  const axis=getTimeAxis(), revision=++priceRevision;
-
-  setTimeout(() => {
-    try {
-      if(revision!==priceRevision || axis.key!==getTimeAxis().key)return;
-      const cS = g('c_szczyt') ? iv('c_szczyt') : 600;
-      const cN = g('c_noc_pl') ? iv('c_noc_pl') : 250;
-      const prices = new Float64Array(axis.length);
-
-      for (let h = 0; h < axis.length; h++) {
-        const hour = axis.hours[h];
-        const dayOfYear = axis.dayOfYear[h];
-        const dayOfWeek = axis.weekdays[h];
-        const isWeekend = dayOfWeek >= 5;
-        const seasonal = 1.0 + Math.sin((dayOfYear / axis.days) * 2 * Math.PI + Math.PI) * 0.22;
-        const dailyShapes = [0.55,0.50,0.48,0.46,0.48,0.55,
-                             0.75,0.90,1.05,1.10,1.08,1.05,
-                             1.00,0.98,0.97,0.98,1.05,1.12,
-                             1.15,1.10,1.00,0.85,0.70,0.60];
-        let factor = dailyShapes[hour] * seasonal * (isWeekend ? 0.78 : 1.0);
-        const noise = (Math.sin(h*0.37+1.2)*0.06 + Math.sin(h*1.3+3.7)*0.04) * factor;
-        factor += noise;
-        const baseNight = cN * 0.85, basePeak = cS * 1.05;
-        prices[h] = Math.max(30, Math.round(baseNight + (basePeak - baseNight) * Math.max(0, (factor - 0.46) / 0.70)));
-      }
-
-      window.uploadedPrices8760 = prices;
-      window.pricesMeta={key:axis.key,kind:'synthetic-demo'};
-      const avgPrice = Math.round(Array.from(prices).reduce((a,b)=>a+b,0) / axis.length);
-      const minPrice = Math.min(...prices);
-      const maxPrice = Math.max(...prices);
-      const nightArr = Array.from(prices).filter((_,i) => { const h=axis.hours[i]; return axis.hours[i]<6||axis.hours[i]>=21; });
-      const dayArr   = Array.from(prices).filter((_,i) => { const h=i%24; return axis.hours[i]>=6&&axis.hours[i]<21; });
-      const nightAvg = Math.round(nightArr.reduce((a,b)=>a+b,0) / nightArr.length);
-      const dayAvg   = Math.round(dayArr.reduce((a,b)=>a+b,0) / dayArr.length);
-
-      statusEl.className = 'ins good';
-      statusEl.innerHTML = t(
-        `✅ Dane RDN demo (${axis.length} h). Śr: <b>${avgPrice}</b> | Dzień: <b>${dayAvg}</b> | Noc: <b>${nightAvg}</b> | Min: ${minPrice} | Max: ${maxPrice} PLN/MWh<br><small style="opacity:0.75">ℹ️ Generator demonstracyjny. Profil syntetyczny dla roku ${axis.year}; nie pobrano danych z PSE.</small>`,
-        `✅ Demo RDN data (${axis.length} h). Avg: <b>${avgPrice}</b> | Day: <b>${dayAvg}</b> | Night: <b>${nightAvg}</b> | Min: ${minPrice} | Max: ${maxPrice} PLN/MWh<br><small style="opacity:0.75">ℹ️ Demo generator. Synthetic profile for ${axis.year}; no PSE data fetched.</small>`
-      );
-      btn.textContent = t('✅ Załadowano (demo)', '✅ Loaded (demo)');
-      btn.disabled = false;
-// Rysujemy mini-wykres cen z całego tygodnia (168h)
-      document.getElementById('pse_chart_wrapper').style.display = 'block';
-      const weekPrices = Array.from(window.uploadedPrices8760).slice(0, 168);
-      mkChart('c_pse_prices', 'line', {
-          labels: Array.from({length: 168}, (_, i) => i),
-          datasets: [{
-              data: weekPrices,
-              borderColor: '#f4a535',
-              backgroundColor: 'rgba(244,165,53,0.15)',
-              fill: true, borderWidth: 1.5, pointRadius: 0, tension: 0.3
-          }]
-      }, {
-          scales: { 
-              x: { display: false }, 
-              y: { display: true, position: 'right', ticks: { font: { size: 9 } } } 
-          }
-      });
-      upd();
-    } catch(e) {
-      if(statusEl) { statusEl.className='ins danger'; statusEl.textContent=t('Błąd: '+e.message,'Error: '+e.message); }
-      if(btn) btn.disabled = false;
-    }
-  }, 600);
-}
-
 function isVisible(id) {
   const el = g(id);
   if (!el) return false;
@@ -2733,6 +2919,7 @@ function isVisible(id) {
 
 window.addEventListener('DOMContentLoaded', () => {
   initAccessibility();
+  UnitInputs.refresh();refreshPriceControls();
   refreshTimeDescription();
   try {upd();} catch(e) {clearSimulationResults(t('Obliczenia przerwane: ','Calculations stopped: ')+e.message);}
   window.addEventListener('error', event=>{
